@@ -1,0 +1,58 @@
+{
+    "editor.fontFamily": "Operator Mono,Dank Mono,Fira Code,微软雅黑",
+    "editor.fontSize": 17,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "workbench.colorTheme": "Winter is Coming (Dark Blue - No Italics)",
+    "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "explorer.confirmDelete": false,
+    "python.jediEnabled": false,
+    "emmet.triggerExpansionOnTab": true,
+    "workbench.iconTheme": "vscode-icons",
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.suggestSelection": "first",
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "breadcrumbs.enabled": true,
+    "debug.toolBarLocation": "floating",
+    "editor.autoIndent": true,
+    "editor.codeLens": false,
+    "editor.cursorStyle": "line",
+    "editor.fontLigatures": true,
+    "editor.formatOnType": false,
+    "editor.formatOnSave": false,
+    "editor.letterSpacing": 0.5,
+    "editor.lineHeight": 25,
+    "files.autoSaveDelay": 1000,
+    "search.showLineNumbers": true,
+    "workbench.colorCustomizations": {},
+    "zenMode.centerLayout": false,
+    "editor.cursorBlinking": "smooth",
+    "window.zoomLevel": 0,
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[php]": {
+        "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    },
+    "vsicons.dontShowNewVersionMessage": true,
+    "files.eol": "\n",
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": false
+}

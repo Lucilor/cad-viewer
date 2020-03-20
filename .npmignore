@@ -1,0 +1,8 @@
+src/
+.vscode/
+.eslintignore
+.eslintrc.json
+.prettierrc
+tsconfig.json
+tslint.json
+webpack.*.js

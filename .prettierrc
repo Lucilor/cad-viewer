@@ -1,0 +1,9 @@
+{
+	"printWidth": 140,
+	"tabWidth": 4,
+	"bracketSpacing": false,
+	"useTabs": true,
+	"proseWrap": "never",
+	"endOfLine": "lf",
+	"quoteProps": "as-needed"
+}
