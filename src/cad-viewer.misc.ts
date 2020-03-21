@@ -1,4 +1,5 @@
 import {Point} from "@lucilor/utils";
+import { CadOption } from ".";
 
 export interface LineStyle {
 	color?: number;
@@ -64,3 +65,44 @@ export const defaultConfig: Config = {
 	drawPolyline: false,
 	reverseSimilarColor: true
 };
+
+export function transformData(data: any, to: "array" | "object") {
+	if (typeof data !== "object" || Array.isArray(data)) {
+		console.warn("Invalid argument: data.");
+		return {};
+	}
+	if (!["array", "object"].includes(to)) {
+		console.warn("Invalid argument: to.");
+		return {};
+	}
+	const list = ["entities", "layers", "lineText", "globalText"];
+	if (to === "array") {
+		for (const key of list) {
+			if (data[key]) {
+				data[key] = this._obj2Arr(data[key]);
+			}
+		}
+		const options: CadOption[] = [];
+		for (const key in data.options) {
+			options.push({name: key, value: data.options[key]});
+		}
+		data.options = options;
+	}
+	if (to === "object") {
+		for (const key of list) {
+			if (data[key]) {
+				data[key] = this._arr2Obj(data[key]);
+			}
+		}
+		const options = {};
+		(data.options as CadOption[]).forEach(o => {
+			if (o.name) {
+				options[o.name] = o.value;
+			}
+		});
+		data.options = options;
+	}
+	data.partners?.forEach(v => this.transformData(v, to));
+	data.components?.data.forEach(v => this.transformData(v, to));
+	return data;
+}

@@ -409,10 +409,10 @@ export class CadViewer {
 
 		const lineWidth = 1;
 		const color = this._correctColor(0x00ff00);
-		const p1 = getPoint(line1, dimension.entity1.location);
-		const p2 = getPoint(line2, dimension.entity2.location);
-		const p3 = p1.clone();
-		const p4 = p2.clone();
+		let p1 = getPoint(line1, dimension.entity1.location);
+		let p2 = getPoint(line2, dimension.entity2.location);
+		let p3 = p1.clone();
+		let p4 = p2.clone();
 		const arrow1: Point[] = [];
 		const arrow2: Point[] = [];
 		const graphics = new PIXI.Graphics();
@@ -436,6 +436,10 @@ export class CadViewer {
 			const y = Math.max(p3.y, p4.y);
 			p3.y = y + distance;
 			p4.y = y + distance;
+			if (p3.x > p4.x) {
+				[p3, p4] = [p4, p3];
+				[p1, p2] = [p2, p1];
+			}
 			arrow1[0] = p3.clone().add(lineWidth, 0);
 			arrow1[1] = arrow1[0].clone().add(arrowLength, -arrowSize);
 			arrow1[2] = arrow1[0].clone().add(arrowLength, arrowSize);
@@ -448,6 +452,10 @@ export class CadViewer {
 			p3.x = x + distance;
 			p4.x = x + distance;
 			text.rotation = -Math.PI / 2;
+			if (p3.y < p4.y) {
+				[p3, p4] = [p4, p3];
+				[p1, p2] = [p2, p1];
+			}
 			arrow1[0] = p3.clone().add(0, -lineWidth);
 			arrow1[1] = arrow1[0].clone().add(-arrowSize, -arrowLength);
 			arrow1[2] = arrow1[0].clone().add(arrowSize, -arrowLength);

@@ -1,4 +1,5 @@
 import {CadViewer} from "./cad-viewer";
+import {Events} from "./cad-viewer.misc";
 import {
 	CadTypes,
 	TextInfo,
@@ -26,6 +27,7 @@ import {
 
 export {
 	CadViewer,
+	Events,
 	CadTypes,
 	TextInfo,
 	CadEntity,
