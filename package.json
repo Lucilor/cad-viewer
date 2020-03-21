@@ -1,20 +1,22 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "cad-viewer",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/src/index.d.ts",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "webpack --config webpack.config.js"
+		"lib": "webpack --config webpack.lib.js",
+		"dist": "webpack --config webpack.dist.js",
+		"build": "npm run lib && npm run dist"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/Lucilor/cad-viewer.git"
 	},
 	"keywords": [
-		"utils"
+		"cad"
 	],
 	"author": "lucilor <lucilor@me.com>",
 	"license": "MIT",
@@ -25,6 +27,7 @@
 	"devDependencies": {
 		"@types/lodash": "^4.14.149",
 		"@types/uuid": "^7.0.2",
+		"clean-webpack-plugin": "^3.0.0",
 		"eslint": "^6.8.0",
 		"terser-webpack-plugin": "^2.3.5",
 		"ts-loader": "^6.2.1",
@@ -32,6 +35,7 @@
 		"typescript": "^3.8.3",
 		"webpack": "^4.42.0",
 		"webpack-cli": "^3.3.11",
+		"webpack-merge": "^4.2.2",
 		"webpack-node-externals": "^1.7.2"
 	},
 	"dependencies": {
