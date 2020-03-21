@@ -1,3 +1,51 @@
 import {CadViewer} from "./cad-viewer";
+import {
+	CadTypes,
+	TextInfo,
+	CadEntity,
+	CadLine,
+	CadCircle,
+	CadArc,
+	CadMText,
+	CadDimension,
+	CadLWPolyline,
+	CadHatch,
+	CadLayer,
+	CadBaseLine,
+	CadJointPoint,
+	CadOption,
+	CadData,
+	CadRawData,
+	Dimension,
+	MText,
+	Component,
+	Components,
+	Connection,
+	ComponentPosition
+} from "./cad-data";
 
-export {CadViewer};
+export {
+	CadViewer,
+	CadTypes,
+	TextInfo,
+	CadEntity,
+	CadLine,
+	CadCircle,
+	CadArc,
+	CadMText,
+	CadDimension,
+	CadLWPolyline,
+	CadHatch,
+	CadLayer,
+	CadBaseLine,
+	CadJointPoint,
+	CadOption,
+	CadData,
+	CadRawData,
+	Dimension,
+	MText,
+	Component,
+	Components,
+	Connection,
+	ComponentPosition
+};

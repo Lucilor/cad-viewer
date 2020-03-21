@@ -1,10 +1,10 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "1.0.1",
+	"version": "1.0.3",
 	"description": "cad-viewer",
-	"main": "dist/index.js",
-	"module": "dist/index.js",
-	"types": "dist/src/index.d.ts",
+	"main": "lib/index.js",
+	"module": "lib/index.js",
+	"types": "lib/src/index.d.ts",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lib": "webpack --config webpack.lib.js",
@@ -39,7 +39,7 @@
 		"webpack-node-externals": "^1.7.2"
 	},
 	"dependencies": {
-		"@lucilor/utils": "^1.0.11",
+		"@lucilor/utils": "^1.0.14",
 		"lodash": "^4.17.15",
 		"pixi.js": "^5.2.1",
 		"uuid": "^7.0.2"
