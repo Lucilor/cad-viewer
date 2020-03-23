@@ -192,8 +192,8 @@ export class CadViewer {
 		}
 		const lineWidth = style && style.lineWidth ? style.lineWidth : entity.lineWidth;
 		const {center, radius, start_angle, end_angle} = entity;
-		const startRad = new Angle(start_angle, "deg").constrain().getRad();
-		const endRad = new Angle(end_angle, "deg").constrain().getRad();
+		const startRad = new Angle(start_angle, "deg").constrain().rad;
+		const endRad = new Angle(end_angle, "deg").constrain().rad;
 		if (!(container instanceof PIXI.Graphics)) {
 			container = new PIXI.Graphics();
 			if (addTo) {
@@ -774,7 +774,7 @@ export class CadViewer {
 			const {from, to, isDragging} = this._status;
 			if (isDragging) {
 				this.clearMultiSelector();
-				if (this.config.selectMode === "multiple") {
+				if (this.config.selectMode === "multiple" && event instanceof MouseEvent && event.button === 0) {
 					const x = Math.min(from.x, to.x);
 					const y = Math.max(from.y, to.y);
 					const width = Math.abs(from.x - to.x);
@@ -1367,8 +1367,8 @@ export class CadViewer {
 						arc.rotate(rotate.angle, rotate.anchor);
 					}
 					arcEntity.center = arc.center.toArray();
-					arcEntity.start_angle = arc.getStartAngle().getDeg();
-					arcEntity.end_angle = arc.getEndAngle().getDeg();
+					arcEntity.start_angle = arc.getStartAngle().rad;
+					arcEntity.end_angle = arc.getEndAngle().rad;
 					arcEntity.clockwise = arc.clockwise;
 					break;
 				case CadTypes.Circle:
