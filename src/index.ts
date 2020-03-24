@@ -1,5 +1,5 @@
 import {CadViewer} from "./cad-viewer";
-import {Events} from "./cad-viewer.misc";
+import {Events, transformData} from "./cad-viewer.misc";
 import {
 	CadTypes,
 	TextInfo,
