@@ -1,5 +1,5 @@
 import {Point} from "@lucilor/utils";
-import { CadOption } from ".";
+import {CadOption} from ".";
 
 export interface LineStyle {
 	color?: number;
@@ -41,7 +41,6 @@ export interface Config {
 	dragAxis?: "x" | "y" | "xy" | "";
 	transparent?: boolean;
 	fps?: number; // 每秒内执行render方法的最大次数
-	showPartners?: boolean;
 	drawMText?: boolean;
 	drawPolyline?: false;
 	reverseSimilarColor?: true; // 颜色与背景相近时反相显示
@@ -60,11 +59,34 @@ export const defaultConfig: Config = {
 	dragAxis: "xy",
 	transparent: false,
 	fps: 60,
-	showPartners: false,
 	drawMText: false,
 	drawPolyline: false,
 	reverseSimilarColor: true
 };
+
+function _obj2Arr(obj: object) {
+	if (typeof obj !== "object") {
+		return obj;
+	}
+	const arr = [];
+	for (const key in obj) {
+		const v = {...obj[key], id: key};
+		arr.push(v);
+	}
+	return arr;
+}
+
+function _arr2Obj(arr: any[]) {
+	if (!Array.isArray(arr)) {
+		return arr;
+	}
+	const obj = {};
+	arr.forEach(v => {
+		obj[v.id] = v;
+		delete v.id;
+	});
+	return obj;
+}
 
 export function transformData(data: any, to: "array" | "object") {
 	if (typeof data !== "object" || Array.isArray(data)) {
@@ -79,7 +101,7 @@ export function transformData(data: any, to: "array" | "object") {
 	if (to === "array") {
 		for (const key of list) {
 			if (data[key]) {
-				data[key] = this._obj2Arr(data[key]);
+				data[key] = _obj2Arr(data[key]);
 			}
 		}
 		const options: CadOption[] = [];
@@ -91,7 +113,7 @@ export function transformData(data: any, to: "array" | "object") {
 	if (to === "object") {
 		for (const key of list) {
 			if (data[key]) {
-				data[key] = this._arr2Obj(data[key]);
+				data[key] = _arr2Obj(data[key]);
 			}
 		}
 		const options = {};
@@ -102,7 +124,7 @@ export function transformData(data: any, to: "array" | "object") {
 		});
 		data.options = options;
 	}
-	data.partners?.forEach(v => this.transformData(v, to));
-	data.components?.data.forEach(v => this.transformData(v, to));
+	data.partners?.forEach(v => transformData(v, to));
+	data.components?.data.forEach(v => transformData(v, to));
 	return data;
 }
