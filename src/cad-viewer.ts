@@ -893,6 +893,7 @@ export class CadViewer {
 		if (data === undefined) {
 			this.data = this.exportData();
 		} else {
+			transformData(data, "array");
 			this.data = {baseLines: [], jointPoints: [], options: [], conditions: [], type: "", ...data};
 		}
 		this.containers.main.removeChildren();
