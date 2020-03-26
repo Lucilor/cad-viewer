@@ -736,6 +736,11 @@ export class CadViewer {
 		} else {
 			result.conditions = [];
 		}
+		if (Array.isArray(result.dimensions)) {
+			result.dimensions = result.dimensions.filter(d => d.entity1 && d.entity1.id && d.entity2 && d.entity2.id);
+		} else {
+			result.dimensions = [];
+		}
 		result.baseLines = result.baseLines.filter(l => l.name && l.valueX && l.valueY);
 		result.jointPoints = result.jointPoints.filter(p => p.name && p.valueX && p.valueY);
 		return type === "object" ? transformData(result, "object") : result;
@@ -1183,6 +1188,8 @@ export class CadViewer {
 			}
 		});
 		components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
+		connection.axis = axis;
+		connection.space = connection.space ? connection.space : "0";
 		components.connections.push(cloneDeep(connection));
 
 		this._sortComponents();
@@ -1592,10 +1599,7 @@ export class CadViewer {
 	}
 
 	private _correctColor(color: number, threshold = 5) {
-		if (typeof color !== "number") {
-			color = 0;
-		}
-		if (Math.abs(color - this.config.backgroundColor) <= threshold && this.config.reverseSimilarColor) {
+		if (typeof color === "number" && Math.abs(color - this.config.backgroundColor) <= threshold && this.config.reverseSimilarColor) {
 			return 0xfffffff - color;
 		}
 		return color;

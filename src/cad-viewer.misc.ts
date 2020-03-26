@@ -100,29 +100,33 @@ export function transformData(data: any, to: "array" | "object") {
 	const list = ["entities", "layers", "lineText", "globalText"];
 	if (to === "array") {
 		for (const key of list) {
-			if (data[key]) {
+			if (data[key] && !Array.isArray(data[key])) {
 				data[key] = _obj2Arr(data[key]);
 			}
 		}
-		const options: CadOption[] = [];
-		for (const key in data.options) {
-			options.push({name: key, value: data.options[key]});
+		if (!Array.isArray(data.options)) {
+			const options: CadOption[] = [];
+			for (const key in data.options) {
+				options.push({name: key, value: data.options[key]});
+			}
+			data.options = options;
 		}
-		data.options = options;
 	}
 	if (to === "object") {
 		for (const key of list) {
-			if (data[key]) {
+			if (data[key] && Array.isArray(data[key])) {
 				data[key] = _arr2Obj(data[key]);
 			}
 		}
-		const options = {};
-		(data.options as CadOption[]).forEach(o => {
-			if (o.name) {
-				options[o.name] = o.value;
-			}
-		});
-		data.options = options;
+		if (Array.isArray(data.options)) {
+			const options = {};
+			(data.options as CadOption[]).forEach(o => {
+				if (o.name) {
+					options[o.name] = o.value;
+				}
+			});
+			data.options = options;
+		}
 	}
 	data.partners?.forEach(v => transformData(v, to));
 	data.components?.data.forEach(v => transformData(v, to));
