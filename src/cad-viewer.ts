@@ -143,18 +143,19 @@ export class CadViewer {
 
 		const main = this.containers.main;
 		const {showLineLength} = this.config;
+		const name = "lineLength - " + entity.id;
+		let lineLength = main.children.find(o => o.name === name) as PIXI.Text;
 		if (showLineLength > 0) {
 			const lengthText = num2Str(line.length);
 			const middle = line.middle;
-			let lineLength = main.children.find(o => o.name === entity.id) as PIXI.Text;
 			if (lineLength) {
-				lineLength.style = new PIXI.TextStyle({fontSize: showLineLength * this._scale, fill: 0xffffff});
+				lineLength.style = new PIXI.TextStyle({fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
 				lineLength.scale.set(1 / this._scale, -1 / this._scale);
 				lineLength.text = lengthText;
 				lineLength.position.set(middle.x, middle.y);
 			} else {
-				lineLength = new PIXI.Text(lengthText, {fontSize: showLineLength * this._scale, fill: 0xffffff});
-				lineLength.name = entity.id;
+				lineLength = new PIXI.Text(lengthText, {fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
+				lineLength.name = name;
 				lineLength.scale.set(1 / this._scale, -1 / this._scale);
 				main.addChild(lineLength);
 				lineLength.zIndex = -1;
@@ -172,6 +173,8 @@ export class CadViewer {
 					this._emitter.emit(Events.linelengthclick, event, entity);
 				});
 			}
+		} else {
+			lineLength?.destroy();
 		}
 
 		let sprite = container.children.find(o => o.name === "sprite") as PIXI.Sprite;
@@ -523,22 +526,8 @@ export class CadViewer {
 		let entities = this.data.entities;
 		this.data.partners.forEach(v => (entities = entities.concat(v.entities)));
 		this.data.components.data.forEach(v => (entities = entities.concat(v.entities)));
-		for (const entity of entities) {
-			entity.selected = false;
-			switch (entity.type) {
-				case CadTypes.Line:
-					this.drawLine(entity as CadLine);
-					break;
-				case CadTypes.Dimension:
-				case CadTypes.MText:
-					this.drawText(entity as CadDimension | CadMText);
-					break;
-				case CadTypes.Arc:
-					this.drawArc(entity as CadArc);
-					break;
-			}
-		}
-		return this;
+		entities.forEach(e => (e.selected = false));
+		return this.render();
 	}
 
 	translatePoint(point: Point) {
@@ -558,7 +547,10 @@ export class CadViewer {
 			return;
 		}
 		this._renderTimer.time = now;
-		const draw = (entity: CadEntity, addTo: PIXI.Container) => {
+		const draw = (entity: CadEntity, container: PIXI.Container) => {
+			if (!entity) {
+				return;
+			}
 			const {color, layer} = entity;
 			const lineWidth = 1;
 			const localStyle = {...style};
@@ -581,24 +573,24 @@ export class CadViewer {
 			switch (entity.type) {
 				case CadTypes.Line:
 					entity.lineWidth = lineWidth;
-					this.drawLine(entity as CadLine, localStyle, addTo);
+					this.drawLine(entity as CadLine, localStyle, container);
 					break;
 				case CadTypes.Arc:
 					entity.lineWidth = lineWidth;
-					this.drawArc(entity as CadArc, localStyle, addTo);
+					this.drawArc(entity as CadArc, localStyle, container);
 					break;
 				case CadTypes.Circle:
 					entity.lineWidth = lineWidth;
-					this.drawCircle(entity as CadCircle, localStyle, addTo);
+					this.drawCircle(entity as CadCircle, localStyle, container);
 					break;
 				case CadTypes.MText:
 					if (this.config.drawMText) {
-						this.drawText(entity as CadMText, localStyle, addTo);
+						this.drawText(entity as CadMText, localStyle, container);
 					}
 					break;
 				case CadTypes.Dimension:
 					if (this.config.drawMText && this._status.dimensions.length < 1) {
-						this.drawText(entity as CadDimension, localStyle, addTo);
+						this.drawText(entity as CadDimension, localStyle, container);
 					} else if (entity.container) {
 						entity.container.destroy();
 						entity.container = null;
@@ -607,34 +599,31 @@ export class CadViewer {
 				case CadTypes.LWPolyline:
 					entity.lineWidth = lineWidth;
 					if (this.config.drawPolyline) {
-						this.drawPolyline(entity as CadLWPolyline, localStyle, addTo);
+						this.drawPolyline(entity as CadLWPolyline, localStyle, container);
 					}
 					break;
 				case CadTypes.Hatch:
-					this.drawHatch(entity as CadHatch, {color: this._correctColor(0)}, addTo);
+					this.drawHatch(entity as CadHatch, {color: this._correctColor(0)}, container);
 					break;
 				default:
 			}
 		};
-		if (mode & 0b100) {
-			this.data.entities.forEach(entity => draw(entity, this.containers.main));
-		}
-		if (mode & 0b010) {
-			this._status.partners.forEach(i => {
-				this.data.partners[i].entities.forEach(entity => draw(entity, this.containers.partners));
-			});
-		}
-		if (mode & 0b001) {
-			this.data.components.data.forEach((component, i) => {
-				component.entities.forEach(entity => draw(entity, this.containers.components));
-			});
-		}
 		if (entities) {
-			entities.forEach(entity => {
-				if (entity) {
-					draw(entity, this.containers.main);
-				}
-			});
+			entities.forEach(entity => draw(entity, this.containers.main));
+		} else {
+			if (mode & 0b100) {
+				this.data.entities.forEach(entity => draw(entity, this.containers.main));
+			}
+			if (mode & 0b010) {
+				this._status.partners.forEach(i => {
+					this.data.partners[i].entities.forEach(entity => draw(entity, this.containers.partners));
+				});
+			}
+			if (mode & 0b001) {
+				this.data.components.data.forEach((component, i) => {
+					component.entities.forEach(entity => draw(entity, this.containers.components));
+				});
+			}
 		}
 
 		this.drawDimensions();
@@ -799,6 +788,9 @@ export class CadViewer {
 					const rect = new Rectangle(new Point(x, y), width, height);
 					const toBeSelected: CadEntity[] = [];
 					for (const entity of this.data.entities) {
+						if (!entity.selectable) {
+							continue;
+						}
 						if (entity.type === CadTypes.Line) {
 							const lineEntity = entity as CadLine;
 							const start = this.translatePoint(new Point(lineEntity.start));
