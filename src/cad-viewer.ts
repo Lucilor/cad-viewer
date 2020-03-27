@@ -890,11 +890,11 @@ export class CadViewer {
 	}
 
 	reset(data?: CadData) {
-		if (data === undefined) {
-			this.data = this.exportData();
-		} else {
+		if (data) {
 			transformData(data, "array");
 			this.data = {baseLines: [], jointPoints: [], options: [], conditions: [], type: "", ...data};
+		} else {
+			this.data = this.exportData();
 		}
 		this.containers.main.removeChildren();
 		this.containers.partners.removeChildren();
