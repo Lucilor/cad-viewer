@@ -544,7 +544,7 @@ export class CadViewer {
 		if (now < then) {
 			window.clearTimeout(this._renderTimer.id);
 			this._renderTimer.id = setTimeout(() => this.render(center), then - now);
-			return;
+			return this;
 		}
 		this._renderTimer.time = now;
 		const draw = (entity: CadEntity, container: PIXI.Container) => {
@@ -554,6 +554,9 @@ export class CadViewer {
 			const {color, layer} = entity;
 			const lineWidth = 1;
 			const localStyle = {...style};
+			if (entity.selectable !== false) {
+				entity.selectable = true;
+			}
 			if (typeof entity.colorRGB !== "number") {
 				if (color === 256) {
 					const cadLayer = this.findLayerByName(layer);
@@ -690,7 +693,7 @@ export class CadViewer {
 	}
 
 	destroy(removeView = true) {
-		this.reset(null);
+		this.reset({});
 		this.app.renderer.gl.getExtension("WEBGL_lose_context").loseContext();
 		this.app.destroy(removeView, {children: true});
 		if (removeView) {
@@ -884,13 +887,26 @@ export class CadViewer {
 	reset(data?: CadData) {
 		if (data) {
 			transformData(data, "array");
-			this.data = {baseLines: [], jointPoints: [], options: [], conditions: [], type: "", ...data};
-		} else {
-			this.data = this.exportData();
+			this.data = {
+				entities: [],
+				baseLines: [],
+				jointPoints: [],
+				options: [],
+				conditions: [],
+				type: "",
+				partners: [],
+				components: {data: [], connections: []},
+				dimensions: [],
+				...data
+			};
 		}
+		this.data = this.exportData();
 		this.containers.main.removeChildren();
 		this.containers.partners.removeChildren();
 		this.containers.components.removeChildren();
+		this._status.dimensions.forEach(d=>d?.destroy());
+		this._status.dimensions.length = 0;
+		this._status.partners.length = 0;
 		return this;
 	}
 
@@ -1248,6 +1264,8 @@ export class CadViewer {
 			conntions = null;
 		} catch (error) {
 			console.warn(error);
+		} finally {
+			return this;
 		}
 	}
 
@@ -1484,7 +1502,7 @@ export class CadViewer {
 			this.data.components.data.forEach(v => (entities = entities.concat(v.entities)));
 		}
 		if (entities.length < 1) {
-			return new Rectangle(new Point(), this.width, this.height);
+			return new Rectangle(new Point(), 0, 0);
 		}
 		for (const entity of entities) {
 			if (entity.type === CadTypes.Line) {
