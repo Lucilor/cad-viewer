@@ -284,7 +284,7 @@ export class CadViewer {
 			container.on("pointerout", event => this._onEntityOut(event, entity));
 		}
 		let position: Point;
-		let fontSize = entity.font_size;
+		let fontSize = entity.font_size * 1.25;
 		if (!fontSize) {
 			fontSize = style && style.fontSize ? style.fontSize : this.config.fontSize;
 		}
@@ -637,6 +637,9 @@ export class CadViewer {
 		this._status.dimensions.length = 0;
 		if (this.config.drawDimensions) {
 			this._drawDimensions();
+			if (center) {
+				this.center();
+			}
 		}
 		const {x, y} = this.containers.inner.position;
 		this.containers.inner.setTransform(x, y, 1, -1, 0, 0, 0, 0, this.height);

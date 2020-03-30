@@ -43,7 +43,7 @@ export interface Config {
 	fps?: number; // 每秒内执行render方法的最大次数
 	drawMTexts?: boolean;
 	drawDimensions?: boolean;
-	drawPolyline?: false;
+	drawPolyline?: boolean;
 	reverseSimilarColor?: true; // 颜色与背景相近时反相显示
 }
 
