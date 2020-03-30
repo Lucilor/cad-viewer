@@ -142,19 +142,22 @@ export class CadViewer {
 		container.clear();
 
 		const main = this.containers.main;
-		const {showLineLength} = this.config;
+		const {showLineLength, drawMTexts} = this.config;
 		const name = "lineLength - " + entity.id;
+		const texts = drawMTexts ? [entity.gongshi, entity.qujian, entity.mingzi].filter(v => v) : [];
+		const textStyle = new PIXI.TextStyle({align: "center", fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
 		let lineLength = main.children.find(o => o.name === name) as PIXI.Text;
 		if (showLineLength > 0) {
 			const lengthText = num2Str(line.length);
+			texts.push(lengthText);
 			const middle = line.middle;
 			if (lineLength) {
-				lineLength.style = new PIXI.TextStyle({fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
+				lineLength.style = textStyle;
 				lineLength.scale.set(1 / this._scale, -1 / this._scale);
-				lineLength.text = lengthText;
+				lineLength.text = texts.join("\n");
 				lineLength.position.set(middle.x, middle.y);
 			} else {
-				lineLength = new PIXI.Text(lengthText, {fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
+				lineLength = new PIXI.Text(texts.join("\n"), textStyle);
 				lineLength.name = name;
 				lineLength.scale.set(1 / this._scale, -1 / this._scale);
 				main.addChild(lineLength);
@@ -369,10 +372,8 @@ export class CadViewer {
 		});
 	}
 
-	drawDimensions() {
-		const containers = this._status.dimensions;
-		containers.forEach(c => c?.destroy());
-		containers.length = 0;
+	private _drawDimensions() {
+		this.data.dimensions = this.data.dimensions.filter(d => d);
 		this.data.dimensions.forEach(d => {
 			const container = this._drawDimension(d);
 			this._status.dimensions.push(container);
@@ -587,12 +588,12 @@ export class CadViewer {
 					this.drawCircle(entity as CadCircle, localStyle, container);
 					break;
 				case CadTypes.MText:
-					if (this.config.drawMText) {
+					if (this.config.drawMTexts) {
 						this.drawText(entity as CadMText, localStyle, container);
 					}
 					break;
 				case CadTypes.Dimension:
-					if (this.config.drawMText && this._status.dimensions.length < 1) {
+					if (this.config.drawMTexts && this._status.dimensions.length < 1) {
 						this.drawText(entity as CadDimension, localStyle, container);
 					} else if (entity.container) {
 						entity.container.destroy();
@@ -611,6 +612,9 @@ export class CadViewer {
 				default:
 			}
 		};
+		if (center) {
+			this.center();
+		}
 		if (entities) {
 			entities.forEach(entity => draw(entity, this.containers.main));
 		} else {
@@ -629,9 +633,10 @@ export class CadViewer {
 			}
 		}
 
-		this.drawDimensions();
-		if (center) {
-			this.center();
+		this._status.dimensions.forEach(d => d?.destroy());
+		this._status.dimensions.length = 0;
+		if (this.config.drawDimensions) {
+			this._drawDimensions();
 		}
 		const {x, y} = this.containers.inner.position;
 		this.containers.inner.setTransform(x, y, 1, -1, 0, 0, 0, 0, this.height);
@@ -904,7 +909,7 @@ export class CadViewer {
 		this.containers.main.removeChildren();
 		this.containers.partners.removeChildren();
 		this.containers.components.removeChildren();
-		this._status.dimensions.forEach(d=>d?.destroy());
+		this._status.dimensions.forEach(d => d?.destroy());
 		this._status.dimensions.length = 0;
 		this._status.partners.length = 0;
 		return this;
@@ -964,7 +969,7 @@ export class CadViewer {
 		this.containers.outer.position.set(0);
 		this.containers.outer.scale.set(value);
 		this.containers.outer.position.set(this.width / 2, this.height / 2);
-		this.drawDimensions();
+		this._drawDimensions();
 		return this;
 	}
 
@@ -1253,20 +1258,21 @@ export class CadViewer {
 	}
 
 	reassembleComponents() {
-		try {
-			let data = this.data.components.data;
-			this.data.components.data = [];
-			data.forEach(component => this.addComponent(component));
-			data = null;
-			let conntions = this.data.components.connections || [];
-			this.data.components.connections = [];
-			conntions.forEach(conn => this.assembleComponents(conn));
-			conntions = null;
-		} catch (error) {
-			console.warn(error);
-		} finally {
-			return this;
-		}
+		let data = this.data.components.data;
+		this.data.components.data = [];
+		data.forEach(component => this.addComponent(component));
+		data = null;
+		let conntions = this.data.components.connections || [];
+		this.data.components.connections = [];
+		conntions.forEach(conn => {
+			try {
+				this.assembleComponents(conn);
+			} catch (error) {
+				console.warn(error);
+			}
+		});
+		conntions = null;
+		return this;
 	}
 
 	get currentComponent() {

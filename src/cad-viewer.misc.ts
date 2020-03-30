@@ -41,7 +41,8 @@ export interface Config {
 	dragAxis?: "x" | "y" | "xy" | "";
 	transparent?: boolean;
 	fps?: number; // 每秒内执行render方法的最大次数
-	drawMText?: boolean;
+	drawMTexts?: boolean;
+	drawDimensions?: boolean;
 	drawPolyline?: false;
 	reverseSimilarColor?: true; // 颜色与背景相近时反相显示
 }
@@ -59,7 +60,8 @@ export const defaultConfig: Config = {
 	dragAxis: "xy",
 	transparent: false,
 	fps: 60,
-	drawMText: false,
+	drawMTexts: false,
+	drawDimensions: false,
 	drawPolyline: false,
 	reverseSimilarColor: true
 };
