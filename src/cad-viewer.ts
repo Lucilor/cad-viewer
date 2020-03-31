@@ -24,6 +24,10 @@ function num2Str(number: number, fixed?: number) {
 	return Number(number.toFixed(fixed)).toString();
 }
 
+declare type DraggingEvent = (event: PointerEvent) => void;
+declare type WheelingEvent = (event: WheelEvent) => void;
+declare type KeyboardEvent0 = (event: KeyboardEvent) => void;
+
 export class CadViewer {
 	app: PIXI.Application;
 	containers: {
@@ -46,6 +50,13 @@ export class CadViewer {
 	};
 	private _renderTimer = {id: null, time: 0};
 	private _emitter: EventEmitter;
+	private _events: {
+		onDragStart: DraggingEvent;
+		onDrag: DraggingEvent;
+		onDragEnd: DraggingEvent;
+		onWheel: WheelingEvent;
+		onKeyDown: KeyboardEvent0;
+	};
 
 	view: HTMLDivElement;
 	data: CadData;
@@ -91,6 +102,7 @@ export class CadViewer {
 		outer.position.set(width / 2, height / 2);
 		this._emitter = new EventEmitter();
 		this._status = {from: new Point(), to: new Point(), isDragging: false, button: null, dimensions: [], partners: []};
+		this._events = {onDragStart: () => {}, onDrag: () => {}, onDragEnd: () => {}, onWheel: () => {}, onKeyDown: () => {}};
 
 		this.data = {
 			entities: [],
@@ -106,16 +118,24 @@ export class CadViewer {
 		};
 		this._scale = 1;
 
-		this.view = document.createElement("div");
+		const view = document.createElement("div");
+		this.view = view;
 		if (data.name) {
-			this.view.id = data.name;
+			view.id = data.name;
 		}
-		this.view.classList.add("cad-viewer");
-		this.view.style.width = width + "px";
-		this.view.style.height = height + "px";
-		this.view.appendChild(this.app.view);
+		view.classList.add("cad-viewer");
+		view.style.width = width + "px";
+		view.style.height = height + "px";
+		view.appendChild(this.app.view);
 
 		this.reassembleComponents();
+		view.addEventListener("pointerdown", event => this._events.onDragStart(event));
+		view.addEventListener("pointermove", event => this._events.onDrag(event));
+		["pointercancel", "pointerleave", "pointerout", "pointerup"].forEach(v => {
+			view.addEventListener(v, (event: PointerEvent) => this._events.onDragEnd(event));
+		});
+		view.addEventListener("wheel", event => this._events.onWheel(event));
+		view.addEventListener("keydown", event => this._events.onKeyDown(event));
 		return this;
 	}
 
@@ -541,10 +561,10 @@ export class CadViewer {
 
 	render(center = false, mode: number = 0b111, entities?: CadEntity[], style: LineStyle = {}) {
 		const now = new Date().getTime();
-		const then = this._renderTimer.time + 1 / this.config.fps;
+		const then = this._renderTimer.time + 1 / this.config.fps * 1000;
 		if (now < then) {
 			window.clearTimeout(this._renderTimer.id);
-			this._renderTimer.id = setTimeout(() => this.render(center), then - now);
+			this._renderTimer.id = setTimeout(() => this.render(center, mode, entities, style), then - now);
 			return this;
 		}
 		this._renderTimer.time = now;
@@ -746,149 +766,164 @@ export class CadViewer {
 		return type === "object" ? transformData(result, "object") : result;
 	}
 
-	enableDragging() {
-		const {view} = this;
-		const onDragStart = (event: MouseEvent | TouchEvent) => {
-			const {clientX: x, clientY: y} = event instanceof TouchEvent ? event.targetTouches[0] : event;
-			this._status.from.set(x, y);
-			this._status.to.set(x, y);
-			this._status.isDragging = true;
-			this._emitter.emit(Events.dragstart, event);
-			this._status.button = (event as MouseEvent).button;
-		};
-		const onDrag = (event: MouseEvent | TouchEvent) => {
-			if (this._status.isDragging) {
+	enableDragging(onDragStart?: DraggingEvent, onDrag?: DraggingEvent, onDragEnd?: DraggingEvent) {
+		const flags = [true, true, true];
+		if (typeof onDragStart !== "function") {
+			onDragStart = event => {
 				const {clientX: x, clientY: y} = event instanceof TouchEvent ? event.targetTouches[0] : event;
-				const {from, to, componentName} = this._status;
-				if (this._status.button === 1 || (event.shiftKey && this._status.button === 0)) {
-					const position = this.getPosition();
-					const offset = new Point(x - to.x, to.y - y).divide(this._scale);
-					if (componentName) {
-						const component = this.data.components.data.find(v => v.name === componentName);
-						if (component) {
-							this.moveComponent(component, offset);
-							this.render(false, 0b001);
+				this._status.from.set(x, y);
+				this._status.to.set(x, y);
+				this._status.isDragging = true;
+				this._emitter.emit(Events.dragstart, event);
+				this._status.button = (event as MouseEvent).button;
+			};
+			flags[0] = false;
+		}
+		if (typeof onDrag !== "function") {
+			onDrag = event => {
+				if (this._status.isDragging) {
+					const {clientX: x, clientY: y} = event instanceof TouchEvent ? event.targetTouches[0] : event;
+					const {from, to, componentName} = this._status;
+					if (this._status.button === 1 || (event.shiftKey && this._status.button === 0)) {
+						const position = this.getPosition();
+						const offset = new Point(x - to.x, to.y - y).divide(this._scale);
+						if (componentName) {
+							const component = this.data.components.data.find(v => v.name === componentName);
+							if (component) {
+								this.moveComponent(component, offset);
+								this.render(false, 0b001);
+							}
+						} else {
+							if (!this.config.dragAxis.includes("x")) {
+								offset.x = 0;
+							}
+							if (!this.config.dragAxis.includes("y")) {
+								offset.y = 0;
+							}
+							this.setPosition(position.add(offset));
 						}
 					} else {
-						if (!this.config.dragAxis.includes("x")) {
-							offset.x = 0;
+						if (this.config.selectMode === "multiple") {
+							this.drawMultiSelector(new Rectangle(from, x - from.x, y - from.y));
 						}
-						if (!this.config.dragAxis.includes("y")) {
-							offset.y = 0;
-						}
-						this.setPosition(position.add(offset));
 					}
+					this._emitter.emit(Events.drag, event);
+					this._status.to.set(x, y);
+				}
+			};
+			flags[1] = false;
+		}
+		if (typeof onDragEnd !== "function") {
+			onDragEnd = event => {
+				const {from, to, isDragging} = this._status;
+				if (isDragging) {
+					this.clearMultiSelector();
+					if (this.config.selectMode === "multiple" && event instanceof MouseEvent && event.button === 0) {
+						const x = Math.min(from.x, to.x);
+						const y = Math.max(from.y, to.y);
+						const width = Math.abs(from.x - to.x);
+						const height = Math.abs(from.y - to.y);
+						const rect = new Rectangle(new Point(x, y), width, height);
+						const toBeSelected: CadEntity[] = [];
+						for (const entity of this.data.entities) {
+							if (!entity.selectable) {
+								continue;
+							}
+							if (entity.type === CadTypes.Line) {
+								const lineEntity = entity as CadLine;
+								const start = this.translatePoint(new Point(lineEntity.start));
+								const end = this.translatePoint(new Point(lineEntity.end));
+								if (rect.containsLine(new Line(start, end))) {
+									toBeSelected.push(entity);
+								}
+							} else if (entity.type === CadTypes.Arc) {
+								const arcEntity = entity as CadArc;
+								const start = new Angle(arcEntity.start_angle, "deg");
+								const end = new Angle(arcEntity.end_angle, "deg");
+								const arc = new Arc(new Point(arcEntity.center), arcEntity.radius, start, end);
+								if (
+									rect.containsPoint(this.translatePoint(arc.startPoint)) &&
+									rect.containsPoint(this.translatePoint(arc.endPoint))
+								) {
+									toBeSelected.push(entity);
+								}
+							} else if (entity.type === CadTypes.Circle) {
+								const circleEntity = entity as CadCircle;
+								const center = this.translatePoint(new Point(circleEntity.center));
+								if (rect.containsPoint(center)) {
+									toBeSelected.push(entity);
+								}
+							}
+						}
+						const allSelected = toBeSelected.every(e => e.selected);
+						toBeSelected.forEach(entity => (entity.selected = !allSelected));
+						this.render(false, null, toBeSelected);
+					}
+					this._emitter.emit(Events.dragend, event);
+				}
+				this._status.isDragging = false;
+			};
+			flags[2] = false;
+		}
+		if (new Set(flags).size > 1) {
+			console.warn("正常情况下，设置拖拽事件时你应该同时设置3个（前中后）事件。");
+		}
+		this._events.onDragStart = onDragStart;
+		this._events.onDrag = onDrag;
+		this._events.onDragEnd = onDragEnd;
+		return this;
+	}
+
+	enableWheeling(onWheel?: WheelingEvent) {
+		if (typeof onWheel !== "function") {
+			onWheel = event => {
+				const factor = 1.2;
+				if (event.deltaY > 0) {
+					this.setScale(this._scale / factor);
 				} else {
-					if (this.config.selectMode === "multiple") {
-						this.drawMultiSelector(new Rectangle(from, x - from.x, y - from.y));
-					}
+					this.setScale(this._scale * factor);
 				}
-				this._emitter.emit(Events.drag, event);
-				this._status.to.set(x, y);
-			}
-		};
-		const onDragEnd = (event: MouseEvent | TouchEvent) => {
-			const {from, to, isDragging} = this._status;
-			if (isDragging) {
-				this.clearMultiSelector();
-				if (this.config.selectMode === "multiple" && event instanceof MouseEvent && event.button === 0) {
-					const x = Math.min(from.x, to.x);
-					const y = Math.max(from.y, to.y);
-					const width = Math.abs(from.x - to.x);
-					const height = Math.abs(from.y - to.y);
-					const rect = new Rectangle(new Point(x, y), width, height);
-					const toBeSelected: CadEntity[] = [];
-					for (const entity of this.data.entities) {
-						if (!entity.selectable) {
-							continue;
-						}
-						if (entity.type === CadTypes.Line) {
-							const lineEntity = entity as CadLine;
-							const start = this.translatePoint(new Point(lineEntity.start));
-							const end = this.translatePoint(new Point(lineEntity.end));
-							if (rect.containsLine(new Line(start, end))) {
-								toBeSelected.push(entity);
-							}
-						} else if (entity.type === CadTypes.Arc) {
-							const arcEntity = entity as CadArc;
-							const start = new Angle(arcEntity.start_angle, "deg");
-							const end = new Angle(arcEntity.end_angle, "deg");
-							const arc = new Arc(new Point(arcEntity.center), arcEntity.radius, start, end);
-							if (
-								rect.containsPoint(this.translatePoint(arc.startPoint)) &&
-								rect.containsPoint(this.translatePoint(arc.endPoint))
-							) {
-								toBeSelected.push(entity);
-							}
-						} else if (entity.type === CadTypes.Circle) {
-							const circleEntity = entity as CadCircle;
-							const center = this.translatePoint(new Point(circleEntity.center));
-							if (rect.containsPoint(center)) {
-								toBeSelected.push(entity);
-							}
-						}
-					}
-					const allSelected = toBeSelected.every(e => e.selected);
-					toBeSelected.forEach(entity => (entity.selected = !allSelected));
-					this.render(false, null, toBeSelected);
-				}
-				this._emitter.emit(Events.dragend, event);
-			}
-			this._status.isDragging = false;
-		};
-
-		view.addEventListener("pointerdown", onDragStart);
-		view.addEventListener("pointermove", onDrag);
-		["pointercancel", "pointerleave", "pointerout", "pointerup"].forEach(v => {
-			view.addEventListener(v, onDragEnd);
-		});
+				this.render();
+				this._emitter.emit(Events.wheel, event);
+			};
+		}
+		this._events.onWheel = onWheel;
 		return this;
 	}
 
-	enableWheeling() {
-		this.view.addEventListener("wheel", event => {
-			const factor = 1.2;
-			if (event.deltaY > 0) {
-				this.setScale(this._scale / factor);
-			} else {
-				this.setScale(this._scale * factor);
-			}
-			this.render();
-			this._emitter.emit(Events.wheel, event);
-		});
-		return this;
-	}
-
-	enableKeyboard() {
+	enableKeyboard(onKeyDown?: KeyboardEvent0) {
 		const {view} = this;
 		const step = 10 / this._scale;
 		view.tabIndex = 0;
 		view.focus();
-		view.addEventListener("keydown", event => {
-			const {x, y} = this.getPosition();
-			switch (event.key) {
-				case "w":
-				case "ArrowUp":
-					this.setPosition(new Point(x, y - step));
-					break;
-				case "a":
-				case "ArrowLeft":
-					this.setPosition(new Point(x + step, y));
-					break;
-				case "s":
-				case "ArrowDown":
-					this.setPosition(new Point(x, y + step));
-					break;
-				case "d":
-				case "ArrowRight":
-					this.setPosition(new Point(x - step, y));
-					break;
-				case "Escape":
-					this.unselectAll();
-					break;
-				default:
-			}
-		});
+		if (typeof onKeyDown !== "function") {
+			onKeyDown = event => {
+				const {x, y} = this.getPosition();
+				switch (event.key) {
+					case "w":
+					case "ArrowUp":
+						this.setPosition(new Point(x, y + step));
+						break;
+					case "a":
+					case "ArrowLeft":
+						this.setPosition(new Point(x - step, y));
+						break;
+					case "s":
+					case "ArrowDown":
+						this.setPosition(new Point(x, y - step));
+						break;
+					case "d":
+					case "ArrowRight":
+						this.setPosition(new Point(x + step, y));
+						break;
+					case "Escape":
+						this.unselectAll();
+						break;
+					default:
+				}
+			};
+		}
+		this._events.onKeyDown = onKeyDown;
 		return this;
 	}
 
@@ -1425,6 +1460,7 @@ export class CadViewer {
 					break;
 			}
 		});
+		return this;
 	}
 
 	clone() {
