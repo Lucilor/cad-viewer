@@ -2,9 +2,6 @@ const {CleanWebpackPlugin} = require("clean-webpack-plugin");
 
 module.exports = {
 	mode: "production",
-	entry: {
-		index: "./src/index.ts",
-	},
 	module: {
 		rules: [
 			{

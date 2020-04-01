@@ -3,6 +3,9 @@ const merge = require("webpack-merge");
 const common = require("./webpack.common.js");
 
 module.exports = merge(common, {
+	entry: {
+		"cad-viewer": "./src/index.ts"
+	},
 	devtool: "#source-map",
 	output: {
 		path: path.resolve(__dirname, "dist"),
