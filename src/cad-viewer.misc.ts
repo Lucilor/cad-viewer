@@ -1,5 +1,5 @@
 import {Point} from "@lucilor/utils";
-import {CadOption} from ".";
+import {CadOption, CadTypes} from ".";
 
 export interface LineStyle {
 	color?: number;
@@ -132,5 +132,12 @@ export function transformData(data: any, to: "array" | "object") {
 	}
 	data.partners?.forEach(v => transformData(v, to));
 	data.components?.data.forEach(v => transformData(v, to));
+	if (Array.isArray(data.entities)) {
+		data.entities.forEach(e => {
+			if (e.type === CadTypes.Arc && typeof e.clockwise !== "boolean") {
+				e.clockwise = false;
+			}
+		});
+	}
 	return data;
 }

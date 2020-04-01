@@ -222,9 +222,6 @@ export class CadViewer {
 		if (style && style.color) {
 			colorRGB = style.color;
 		}
-		if (entity.clockwise === undefined) {
-			entity.clockwise = false;
-		}
 		const lineWidth = style && style.lineWidth ? style.lineWidth : entity.lineWidth;
 		const {center, radius, start_angle, end_angle} = entity;
 		const start = new Angle(start_angle, "deg").constrain();

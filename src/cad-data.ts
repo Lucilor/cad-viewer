@@ -99,8 +99,8 @@ export interface CadOption {
 	value: string;
 }
 
-export interface CadData<T extends CadEntity = CadEntity> {
-	entities?: T[];
+export interface CadData {
+	entities?: CadEntity[];
 	layers?: CadLayer[];
 	id?: string;
 	name?: string;
