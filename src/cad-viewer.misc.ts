@@ -1,5 +1,5 @@
 import {Point} from "@lucilor/utils";
-import {CadOption, CadTypes} from ".";
+import {CadOption, CadTypes} from "./cad-data";
 
 export interface LineStyle {
 	color?: number;

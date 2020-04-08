@@ -1,6 +1,6 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
@@ -31,9 +31,9 @@
 		"eslint": "^6.8.0",
 		"terser-webpack-plugin": "^2.3.5",
 		"ts-loader": "^6.2.2",
-		"tslint": "^6.1.0",
+		"tslint": "^6.1.1",
 		"typescript": "^3.8.3",
-		"webpack": "^4.42.0",
+		"webpack": "^4.42.1",
 		"webpack-cli": "^3.3.11",
 		"webpack-merge": "^4.2.2",
 		"webpack-node-externals": "^1.7.2"
@@ -42,6 +42,6 @@
 		"@lucilor/utils": "^1.0.18",
 		"lodash": "^4.17.15",
 		"pixi.js": "^5.2.1",
-		"uuid": "^7.0.2"
+		"uuid": "^7.0.3"
 	}
 }

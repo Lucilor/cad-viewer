@@ -558,7 +558,7 @@ export class CadViewer {
 
 	render(center = false, mode: number = 0b111, entities?: CadEntity[], style: LineStyle = {}) {
 		const now = new Date().getTime();
-		const then = this._renderTimer.time + 1 / this.config.fps * 1000;
+		const then = this._renderTimer.time + (1 / this.config.fps) * 1000;
 		if (now < then) {
 			window.clearTimeout(this._renderTimer.id);
 			this._renderTimer.id = setTimeout(() => this.render(center, mode, entities, style), then - now);

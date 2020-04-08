@@ -1,5 +1,5 @@
 import {CadViewer} from "./cad-viewer";
-import {Events} from "./cad-viewer.misc";
+import {Events, Config, defaultConfig, transformData} from "./cad-viewer.misc";
 import {
 	CadTypes,
 	TextInfo,
@@ -49,5 +49,8 @@ export {
 	Component,
 	Components,
 	Connection,
-	ComponentPosition
+	ComponentPosition,
+	Config,
+	defaultConfig,
+	transformData
 };
