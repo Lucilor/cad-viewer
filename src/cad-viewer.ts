@@ -12,7 +12,7 @@ import {
 	Connection,
 	CadLWPolyline,
 	Dimension,
-	CadHatch
+	CadHatch,
 } from "./cad-data";
 import {Line, Rectangle, Point, Arc, Angle, RGB2Index, index2RGB} from "@lucilor/utils";
 import {EventEmitter} from "events";
@@ -114,7 +114,7 @@ export class CadViewer {
 			partners: [],
 			components: {data: [], connections: []},
 			dimensions: [],
-			...data
+			...data,
 		};
 		this._scale = 1;
 
@@ -129,13 +129,13 @@ export class CadViewer {
 		view.appendChild(this.app.view);
 
 		this.reassembleComponents();
-		view.addEventListener("pointerdown", event => this._events.onDragStart(event));
-		view.addEventListener("pointermove", event => this._events.onDrag(event));
-		["pointercancel", "pointerleave", "pointerout", "pointerup"].forEach(v => {
+		view.addEventListener("pointerdown", (event) => this._events.onDragStart(event));
+		view.addEventListener("pointermove", (event) => this._events.onDrag(event));
+		["pointercancel", "pointerleave", "pointerout", "pointerup"].forEach((v) => {
 			view.addEventListener(v, (event: PointerEvent) => this._events.onDragEnd(event));
 		});
-		view.addEventListener("wheel", event => this._events.onWheel(event));
-		view.addEventListener("keydown", event => this._events.onKeyDown(event));
+		view.addEventListener("wheel", (event) => this._events.onWheel(event));
+		view.addEventListener("keydown", (event) => this._events.onKeyDown(event));
 		return this;
 	}
 
@@ -164,9 +164,9 @@ export class CadViewer {
 		const main = this.containers.main;
 		const {showLineLength, drawMTexts} = this.config;
 		const name = "lineLength - " + entity.id;
-		const texts = drawMTexts ? [entity.gongshi, entity.qujian, entity.mingzi].filter(v => v) : [];
+		const texts = drawMTexts ? [entity.gongshi, entity.qujian, entity.mingzi].filter((v) => v) : [];
 		const textStyle = new PIXI.TextStyle({align: "center", fontSize: showLineLength * this._scale, fill: this._correctColor(0xffffff)});
-		let lineLength = main.children.find(o => o.name === name) as PIXI.Text;
+		let lineLength = main.children.find((o) => o.name === name) as PIXI.Text;
 		if (showLineLength > 0) {
 			const lengthText = num2Str(line.length);
 			texts.push(lengthText);
@@ -200,7 +200,7 @@ export class CadViewer {
 			lineLength?.destroy();
 		}
 
-		let sprite = container.children.find(o => o.name === "sprite") as PIXI.Sprite;
+		let sprite = container.children.find((o) => o.name === "sprite") as PIXI.Sprite;
 		if (!sprite) {
 			sprite = this._createGhostSprite(entity, new Point(0.5, 0));
 			entity.container.addChild(sprite);
@@ -239,7 +239,7 @@ export class CadViewer {
 		container.lineStyle(lineWidth, colorRGB);
 		container.arc(center[0], center[1], radius, start.rad, end.rad, entity.clockwise);
 
-		let sprite = container.children.find(o => o instanceof PIXI.Sprite) as PIXI.Sprite;
+		let sprite = container.children.find((o) => o instanceof PIXI.Sprite) as PIXI.Sprite;
 		if (!sprite) {
 			sprite = this._createGhostSprite(entity, new Point(0.5, 1));
 			entity.container.addChild(sprite);
@@ -275,7 +275,7 @@ export class CadViewer {
 		container.lineStyle(lineWidth, colorRGB);
 		container.drawCircle(center[0], center[1], radius);
 
-		let sprite = container.children.find(o => o instanceof PIXI.Sprite) as PIXI.Sprite;
+		let sprite = container.children.find((o) => o instanceof PIXI.Sprite) as PIXI.Sprite;
 		if (!sprite) {
 			sprite = this._createGhostSprite(entity, new Point(0.5, 0.5));
 			entity.container.addChild(sprite);
@@ -296,9 +296,9 @@ export class CadViewer {
 			}
 			entity.container = container;
 			container.interactive = true;
-			container.on("pointerover", event => this._onEntityHover(event, entity));
-			container.on("pointerdown", event => this._onEntityClick(event, entity));
-			container.on("pointerout", event => this._onEntityOut(event, entity));
+			container.on("pointerover", (event) => this._onEntityHover(event, entity));
+			container.on("pointerdown", (event) => this._onEntityClick(event, entity));
+			container.on("pointerout", (event) => this._onEntityOut(event, entity));
 		}
 		let position: Point;
 		let fontSize = entity.font_size * 1.25;
@@ -367,7 +367,7 @@ export class CadViewer {
 		}
 
 		const color = this._correctColor(0);
-		entity.paths.forEach(path => {
+		entity.paths.forEach((path) => {
 			container.beginFill(color);
 			if (Array.isArray(path.edges)) {
 				path.edges.forEach((edge, i) => {
@@ -390,8 +390,8 @@ export class CadViewer {
 	}
 
 	private _drawDimensions() {
-		this.data.dimensions = this.data.dimensions.filter(d => d);
-		this.data.dimensions.forEach(d => {
+		this.data.dimensions = this.data.dimensions.filter((d) => d);
+		this.data.dimensions.forEach((d) => {
 			const container = this._drawDimension(d);
 			this._status.dimensions.push(container);
 		});
@@ -542,9 +542,9 @@ export class CadViewer {
 
 	unselectAll() {
 		let entities = this.data.entities;
-		this.data.partners.forEach(v => (entities = entities.concat(v.entities)));
-		this.data.components.data.forEach(v => (entities = entities.concat(v.entities)));
-		entities.forEach(e => (e.selected = false));
+		this.data.partners.forEach((v) => (entities = entities.concat(v.entities)));
+		this.data.components.data.forEach((v) => (entities = entities.concat(v.entities)));
+		entities.forEach((e) => (e.selected = false));
 		return this.render();
 	}
 
@@ -633,24 +633,24 @@ export class CadViewer {
 			this.center();
 		}
 		if (entities) {
-			entities.forEach(entity => draw(entity, this.containers.main));
+			entities.forEach((entity) => draw(entity, this.containers.main));
 		} else {
 			if (mode & 0b100) {
-				this.data.entities.forEach(entity => draw(entity, this.containers.main));
+				this.data.entities.forEach((entity) => draw(entity, this.containers.main));
 			}
 			if (mode & 0b010) {
-				this._status.partners.forEach(i => {
-					this.data.partners[i].entities.forEach(entity => draw(entity, this.containers.partners));
+				this._status.partners.forEach((i) => {
+					this.data.partners[i].entities.forEach((entity) => draw(entity, this.containers.partners));
 				});
 			}
 			if (mode & 0b001) {
 				this.data.components.data.forEach((component, i) => {
-					component.entities.forEach(entity => draw(entity, this.containers.components));
+					component.entities.forEach((entity) => draw(entity, this.containers.components));
 				});
 			}
 		}
 
-		this._status.dimensions.forEach(d => d?.destroy());
+		this._status.dimensions.forEach((d) => d?.destroy());
 		this._status.dimensions.length = 0;
 		if (this.config.drawDimensions) {
 			this._drawDimensions();
@@ -672,10 +672,10 @@ export class CadViewer {
 		const scale = Math.min(scaleX, scaleY);
 		this.config.minScale = Math.min(scale, minScale);
 		this.config.maxScale = Math.max(scale, maxScale);
-		this.setScale(scale);
+		this.scale = scale;
 		const positionX = (width - rect.width + (padding[3] - padding[1]) / scale) / 2 - rect.x;
 		const positionY = (height - rect.height + (padding[2] - padding[0]) / scale) / 2 - rect.y;
-		this.setPosition(new Point(positionX, positionY));
+		this.position = new Point(positionX, positionY);
 		return this;
 	}
 
@@ -689,8 +689,8 @@ export class CadViewer {
 	}
 
 	addEntities(entities: CadEntity[]) {
-		const ids = this.data.entities.map(v => v.id);
-		entities.forEach(e => {
+		const ids = this.data.entities.map((v) => v.id);
+		entities.forEach((e) => {
 			const idx = ids.indexOf(e.id);
 			e.container = null;
 			if (idx > -1) {
@@ -702,16 +702,16 @@ export class CadViewer {
 	}
 
 	removeEntities(entities: CadEntity[]) {
-		const ids = entities.map(v => {
+		const ids = entities.map((v) => {
 			this.containers.inner.removeChild(v.container);
 			return v.id;
 		});
 		const exclude = (e: CadEntity) => !ids.includes(e.id);
 		this.data.entities = this.data.entities.filter(exclude);
-		this.data.partners.forEach(partner => {
+		this.data.partners.forEach((partner) => {
 			partner.entities = partner.entities.filter(exclude);
 		});
-		this.data.components.data.forEach(component => {
+		this.data.components.data.forEach((component) => {
 			component.entities = component.entities.filter(exclude);
 		});
 		return this;
@@ -744,29 +744,29 @@ export class CadViewer {
 			}
 		}
 		if (Array.isArray(result.options)) {
-			result.options = result.options.filter(c => c.value && c.name);
+			result.options = result.options.filter((c) => c.value && c.name);
 		} else {
 			result.options = [];
 		}
 		if (Array.isArray(result.conditions)) {
-			result.conditions = result.conditions.filter(c => c.length);
+			result.conditions = result.conditions.filter((c) => c.length);
 		} else {
 			result.conditions = [];
 		}
 		if (Array.isArray(result.dimensions)) {
-			result.dimensions = result.dimensions.filter(d => d.entity1 && d.entity1.id && d.entity2 && d.entity2.id);
+			result.dimensions = result.dimensions.filter((d) => d.entity1 && d.entity1.id && d.entity2 && d.entity2.id);
 		} else {
 			result.dimensions = [];
 		}
-		result.baseLines = result.baseLines.filter(l => l.name && l.valueX && l.valueY);
-		result.jointPoints = result.jointPoints.filter(p => p.name && p.valueX && p.valueY);
+		result.baseLines = result.baseLines.filter((l) => l.name && l.valueX && l.valueY);
+		result.jointPoints = result.jointPoints.filter((p) => p.name && p.valueX && p.valueY);
 		return type === "object" ? transformData(result, "object") : result;
 	}
 
 	enableDragging(onDragStart?: DraggingEvent, onDrag?: DraggingEvent, onDragEnd?: DraggingEvent) {
 		const flags = [true, true, true];
 		if (typeof onDragStart !== "function") {
-			onDragStart = event => {
+			onDragStart = (event) => {
 				const {clientX: x, clientY: y} = event instanceof TouchEvent ? event.targetTouches[0] : event;
 				this._status.from.set(x, y);
 				this._status.to.set(x, y);
@@ -777,15 +777,15 @@ export class CadViewer {
 			flags[0] = false;
 		}
 		if (typeof onDrag !== "function") {
-			onDrag = event => {
+			onDrag = (event) => {
 				if (this._status.isDragging) {
 					const {clientX: x, clientY: y} = event instanceof TouchEvent ? event.targetTouches[0] : event;
 					const {from, to, componentName} = this._status;
 					if (this._status.button === 1 || (event.shiftKey && this._status.button === 0)) {
-						const position = this.getPosition();
+						const position = this.position;
 						const offset = new Point(x - to.x, to.y - y).divide(this._scale);
 						if (componentName) {
-							const component = this.data.components.data.find(v => v.name === componentName);
+							const component = this.data.components.data.find((v) => v.name === componentName);
 							if (component) {
 								this.moveComponent(component, offset);
 								this.render(false, 0b001);
@@ -797,7 +797,7 @@ export class CadViewer {
 							if (!this.config.dragAxis.includes("y")) {
 								offset.y = 0;
 							}
-							this.setPosition(position.add(offset));
+							this.position = position.add(offset);
 						}
 					} else {
 						if (this.config.selectMode === "multiple") {
@@ -811,7 +811,7 @@ export class CadViewer {
 			flags[1] = false;
 		}
 		if (typeof onDragEnd !== "function") {
-			onDragEnd = event => {
+			onDragEnd = (event) => {
 				const {from, to, isDragging} = this._status;
 				if (isDragging) {
 					this.clearMultiSelector();
@@ -852,8 +852,8 @@ export class CadViewer {
 								}
 							}
 						}
-						const allSelected = toBeSelected.every(e => e.selected);
-						toBeSelected.forEach(entity => (entity.selected = !allSelected));
+						const allSelected = toBeSelected.every((e) => e.selected);
+						toBeSelected.forEach((entity) => (entity.selected = !allSelected));
 						this.render(false, null, toBeSelected);
 					}
 					this._emitter.emit(Events.dragend, event);
@@ -873,12 +873,12 @@ export class CadViewer {
 
 	enableWheeling(onWheel?: WheelingEvent) {
 		if (typeof onWheel !== "function") {
-			onWheel = event => {
+			onWheel = (event) => {
 				const factor = 1.2;
 				if (event.deltaY > 0) {
-					this.setScale(this._scale / factor);
+					this.scale = this._scale / factor;
 				} else {
-					this.setScale(this._scale * factor);
+					this.scale = this._scale * factor;
 				}
 				this.render();
 				this._emitter.emit(Events.wheel, event);
@@ -894,24 +894,24 @@ export class CadViewer {
 		view.tabIndex = 0;
 		view.focus();
 		if (typeof onKeyDown !== "function") {
-			onKeyDown = event => {
-				const {x, y} = this.getPosition();
+			onKeyDown = (event) => {
+				const {x, y} = this.position;
 				switch (event.key) {
 					case "w":
 					case "ArrowUp":
-						this.setPosition(new Point(x, y + step));
+						this.position = new Point(x, y + step);
 						break;
 					case "a":
 					case "ArrowLeft":
-						this.setPosition(new Point(x - step, y));
+						this.position = new Point(x - step, y);
 						break;
 					case "s":
 					case "ArrowDown":
-						this.setPosition(new Point(x, y - step));
+						this.position = new Point(x, y - step);
 						break;
 					case "d":
 					case "ArrowRight":
-						this.setPosition(new Point(x + step, y));
+						this.position = new Point(x + step, y);
 						break;
 					case "Escape":
 						this.unselectAll();
@@ -937,24 +937,40 @@ export class CadViewer {
 				partners: [],
 				components: {data: [], connections: []},
 				dimensions: [],
-				...data
+				...data,
 			};
 		}
 		this.data = this.exportData();
 		this.containers.main.removeChildren();
 		this.containers.partners.removeChildren();
 		this.containers.components.removeChildren();
-		this._status.dimensions.forEach(d => d?.destroy());
+		this._status.dimensions.forEach((d) => d?.destroy());
 		this._status.dimensions.length = 0;
 		this._status.partners.length = 0;
 		return this;
 	}
 
-	findEntity<T extends CadEntity = CadEntity>(id: string, entities?: CadEntity[]): T {
-		if (!entities) {
-			entities = this.data.entities;
-			this.data.partners.forEach(v => (entities = entities.concat(v.entities)));
-			this.data.components.data.forEach(v => (entities = entities.concat(v.entities)));
+	getEntities(mode = 0b111) {
+		let result: CadEntity[] = [];
+		if (mode & 0b100) {
+			result = result.concat(this.data.entities);
+		}
+		if (mode & 0b010) {
+			this.data.partners.forEach((partner) => {
+				result = result.concat(partner.entities);
+			});
+		}
+		if (mode & 0b001) {
+			this.data.components.data.forEach((component) => {
+				result = result.concat(component.entities);
+			});
+		}
+		return result;
+	}
+
+	findEntity<T extends CadEntity = CadEntity>(id: string, entities: CadEntity[] | number = 0b111): T {
+		if (typeof entities === "number") {
+			entities = this.getEntities(entities);
 		}
 		for (const entity of entities) {
 			if (entity.id === id) {
@@ -981,31 +997,29 @@ export class CadViewer {
 		return this;
 	}
 
-	getPosition() {
+	get position() {
 		const {inner, outer} = this.containers;
 		const {x, y} = inner.position;
 		return new Point(x + outer.position.x, -y - outer.position.y);
 	}
 
-	setPosition(position: Point) {
+	set position(position: Point) {
 		const {inner, outer} = this.containers;
 		const {x, y} = position;
 		inner.position.set(x - outer.position.x, -y - outer.position.y);
-		return this;
 	}
 
-	getScale() {
+	get scale() {
 		return this._scale;
 	}
 
-	setScale(value: number) {
+	set scale(value: number) {
 		value = Math.max(this.config.minScale, Math.min(this.config.maxScale, value));
 		this._scale = value;
 		this.containers.outer.position.set(0);
 		this.containers.outer.scale.set(value);
 		this.containers.outer.position.set(this.width / 2, this.height / 2);
 		this._drawDimensions();
-		return this;
 	}
 
 	getSelectedEntities() {
@@ -1026,10 +1040,10 @@ export class CadViewer {
 			const thatJointPoints = partner.jointPoints;
 			if (Array.isArray(thatJointPoints)) {
 				for (const thatPoint of thatJointPoints) {
-					const thisPoint = thisJointPoints.find(p => p.name && p.name === thatPoint.name);
+					const thisPoint = thisJointPoints.find((p) => p.name && p.name === thatPoint.name);
 					if (thisPoint) {
 						const entities = partner.entities;
-						entities.forEach(e => this._purgeEntityData(e));
+						entities.forEach((e) => this._purgeEntityData(e));
 						const p1 = new Point(thisPoint.valueX, thisPoint.valueY);
 						const p2 = new Point(thatPoint.valueX, thatPoint.valueY);
 						if (!p1.equals(p2)) {
@@ -1051,7 +1065,7 @@ export class CadViewer {
 		offset1.y += (rect1.height - rect2.height) / 2;
 		this.transformEntities(component.entities, {translate: offset1});
 		const data = this.data.components.data;
-		const prev = data.findIndex(v => v.name === component.name);
+		const prev = data.findIndex((v) => v.name === component.name);
 		if (prev > -1) {
 			data[prev] = component;
 		} else {
@@ -1212,7 +1226,7 @@ export class CadViewer {
 		const toRemove = [];
 		const connectedToC1: string[] = [];
 		const connectedToC2: string[] = [];
-		components.connections.forEach(conn => {
+		components.connections.forEach((conn) => {
 			if (conn.names[0] === c1.name) {
 				connectedToC1.push(conn.names[1]);
 			}
@@ -1248,9 +1262,9 @@ export class CadViewer {
 	moveComponent(curr: Component, translate: Point, prev?: Component) {
 		this.transformEntities(curr.entities, {translate});
 		const map: object = {};
-		this.data.components.connections.forEach(conn => {
+		this.data.components.connections.forEach((conn) => {
 			if (conn.names.includes(curr.name)) {
-				conn.names.forEach(n => {
+				conn.names.forEach((n) => {
 					if (n !== curr.name && n !== prev?.name) {
 						if (!map[n]) {
 							map[n] = {};
@@ -1278,7 +1292,7 @@ export class CadViewer {
 			}
 		});
 		for (const name in map) {
-			const next = this.data.components.data.find(v => v.name === name);
+			const next = this.data.components.data.find((v) => v.name === name);
 			if (next) {
 				const newTranslate = translate.clone();
 				if (map[name].x === undefined) {
@@ -1295,11 +1309,11 @@ export class CadViewer {
 	reassembleComponents() {
 		let data = this.data.components.data;
 		this.data.components.data = [];
-		data.forEach(component => this.addComponent(component));
+		data.forEach((component) => this.addComponent(component));
 		data = null;
 		let conntions = this.data.components.connections || [];
 		this.data.components.connections = [];
-		conntions.forEach(conn => {
+		conntions.forEach((conn) => {
 			try {
 				this.assembleComponents(conn);
 			} catch (error) {
@@ -1326,24 +1340,24 @@ export class CadViewer {
 	flip(vertical = false, horizontal = false, anchor = new Point()) {
 		this.transformEntities(this.data.entities, {flip: {vertical, horizontal, anchor}});
 		this.calculateBaseLines();
-		this.data.baseLines.forEach(l => {
+		this.data.baseLines.forEach((l) => {
 			const point = new Point(l.valueX, l.valueY).flip(vertical, horizontal);
 			l.valueX = point.x;
 			l.valueY = point.y;
 		});
-		this.data.jointPoints.forEach(p => {
+		this.data.jointPoints.forEach((p) => {
 			const point = new Point(p.valueX, p.valueY).flip(vertical, horizontal);
 			p.valueX = point.x;
 			p.valueY = point.y;
 		});
 		if (this._status.partners.length) {
-			this._status.partners.forEach(i => {
+			this._status.partners.forEach((i) => {
 				const partner = this.data.partners[i];
 				this.transformEntities(partner.entities, {flip: {vertical, horizontal, anchor}});
 			});
 			this.joinPartners();
 		}
-		this.data.components.data.forEach(v => {
+		this.data.components.data.forEach((v) => {
 			this.transformEntities(v.entities, {flip: {vertical, horizontal, anchor}});
 		});
 		this.reassembleComponents();
@@ -1357,24 +1371,24 @@ export class CadViewer {
 		}
 		this.transformEntities(this.data.entities, {rotate: {angle, anchor}});
 		this.calculateBaseLines();
-		this.data.baseLines.forEach(l => {
+		this.data.baseLines.forEach((l) => {
 			const point = new Point(l.valueX, l.valueY).rotate(angle, anchor);
 			l.valueX = point.x;
 			l.valueY = point.y;
 		});
-		this.data.jointPoints.forEach(p => {
+		this.data.jointPoints.forEach((p) => {
 			const point = new Point(p.valueX, p.valueY).rotate(angle, anchor);
 			p.valueX = point.x;
 			p.valueY = point.y;
 		});
 		if (this._status.partners.length) {
-			this._status.partners.forEach(i => {
+			this._status.partners.forEach((i) => {
 				const partner = this.data.partners[i];
 				this.transformEntities(partner.entities, {rotate: {angle, anchor}});
 			});
 			this.joinPartners();
 		}
-		this.data.components.data.forEach(v => {
+		this.data.components.data.forEach((v) => {
 			this.transformEntities(v.entities, {rotate: {angle, anchor}});
 		});
 		this.reassembleComponents();
@@ -1382,7 +1396,7 @@ export class CadViewer {
 	}
 
 	flipComponent(name: string, vertical = false, horizontal = false, anchor = new Point()) {
-		const component = this.data.components.data.find(v => v.name === name);
+		const component = this.data.components.data.find((v) => v.name === name);
 		if (component) {
 			this.transformEntities(component.entities, {flip: {vertical, horizontal, anchor}});
 			this.reassembleComponents();
@@ -1393,7 +1407,7 @@ export class CadViewer {
 	}
 
 	rotateComponent(name: string, angle = 0, anchor?: Point) {
-		const component = this.data.components.data.find(v => v.name === name);
+		const component = this.data.components.data.find((v) => v.name === name);
 		if (component) {
 			this.transformEntities(component.entities, {rotate: {angle, anchor}});
 			this.reassembleComponents();
@@ -1405,7 +1419,7 @@ export class CadViewer {
 
 	transformEntities(entities: CadEntity[], transform: Tramsform) {
 		const {translate, flip, rotate} = transform;
-		entities.forEach(e => {
+		entities.forEach((e) => {
 			switch (e.type) {
 				case CadTypes.Line:
 					const lineEntity = e as CadLine;
@@ -1465,7 +1479,7 @@ export class CadViewer {
 	}
 
 	cloneComponent(name: string) {
-		const component = this.data.components.data.find(v => v.name === name);
+		const component = this.data.components.data.find((v) => v.name === name);
 		if (component) {
 			const newComponent = cloneDeep(component);
 			const arr = component.name.split("-");
@@ -1481,10 +1495,10 @@ export class CadViewer {
 					if (++counter >= 1000) {
 						throw new Error("set name failed.");
 					}
-				} while (this.data.components.data.find(v => v.name === newName));
+				} while (this.data.components.data.find((v) => v.name === newName));
 				newComponent.name = newName;
 			}
-			newComponent.entities.forEach(e => {
+			newComponent.entities.forEach((e) => {
 				e.id = UUID.v1();
 				this._purgeEntityData(e);
 			});
@@ -1538,10 +1552,10 @@ export class CadViewer {
 		};
 		if (!entities) {
 			entities = this.data.entities;
-			this._status.partners.forEach(i => {
+			this._status.partners.forEach((i) => {
 				entities = entities.concat(this.data.partners[i].entities);
 			});
-			this.data.components.data.forEach(v => (entities = entities.concat(v.entities)));
+			this.data.components.data.forEach((v) => (entities = entities.concat(v.entities)));
 		}
 		if (entities.length < 1) {
 			return new Rectangle(new Point(), 0, 0);
@@ -1567,7 +1581,7 @@ export class CadViewer {
 			}
 		}
 		let rect: PIXI.Rectangle;
-		this._status.dimensions.forEach(c => {
+		this._status.dimensions.forEach((c) => {
 			if (c) {
 				if (rect) {
 					rect.enlarge(c.getLocalBounds());
@@ -1626,9 +1640,9 @@ export class CadViewer {
 		sprite.anchor.set(anchor.x, anchor.y);
 		sprite.name = name;
 		sprite.interactive = true;
-		sprite.on("pointerover", event => this._onEntityHover(event, entity));
-		sprite.on("pointerout", event => this._onEntityOut(event, entity));
-		sprite.on("pointerdown", event => this._onEntityClick(event, entity));
+		sprite.on("pointerover", (event) => this._onEntityHover(event, entity));
+		sprite.on("pointerout", (event) => this._onEntityOut(event, entity));
+		sprite.on("pointerdown", (event) => this._onEntityClick(event, entity));
 		return sprite;
 	}
 
