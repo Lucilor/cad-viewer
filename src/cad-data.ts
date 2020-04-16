@@ -29,6 +29,16 @@ export interface CadEntity {
 	selectable?: boolean;
 }
 
+declare type CadEntities0 = {[key:string]:CadEntity[]};
+export interface CadEntities extends CadEntities0 {
+	line?: CadLine[];
+	arc?: CadArc[];
+	circle?: CadCircle[];
+	hatch?: CadHatch[];
+	dimension?: CadDimension[];
+	mtext?: CadMText[];
+}
+
 export interface CadLine extends CadEntity {
 	start: number[];
 	end: number[];
@@ -57,12 +67,20 @@ export interface CadMText extends CadEntity {
 }
 
 export interface CadDimension extends CadEntity {
-	defpoint: number[];
-	defpoint2: number[];
-	defpoint3: number[];
-	text: TextInfo;
+	// defpoint: number[];
+	// defpoint2: number[];
+	// defpoint3: number[];
+	// text: TextInfo;
 	font_size: number;
 	dimstyle: string;
+	axis: "x" | "y";
+	entity1?: {id: string; location: "start" | "end" | "center"};
+	entity2?: {id: string; location: "start" | "end" | "center"};
+	distance: number;
+	cad1?: string;
+	cad2?: string;
+	mingzi?: string;
+	qujian?: string;
 }
 
 export interface CadLWPolyline extends CadEntity {
@@ -100,7 +118,7 @@ export interface CadOption {
 }
 
 export interface CadData {
-	entities?: CadEntity[];
+	entities?: CadEntities;
 	layers?: CadLayer[];
 	id?: string;
 	name?: string;
@@ -112,8 +130,8 @@ export interface CadData {
 	parent?: string;
 	partners?: CadData[];
 	components?: Components;
-	dimensions?: Dimension[];
-	mtexts?: MText[];
+	// dimensions?: Dimension[];
+	// mtexts?: MText[];
 }
 
 export interface CadRawData extends CadData {
@@ -121,33 +139,28 @@ export interface CadRawData extends CadData {
 	globalText: (CadMText | CadDimension)[];
 }
 
-export interface Dimension {
-	axis: "x" | "y";
-	entity1: {id: string; location: "start" | "end" | "center"};
-	entity2: {id: string; location: "start" | "end" | "center"};
-	distance: number;
-	fontSize: number;
-	dimstyle: string;
-	cad1?: string;
-	cad2?: string;
-	mingzi?: string;
-	qujian?: string;
-}
+// export interface Dimension {
+// 	axis: "x" | "y";
+// 	entity1: {id: string; location: "start" | "end" | "center"};
+// 	entity2: {id: string; location: "start" | "end" | "center"};
+// 	distance: number;
+// 	fontSize: number;
+// 	dimstyle: string;
+// 	cad1?: string;
+// 	cad2?: string;
+// 	mingzi?: string;
+// 	qujian?: string;
+// }
 
-export interface MText {
-	entity: string;
-	distance: number;
-	text: string;
-	fontSize: number;
-}
-
-export interface Component {
-	name: string;
-	entities: CadEntity[];
-}
+// export interface MText {
+// 	entity: string;
+// 	distance: number;
+// 	text: string;
+// 	fontSize: number;
+// }
 
 export interface Components {
-	data: Component[];
+	data: CadData[];
 	connections: Connection[];
 }
 

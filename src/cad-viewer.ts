@@ -8,11 +8,10 @@ import {
 	CadTypes,
 	CadArc,
 	CadCircle,
-	Component,
 	Connection,
 	CadLWPolyline,
-	Dimension,
 	CadHatch,
+	CadEntities
 } from "./cad-data";
 import {Line, Rectangle, Point, Arc, Angle, RGB2Index, index2RGB} from "@lucilor/utils";
 import {EventEmitter} from "events";
@@ -45,7 +44,6 @@ export class CadViewer {
 		isDragging: boolean;
 		button: number;
 		componentName?: string;
-		dimensions: PIXI.Graphics[];
 		partners: number[];
 	};
 	private _renderTimer = {id: null, time: 0};
@@ -101,11 +99,11 @@ export class CadViewer {
 		main.sortableChildren = true;
 		outer.position.set(width / 2, height / 2);
 		this._emitter = new EventEmitter();
-		this._status = {from: new Point(), to: new Point(), isDragging: false, button: null, dimensions: [], partners: []};
+		this._status = {from: new Point(), to: new Point(), isDragging: false, button: null, partners: []};
 		this._events = {onDragStart: () => {}, onDrag: () => {}, onDragEnd: () => {}, onWheel: () => {}, onKeyDown: () => {}};
 
 		this.data = {
-			entities: [],
+			entities: {line: [], arc: [], circle: [], hatch: [], mtext: [], dimension: []},
 			baseLines: [],
 			jointPoints: [],
 			options: [],
@@ -113,8 +111,7 @@ export class CadViewer {
 			type: "",
 			partners: [],
 			components: {data: [], connections: []},
-			dimensions: [],
-			...data,
+			...data
 		};
 		this._scale = 1;
 
@@ -285,7 +282,7 @@ export class CadViewer {
 		sprite.position.set(center[0], center[1]);
 	}
 
-	drawText(entity: CadMText | CadDimension, style?: TextStyle, addTo?: PIXI.Container) {
+	drawText(entity: CadMText, style?: TextStyle, addTo?: PIXI.Container) {
 		let container = entity.container as PIXI.Text;
 		if (!(container instanceof PIXI.Text)) {
 			container = new PIXI.Text("");
@@ -308,9 +305,6 @@ export class CadViewer {
 		const color = style && style.color ? style.color : entity.colorRGB;
 		if (entity.type === CadTypes.MText) {
 			position = new Point((entity as CadMText).insert);
-		}
-		if (entity.type === CadTypes.Dimension) {
-			position = new Point((entity as CadDimension).defpoint);
 		}
 		const text = entity.text;
 		if (!text) {
@@ -389,36 +383,38 @@ export class CadViewer {
 		});
 	}
 
-	private _drawDimensions() {
-		this.data.dimensions = this.data.dimensions.filter((d) => d);
-		this.data.dimensions.forEach((d) => {
-			const container = this._drawDimension(d);
-			this._status.dimensions.push(container);
-		});
-		return this;
-	}
-
-	private _drawDimension(dimension: Dimension) {
-		const {mingzi, qujian, axis, distance, fontSize} = dimension;
-		if (!dimension.entity1 || !dimension.entity2 || !dimension.entity1.id || !dimension.entity2.id) {
-			return null;
+	drawDimension(entity: CadDimension, style?: {color?: number}, addTo?: PIXI.Container) {
+		const {mingzi, qujian, axis, distance, font_size} = entity;
+		let container = entity.container as PIXI.Graphics;
+		if (!(container instanceof PIXI.Graphics)) {
+			container = new PIXI.Graphics();
+			container.zIndex = -1;
+			if (addTo) {
+				addTo.addChild(container);
+			} else {
+				this.containers.inner.addChild(container);
+			}
+			entity.container = container;
 		}
-		const entity1 = this.findEntity(dimension.entity1.id) as CadLine;
-		const entity2 = this.findEntity(dimension.entity2.id) as CadLine;
+		if (!entity.entity1 || !entity.entity2 || !entity.entity1.id || !entity.entity2.id) {
+			return;
+		}
+		const entity1 = this.findEntity(entity.entity1.id) as CadLine;
+		const entity2 = this.findEntity(entity.entity2.id) as CadLine;
 		if (!entity1) {
-			console.warn(`线段${dimension.entity1.id}没找到`);
+			console.warn(`线段${entity1.id}没找到`);
 			return null;
 		}
 		if (!entity2) {
-			console.warn(`线段${dimension.entity2.id}没找到`);
+			console.warn(`线段${entity2.id}没找到`);
 			return null;
 		}
 		if (entity1.type !== CadTypes.Line) {
-			console.warn(`实体${dimension.entity1.id}不是线段`);
+			console.warn(`实体${entity1.id}不是线段`);
 			return null;
 		}
 		if (entity2.type !== CadTypes.Line) {
-			console.warn(`实体${dimension.entity2.id}不是线段`);
+			console.warn(`实体${entity2.id}不是线段`);
 			return null;
 		}
 		const line1 = new Line(new Point(entity1.start), new Point(entity1.end));
@@ -436,27 +432,20 @@ export class CadViewer {
 		};
 
 		const lineWidth = 1;
-		const color = this._correctColor(0x00ff00);
-		let p1 = getPoint(line1, dimension.entity1.location);
-		let p2 = getPoint(line2, dimension.entity2.location);
+		let colorRGB = entity.colorRGB;
+		if (style && style.color) {
+			colorRGB = style.color;
+		}
+		const color = this._correctColor(colorRGB);
+		let p1 = getPoint(line1, entity.entity1.location);
+		let p2 = getPoint(line2, entity.entity2.location);
 		let p3 = p1.clone();
 		let p4 = p2.clone();
 		const arrow1: Point[] = [];
 		const arrow2: Point[] = [];
-		const graphics = new PIXI.Graphics();
-		graphics.zIndex = -1;
-		graphics.lineStyle(lineWidth, color, 0.85);
-
-		let str = "";
-		if (mingzi) {
-			str = mingzi;
-		}
-		if (qujian) {
-			str = qujian;
-		}
-		const text = new PIXI.Text(str, new PIXI.TextStyle({fontSize: fontSize * this._scale, fill: color}));
-		text.scale.set(1 / this._scale, -1 / this._scale);
-		text.anchor.set(0.5, 1);
+		container.clear();
+		container.lineStyle(lineWidth, color, 0.85);
+		container.removeChildren();
 
 		const arrowSize = 1;
 		const arrowLength = arrowSize * Math.sqrt(3);
@@ -479,7 +468,6 @@ export class CadViewer {
 			const x = Math.max(p3.x, p4.x);
 			p3.x = x + distance;
 			p4.x = x + distance;
-			text.rotation = -Math.PI / 2;
 			if (p3.y < p4.y) {
 				[p3, p4] = [p4, p3];
 				[p1, p2] = [p2, p1];
@@ -491,28 +479,44 @@ export class CadViewer {
 			arrow2[1] = arrow2[0].clone().add(-arrowSize, arrowLength);
 			arrow2[2] = arrow2[0].clone().add(arrowSize, arrowLength);
 		}
-		graphics.moveTo(p1.x, p1.y);
-		graphics.lineTo(p3.x, p3.y);
-		graphics.lineTo(p4.x, p4.y);
-		graphics.lineTo(p2.x, p2.y);
+		container.moveTo(p1.x, p1.y);
+		container.lineTo(p3.x, p3.y);
+		container.lineTo(p4.x, p4.y);
+		container.lineTo(p2.x, p2.y);
 
-		graphics.beginFill(color);
-		graphics.moveTo(arrow1[0].x, arrow1[0].y);
-		graphics.lineTo(arrow1[1].x, arrow1[1].y);
-		graphics.lineTo(arrow1[2].x, arrow1[2].y);
-		graphics.closePath();
-		graphics.endFill();
-		graphics.beginFill(color);
-		graphics.moveTo(arrow2[0].x, arrow2[0].y);
-		graphics.lineTo(arrow2[1].x, arrow2[1].y);
-		graphics.lineTo(arrow2[2].x, arrow2[2].y);
-		graphics.closePath();
-		graphics.endFill();
+		container.beginFill(color);
+		container.moveTo(arrow1[0].x, arrow1[0].y);
+		container.lineTo(arrow1[1].x, arrow1[1].y);
+		container.lineTo(arrow1[2].x, arrow1[2].y);
+		container.closePath();
+		container.endFill();
+		container.beginFill(color);
+		container.moveTo(arrow2[0].x, arrow2[0].y);
+		container.lineTo(arrow2[1].x, arrow2[1].y);
+		container.lineTo(arrow2[2].x, arrow2[2].y);
+		container.closePath();
+		container.endFill();
+
+		let str = "";
+		if (mingzi) {
+			str = mingzi;
+		}
+		if (qujian) {
+			str = qujian;
+		}
+		if (str === "") {
+			str = "<>";
+		}
+		str = str.replace("<>", p3.distance(p4).toFixed(2));
+		const text = new PIXI.Text(str, new PIXI.TextStyle({fontSize: font_size * this._scale, fill: color}));
 		const midPoint = new Line(p3, p4).middle;
+		text.scale.set(1 / this._scale, -1 / this._scale);
+		text.anchor.set(0.5, 1);
 		text.position.set(midPoint.x, midPoint.y);
-		graphics.addChild(text);
-		this.containers.main.addChild(graphics);
-		return graphics;
+		if (axis === "y") {
+			text.rotation = -Math.PI / 2;
+		}
+		container.addChild(text);
 	}
 
 	drawMultiSelector(rect: Rectangle) {
@@ -541,10 +545,7 @@ export class CadViewer {
 	}
 
 	unselectAll() {
-		let entities = this.data.entities;
-		this.data.partners.forEach((v) => (entities = entities.concat(v.entities)));
-		this.data.components.data.forEach((v) => (entities = entities.concat(v.entities)));
-		entities.forEach((e) => (e.selected = false));
+		this.flatEntities().forEach((e) => (e.selected = false));
 		return this.render();
 	}
 
@@ -568,6 +569,9 @@ export class CadViewer {
 		const draw = (entity: CadEntity, container: PIXI.Container) => {
 			if (!entity) {
 				return;
+			}
+			if(!entity.id){
+				entity.id = UUID.v1();
 			}
 			const {color, layer} = entity;
 			const lineWidth = 1;
@@ -610,10 +614,10 @@ export class CadViewer {
 					}
 					break;
 				case CadTypes.Dimension:
-					if (this.config.drawMTexts && this._status.dimensions.length < 1) {
-						this.drawText(entity as CadDimension, localStyle, container);
+					if (this.config.drawDimensions) {
+						this.drawDimension(entity as CadDimension, localStyle, container);
 					} else if (entity.container) {
-						entity.container.destroy();
+						container.removeChild(entity.container);
 						entity.container = null;
 					}
 					break;
@@ -632,38 +636,17 @@ export class CadViewer {
 		if (center) {
 			this.center();
 		}
-		if (entities) {
-			entities.forEach((entity) => draw(entity, this.containers.main));
-		} else {
-			if (mode & 0b100) {
-				this.data.entities.forEach((entity) => draw(entity, this.containers.main));
-			}
-			if (mode & 0b010) {
-				this._status.partners.forEach((i) => {
-					this.data.partners[i].entities.forEach((entity) => draw(entity, this.containers.partners));
-				});
-			}
-			if (mode & 0b001) {
-				this.data.components.data.forEach((component, i) => {
-					component.entities.forEach((entity) => draw(entity, this.containers.components));
-				});
-			}
+		if (!entities) {
+			entities = this.flatEntities(this.data, mode);
 		}
+		entities.forEach((entity) => draw(entity, this.containers.main));
 
-		this._status.dimensions.forEach((d) => d?.destroy());
-		this._status.dimensions.length = 0;
-		if (this.config.drawDimensions) {
-			this._drawDimensions();
-			if (center) {
-				this.center();
-			}
-		}
 		const {x, y} = this.containers.inner.position;
 		this.containers.inner.setTransform(x, y, 1, -1, 0, 0, 0, 0, this.height);
 		return this;
 	}
 
-	center(entities?: CadEntity[]) {
+	center(entities = this.data.entities) {
 		const {width, height} = this;
 		const {padding, maxScale, minScale} = this.config;
 		const rect = this.getBounds(entities);
@@ -688,34 +671,35 @@ export class CadViewer {
 		return null;
 	}
 
-	addEntities(entities: CadEntity[]) {
-		const ids = this.data.entities.map((v) => v.id);
-		entities.forEach((e) => {
-			const idx = ids.indexOf(e.id);
-			e.container = null;
-			if (idx > -1) {
-				this.data.entities[idx] = e;
-			} else {
-				this.data.entities.push(e);
-			}
-		});
-	}
+	// addEntities(entities: CadEntity[]) {
+	// 	const ids = this.data.entities.map((v) => v.id);
+	// 	entities.forEach((e) => {
+	// 		switch e.type
+	// 		const idx = ids.indexOf(e.id);
+	// 		e.container = null;
+	// 		if (idx > -1) {
+	// 			this.data.entities[idx] = e;
+	// 		} else {
+	// 			this.data.entities.push(e);
+	// 		}
+	// 	});
+	// }
 
-	removeEntities(entities: CadEntity[]) {
-		const ids = entities.map((v) => {
-			this.containers.inner.removeChild(v.container);
-			return v.id;
-		});
-		const exclude = (e: CadEntity) => !ids.includes(e.id);
-		this.data.entities = this.data.entities.filter(exclude);
-		this.data.partners.forEach((partner) => {
-			partner.entities = partner.entities.filter(exclude);
-		});
-		this.data.components.data.forEach((component) => {
-			component.entities = component.entities.filter(exclude);
-		});
-		return this;
-	}
+	// removeEntities(entities: CadEntity[]) {
+	// 	const ids = entities.map((v) => {
+	// 		this.containers.inner.removeChild(v.container);
+	// 		return v.id;
+	// 	});
+	// 	const exclude = (e: CadEntity) => !ids.includes(e.id);
+	// 	this.data.entities = this.data.entities.filter(exclude);
+	// 	this.data.partners.forEach((partner) => {
+	// 		partner.entities = partner.entities.filter(exclude);
+	// 	});
+	// 	this.data.components.data.forEach((component) => {
+	// 		component.entities = component.entities.filter(exclude);
+	// 	});
+	// 	return this;
+	// }
 
 	destroy(removeView = true) {
 		this.reset({});
@@ -730,19 +714,7 @@ export class CadViewer {
 		this.calculateBaseLines();
 		this._sortComponents();
 		const result = cloneDeep(this.data);
-		for (const entity of result.entities) {
-			this._purgeEntityData(entity);
-		}
-		for (const partner of result.partners) {
-			for (const entity of partner.entities) {
-				this._purgeEntityData(entity);
-			}
-		}
-		for (const component of result.components.data) {
-			for (const entity of component.entities) {
-				this._purgeEntityData(entity);
-			}
-		}
+		this.flatEntities(result).forEach((e) => this._purgeEntityData(e));
 		if (Array.isArray(result.options)) {
 			result.options = result.options.filter((c) => c.value && c.name);
 		} else {
@@ -752,11 +724,6 @@ export class CadViewer {
 			result.conditions = result.conditions.filter((c) => c.length);
 		} else {
 			result.conditions = [];
-		}
-		if (Array.isArray(result.dimensions)) {
-			result.dimensions = result.dimensions.filter((d) => d.entity1 && d.entity1.id && d.entity2 && d.entity2.id);
-		} else {
-			result.dimensions = [];
 		}
 		result.baseLines = result.baseLines.filter((l) => l.name && l.valueX && l.valueY);
 		result.jointPoints = result.jointPoints.filter((p) => p.name && p.valueX && p.valueY);
@@ -822,7 +789,7 @@ export class CadViewer {
 						const height = Math.abs(from.y - to.y);
 						const rect = new Rectangle(new Point(x, y), width, height);
 						const toBeSelected: CadEntity[] = [];
-						for (const entity of this.data.entities) {
+						for (const entity of this.flatEntities()) {
 							if (!entity.selectable) {
 								continue;
 							}
@@ -928,7 +895,7 @@ export class CadViewer {
 		if (data) {
 			transformData(data, "array");
 			this.data = {
-				entities: [],
+				entities: {line: [], arc: [], circle: [], hatch: [], mtext: [], dimension: []},
 				baseLines: [],
 				jointPoints: [],
 				options: [],
@@ -936,33 +903,30 @@ export class CadViewer {
 				type: "",
 				partners: [],
 				components: {data: [], connections: []},
-				dimensions: [],
-				...data,
+				...data
 			};
 		}
 		this.data = this.exportData();
 		this.containers.main.removeChildren();
 		this.containers.partners.removeChildren();
 		this.containers.components.removeChildren();
-		this._status.dimensions.forEach((d) => d?.destroy());
-		this._status.dimensions.length = 0;
 		this._status.partners.length = 0;
 		return this;
 	}
 
-	getEntities(mode = 0b111) {
+	flatEntities(from = this.data, mode = 0b111) {
 		let result: CadEntity[] = [];
 		if (mode & 0b100) {
-			result = result.concat(this.data.entities);
+			result = result.concat(Object.values(from.entities).flat());
 		}
 		if (mode & 0b010) {
-			this.data.partners.forEach((partner) => {
-				result = result.concat(partner.entities);
+			from.partners.forEach((partner) => {
+				result = result.concat(Object.values(partner.entities).flat());
 			});
 		}
 		if (mode & 0b001) {
-			this.data.components.data.forEach((component) => {
-				result = result.concat(component.entities);
+			from.components.data.forEach((component) => {
+				result = result.concat(Object.values(component.entities).flat());
 			});
 		}
 		return result;
@@ -970,7 +934,7 @@ export class CadViewer {
 
 	findEntity<T extends CadEntity = CadEntity>(id: string, entities: CadEntity[] | number = 0b111): T {
 		if (typeof entities === "number") {
-			entities = this.getEntities(entities);
+			entities = this.flatEntities(this.data, entities);
 		}
 		for (const entity of entities) {
 			if (entity.id === id) {
@@ -1019,15 +983,14 @@ export class CadViewer {
 		this.containers.outer.position.set(0);
 		this.containers.outer.scale.set(value);
 		this.containers.outer.position.set(this.width / 2, this.height / 2);
-		this._drawDimensions();
 	}
 
 	getSelectedEntities() {
-		const result: CadEntity[] = [];
-		for (const entity of this.data.entities) {
-			if (entity.selected) {
-				result.push({...entity});
-			}
+		const result: CadEntities = {};
+		for (const key in this.data.entities) {
+			const data = cloneDeep(this.data.entities[key].filter((e) => e.selected));
+			data.forEach((e) => this._purgeEntityData(e));
+			result[key] = data;
 		}
 		return result;
 	}
@@ -1043,7 +1006,9 @@ export class CadViewer {
 					const thisPoint = thisJointPoints.find((p) => p.name && p.name === thatPoint.name);
 					if (thisPoint) {
 						const entities = partner.entities;
-						entities.forEach((e) => this._purgeEntityData(e));
+						Object.values(entities)
+							.flat()
+							.forEach((e) => this._purgeEntityData(e));
 						const p1 = new Point(thisPoint.valueX, thisPoint.valueY);
 						const p2 = new Point(thatPoint.valueX, thatPoint.valueY);
 						if (!p1.equals(p2)) {
@@ -1057,7 +1022,7 @@ export class CadViewer {
 		return this;
 	}
 
-	addComponent(component: Component) {
+	addComponent(component: CadData) {
 		const rect1 = this.getBounds();
 		const rect2 = this.getBounds(component.entities);
 		const offset1 = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
@@ -1077,8 +1042,8 @@ export class CadViewer {
 	assembleComponents(connection: Connection) {
 		const {names, lines, space, position, offset} = connection;
 		const components = this.data.components;
-		let c1: Component;
-		let c2: Component;
+		let c1: CadData;
+		let c2: CadData;
 		for (const c of components.data) {
 			if (c.name === names[0]) {
 				c1 = c;
@@ -1114,9 +1079,11 @@ export class CadViewer {
 		// 		}
 		// 	});
 		// }
+		const c1Entities = this.flatEntities(c1);
+		const c2Entities = this.flatEntities(c2);
 		if (position === "absolute") {
-			const e1 = this.findEntity(lines[0], c1.entities);
-			const e2 = this.findEntity(lines[1], c2.entities);
+			const e1 = this.findEntity(lines[0], c1Entities);
+			const e2 = this.findEntity(lines[1], c2Entities);
 			if (!e1 || !e2) {
 				throw new Error("未找到对应实体");
 			}
@@ -1173,9 +1140,9 @@ export class CadViewer {
 			if (isNaN(spParent)) {
 				throw new Error("相对定位的距离格式错误");
 			}
-			const e1 = this.findEntity<CadLine>(lines[0], c1.entities);
-			const e2 = this.findEntity<CadLine>(lines[1], c1.entities);
-			const e3 = this.findEntity(lines[2], c2.entities);
+			const e1 = this.findEntity<CadLine>(lines[0], c1Entities);
+			const e2 = this.findEntity<CadLine>(lines[1], c1Entities);
+			const e3 = this.findEntity(lines[2], c2Entities);
 			if (!e1 || !e2 || !e3) {
 				throw new Error("未找到对应实体");
 			}
@@ -1259,7 +1226,7 @@ export class CadViewer {
 		return this;
 	}
 
-	moveComponent(curr: Component, translate: Point, prev?: Component) {
+	moveComponent(curr: CadData, translate: Point, prev?: CadData) {
 		this.transformEntities(curr.entities, {translate});
 		const map: object = {};
 		this.data.components.connections.forEach((conn) => {
@@ -1417,58 +1384,51 @@ export class CadViewer {
 		return this;
 	}
 
-	transformEntities(entities: CadEntity[], transform: Tramsform) {
+	transformEntities(entities: CadEntities, transform: Tramsform) {
 		const {translate, flip, rotate} = transform;
-		entities.forEach((e) => {
-			switch (e.type) {
-				case CadTypes.Line:
-					const lineEntity = e as CadLine;
-					const line = new Line(new Point(lineEntity.start), new Point(lineEntity.end));
-					if (translate) {
-						line.start.add(translate);
-						line.end.add(translate);
-					}
-					if (flip) {
-						line.flip(flip.vertical, flip.horizontal, flip.anchor);
-					}
-					if (rotate) {
-						line.rotate(rotate.angle, rotate.anchor);
-					}
-					lineEntity.start = line.start.toArray();
-					lineEntity.end = line.end.toArray();
-					break;
-				case CadTypes.Arc:
-					const arcEntity = e as CadArc;
-					const start = new Angle(arcEntity.start_angle, "deg");
-					const end = new Angle(arcEntity.end_angle, "deg");
-					const arc = new Arc(new Point(arcEntity.center), arcEntity.radius, start, end, arcEntity.clockwise);
-					if (translate) {
-						arc.center.add(translate);
-					}
-					if (flip) {
-						arc.flip(flip.vertical, flip.horizontal, flip.anchor);
-					}
-					if (rotate) {
-						arc.rotate(rotate.angle, rotate.anchor);
-					}
-					arcEntity.center = arc.center.toArray();
-					arcEntity.start_angle = arc.startAngle.deg;
-					arcEntity.end_angle = arc.endAngle.deg;
-					arcEntity.clockwise = arc.clockwise;
-					break;
-				case CadTypes.Circle:
-					const circleEntity = e as CadCircle;
-					if (translate) {
-						circleEntity.center[0] += translate.x;
-						circleEntity.center[1] += translate.y;
-					}
-					if (flip) {
-						circleEntity.center = new Point(circleEntity.center).flip(flip.vertical, flip.horizontal, flip.anchor).toArray();
-					}
-					if (rotate) {
-						circleEntity.center = new Point(circleEntity.center).rotate(rotate.angle, rotate.anchor).toArray();
-					}
-					break;
+		entities.line?.forEach((entity) => {
+			const line = new Line(new Point(entity.start), new Point(entity.end));
+			if (translate) {
+				line.start.add(translate);
+				line.end.add(translate);
+			}
+			if (flip) {
+				line.flip(flip.vertical, flip.horizontal, flip.anchor);
+			}
+			if (rotate) {
+				line.rotate(rotate.angle, rotate.anchor);
+			}
+			entity.start = line.start.toArray();
+			entity.end = line.end.toArray();
+		});
+		entities.arc?.forEach((entity) => {
+			const start = new Angle(entity.start_angle, "deg");
+			const end = new Angle(entity.end_angle, "deg");
+			const arc = new Arc(new Point(entity.center), entity.radius, start, end, entity.clockwise);
+			if (translate) {
+				arc.center.add(translate);
+			}
+			if (flip) {
+				arc.flip(flip.vertical, flip.horizontal, flip.anchor);
+			}
+			if (rotate) {
+				arc.rotate(rotate.angle, rotate.anchor);
+			}
+			entity.center = arc.center.toArray();
+			entity.start_angle = arc.startAngle.deg;
+			entity.end_angle = arc.endAngle.deg;
+			entity.clockwise = arc.clockwise;
+		});
+		entities.circle?.forEach((entity) => {
+			if (translate) {
+				entity.center[0] += translate.x;
+				entity.center[1] += translate.y;
+			}
+			if (flip) {
+				entity.center = new Point(entity.center).flip(flip.vertical, flip.horizontal, flip.anchor).toArray();
+			}
+			if (rotate) {
+				entity.center = new Point(entity.center).rotate(rotate.angle, rotate.anchor).toArray();
 			}
 		});
 		return this;
@@ -1498,7 +1458,7 @@ export class CadViewer {
 				} while (this.data.components.data.find((v) => v.name === newName));
 				newComponent.name = newName;
 			}
-			newComponent.entities.forEach((e) => {
+			this.flatEntities(newComponent).forEach((e) => {
 				e.id = UUID.v1();
 				this._purgeEntityData(e);
 			});
@@ -1527,19 +1487,7 @@ export class CadViewer {
 		this.app.view.height = value;
 	}
 
-	// get localText() {
-	// 	const ids = this.data.entities.map(e => e.id);
-	// 	const result = [];
-	// 	const lineText = new CadDataManager().lineText;
-	// 	lineText.forEach(t => {
-	// 		if (t.text.to.every(id => ids.includes(id))) {
-	// 			result.push(cloneDeep(t));
-	// 		}
-	// 	});
-	// 	return result;
-	// }
-
-	getBounds(entities?: CadEntity[]) {
+	getBounds(entities = this.data.entities) {
 		let maxX = -Infinity;
 		let minX = Infinity;
 		let maxY = -Infinity;
@@ -1550,51 +1498,43 @@ export class CadViewer {
 			minX = Math.min(point.x, minX);
 			minY = Math.min(point.y, minY);
 		};
-		if (!entities) {
-			entities = this.data.entities;
-			this._status.partners.forEach((i) => {
-				entities = entities.concat(this.data.partners[i].entities);
-			});
-			this.data.components.data.forEach((v) => (entities = entities.concat(v.entities)));
-		}
-		if (entities.length < 1) {
-			return new Rectangle(new Point(), 0, 0);
-		}
-		for (const entity of entities) {
-			if (entity.type === CadTypes.Line) {
-				const {start, end} = entity as CadLine;
-				calc(new Point(start));
-				calc(new Point(end));
-			}
-			if (entity.type === CadTypes.Arc) {
-				const arcEntity = entity as CadArc;
-				const start = new Angle(arcEntity.start_angle, "deg");
-				const end = new Angle(arcEntity.end_angle, "deg");
-				const arc = new Arc(new Point(arcEntity.center), arcEntity.radius, start, end);
-				calc(arc.startPoint);
-				calc(arc.endPoint);
-			}
-			if (entity.type === CadTypes.Circle) {
-				const {center, radius} = entity as CadCircle;
-				calc(new Point(center).add(radius));
-				calc(new Point(center).sub(radius));
-			}
-		}
-		let rect: PIXI.Rectangle;
-		this._status.dimensions.forEach((c) => {
-			if (c) {
-				if (rect) {
-					rect.enlarge(c.getLocalBounds());
-				} else {
-					rect = c.getLocalBounds();
-				}
-			}
+		let counter = 0;
+		entities.line.forEach((entity) => {
+			const {start, end} = entity as CadLine;
+			calc(new Point(start));
+			calc(new Point(end));
+			counter++;
 		});
-		if (rect) {
-			maxX = Math.max(rect.right, maxX);
-			maxY = Math.max(rect.bottom, maxY);
-			minX = Math.min(rect.left, minX);
-			minY = Math.min(rect.top, minY);
+		entities.arc.forEach((entity) => {
+			const start = new Angle(entity.start_angle, "deg");
+			const end = new Angle(entity.end_angle, "deg");
+			const arc = new Arc(new Point(entity.center), entity.radius, start, end);
+			calc(arc.startPoint);
+			calc(arc.endPoint);
+			counter++;
+		});
+		entities.circle.forEach((entity) => {
+			const {center, radius} = entity;
+			calc(new Point(center).add(radius));
+			calc(new Point(center).sub(radius));
+			counter++;
+		});
+		// let rect: PIXI.Rectangle;
+		// entities.dimension.forEach((entity) => {
+		// 	if (rect && entity.container) {
+		// 		rect.enlarge(entity.container?.getLocalBounds());
+		// 	} else {
+		// 		rect = entity.container.getLocalBounds();
+		// 	}
+		// });
+		// if (rect) {
+		// 	maxX = Math.max(rect.right, maxX);
+		// 	maxY = Math.max(rect.bottom, maxY);
+		// 	minX = Math.min(rect.left, minX);
+		// 	minY = Math.min(rect.top, minY);
+		// }
+		if (counter === 0) {
+			return new Rectangle(new Point(), 0, 0);
 		}
 		return new Rectangle(new Point(minX, minY), maxX - minX, maxY - minY);
 	}

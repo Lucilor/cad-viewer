@@ -83,7 +83,7 @@ function _arr2Obj(arr: any[]) {
 		return arr;
 	}
 	const obj = {};
-	arr.forEach(v => {
+	arr.forEach((v) => {
 		obj[v.id] = v;
 		delete v.id;
 	});
@@ -99,11 +99,18 @@ export function transformData(data: any, to: "array" | "object") {
 		console.warn("Invalid argument: to.");
 		return {};
 	}
-	const list = ["entities", "layers", "lineText", "globalText"];
+	const list = ["layers", "lineText", "globalText"];
 	if (to === "array") {
 		for (const key of list) {
 			if (data[key] && !Array.isArray(data[key])) {
 				data[key] = _obj2Arr(data[key]);
+			}
+		}
+		if (data.entities) {
+			for (const key in data.entities) {
+				if(!Array.isArray(data.entities[key])){
+					data.entities[key] = _obj2Arr(data.entities[key]);
+				}
 			}
 		}
 		if (!Array.isArray(data.options)) {
@@ -120,9 +127,16 @@ export function transformData(data: any, to: "array" | "object") {
 				data[key] = _arr2Obj(data[key]);
 			}
 		}
+		if (data.entities) {
+			for (const key in data.entities) {
+				if(Array.isArray(data.entities[key])){
+					data.entities[key] = _arr2Obj(data.entities[key]);
+				}
+			}
+		}
 		if (Array.isArray(data.options)) {
 			const options = {};
-			(data.options as CadOption[]).forEach(o => {
+			(data.options as CadOption[]).forEach((o) => {
 				if (o.name) {
 					options[o.name] = o.value;
 				}
@@ -130,10 +144,10 @@ export function transformData(data: any, to: "array" | "object") {
 			data.options = options;
 		}
 	}
-	data.partners?.forEach(v => transformData(v, to));
-	data.components?.data.forEach(v => transformData(v, to));
-	if (Array.isArray(data.entities)) {
-		data.entities.forEach(e => {
+	data.partners?.forEach((v) => transformData(v, to));
+	data.components?.data.forEach((v) => transformData(v, to));
+	if (Array.isArray(data.entities?.arc)) {
+		data.entities.arc.forEach((e) => {
 			if (e.type === CadTypes.Arc && typeof e.clockwise !== "boolean") {
 				e.clockwise = false;
 			}
