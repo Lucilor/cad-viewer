@@ -570,7 +570,7 @@ export class CadViewer {
 			if (!entity) {
 				return;
 			}
-			if(!entity.id){
+			if (!entity.id) {
 				entity.id = UUID.v1();
 			}
 			const {color, layer} = entity;
@@ -636,10 +636,23 @@ export class CadViewer {
 		if (center) {
 			this.center();
 		}
-		if (!entities) {
-			entities = this.flatEntities(this.data, mode);
+		if (entities) {
+			entities.forEach((entity) => draw(entity, this.containers.main));
+		} else {
+			if (mode & 0b100) {
+				this.flatEntities(this.data, 0b100).forEach((entity) => draw(entity, this.containers.main));
+			}
+			if (mode & 0b010) {
+				this._status.partners.forEach((i) => {
+					this.flatEntities(this.data.partners[i], 0b100).forEach((entity) => draw(entity, this.containers.partners));
+				});
+			}
+			if (mode & 0b001) {
+				this.data.components.data.forEach((component) => {
+					this.flatEntities(component, 0b100).forEach((entity) => draw(entity, this.containers.components));
+				});
+			}
 		}
-		entities.forEach((entity) => draw(entity, this.containers.main));
 
 		const {x, y} = this.containers.inner.position;
 		this.containers.inner.setTransform(x, y, 1, -1, 0, 0, 0, 0, this.height);
