@@ -659,10 +659,10 @@ export class CadViewer {
 		return this;
 	}
 
-	center(entities = this.data.entities) {
+	center() {
 		const {width, height} = this;
 		const {padding, maxScale, minScale} = this.config;
-		const rect = this.getBounds(entities);
+		const rect = this.getBounds();
 		const scaleX = (width - padding[1] - padding[3]) / (rect.width + 10);
 		const scaleY = (height - padding[0] - padding[2]) / (rect.height + 10);
 		const scale = Math.min(scaleX, scaleY);
@@ -999,11 +999,19 @@ export class CadViewer {
 	}
 
 	getSelectedEntities() {
-		const result: CadEntities = {};
+		const result: CadEntities = {line: [], arc: [], circle: [], hatch: [], mtext: [], dimension: []};
 		for (const key in this.data.entities) {
-			const data = cloneDeep(this.data.entities[key].filter((e) => e.selected));
-			data.forEach((e) => this._purgeEntityData(e));
-			result[key] = data;
+			this.data.entities[key].forEach((e) => {
+				const e2 = {...e};
+				this._purgeEntityData(e2);
+				if (e.selected) {
+					if (result[key]) {
+						result[key].push(e2);
+					} else {
+						result[key] = [e2];
+					}
+				}
+			});
 		}
 		return result;
 	}
@@ -1500,7 +1508,7 @@ export class CadViewer {
 		this.app.view.height = value;
 	}
 
-	getBounds(entities = this.data.entities) {
+	getBounds(entities?: CadEntities, mode = 0b111) {
 		let maxX = -Infinity;
 		let minX = Infinity;
 		let maxY = -Infinity;
@@ -1512,6 +1520,24 @@ export class CadViewer {
 			minY = Math.min(point.y, minY);
 		};
 		let counter = 0;
+		if (!entities) {
+			entities = {line: [], arc: [], circle: [], dimension: [], mtext: [], hatch: []};
+			for (const key in entities) {
+				if (mode & 0b100) {
+					entities[key] = entities[key].concat(this.data.entities[key]);
+				}
+				if (mode & 0b010) {
+					this._status.partners.forEach((i) => {
+						entities[key] = entities[key].concat(this.data.partners[i].entities[key]);
+					});
+				}
+				if (mode & 0b001) {
+					this.data.components.data.forEach((c) => {
+						entities[key] = entities[key].concat(c.entities[key]);
+					});
+				}
+			}
+		}
 		entities.line.forEach((entity) => {
 			const {start, end} = entity as CadLine;
 			calc(new Point(start));
