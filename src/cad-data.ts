@@ -62,7 +62,7 @@ export interface CadArc extends CadEntity {
 
 export interface CadMText extends CadEntity {
 	insert: number[];
-	text: TextInfo;
+	text: string;
 	font_size: number;
 }
 

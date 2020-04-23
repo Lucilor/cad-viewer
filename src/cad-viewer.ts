@@ -310,9 +310,9 @@ export class CadViewer {
 		if (!text) {
 			return;
 		}
-		container.text = text.text;
+		container.text = text;
 		container.position.set(position.x, position.y);
-		container.anchor.set(0, 0);
+		container.anchor.set(0, 1);
 		container.scale.set(1 / this._scale, -1 / this._scale);
 		container.style = new PIXI.TextStyle({fontSize: fontSize * this._scale, fill: color});
 	}
@@ -1027,13 +1027,14 @@ export class CadViewer {
 					const thisPoint = thisJointPoints.find((p) => p.name && p.name === thatPoint.name);
 					if (thisPoint) {
 						const entities = partner.entities;
-						Object.values(entities)
-							.flat()
-							.forEach((e) => this._purgeEntityData(e));
+						Object.values(entities).flat();
+						// .forEach((e) => this._purgeEntityData(e));
 						const p1 = new Point(thisPoint.valueX, thisPoint.valueY);
 						const p2 = new Point(thatPoint.valueX, thatPoint.valueY);
 						if (!p1.equals(p2)) {
 							this.transformEntities(entities, {translate: p1.sub(p2)});
+							thatPoint.valueX = thisPoint.valueX;
+							thatPoint.valueY = thisPoint.valueY;
 						}
 						this._status.partners.push(i);
 					}
@@ -1329,12 +1330,12 @@ export class CadViewer {
 		this.transformEntities(this.data.entities, {flip: {vertical, horizontal, anchor}});
 		this.calculateBaseLines();
 		this.data.baseLines.forEach((l) => {
-			const point = new Point(l.valueX, l.valueY).flip(vertical, horizontal);
+			const point = new Point(l.valueX, l.valueY).flip(vertical, horizontal, anchor);
 			l.valueX = point.x;
 			l.valueY = point.y;
 		});
 		this.data.jointPoints.forEach((p) => {
-			const point = new Point(p.valueX, p.valueY).flip(vertical, horizontal);
+			const point = new Point(p.valueX, p.valueY).flip(vertical, horizontal, anchor);
 			p.valueX = point.x;
 			p.valueY = point.y;
 		});
@@ -1342,6 +1343,11 @@ export class CadViewer {
 			this._status.partners.forEach((i) => {
 				const partner = this.data.partners[i];
 				this.transformEntities(partner.entities, {flip: {vertical, horizontal, anchor}});
+				partner.jointPoints.forEach((p) => {
+					const point = new Point(p.valueX, p.valueY).flip(vertical, horizontal, anchor);
+					p.valueX = point.x;
+					p.valueY = point.y;
+				});
 			});
 			this.joinPartners();
 		}
@@ -1373,6 +1379,11 @@ export class CadViewer {
 			this._status.partners.forEach((i) => {
 				const partner = this.data.partners[i];
 				this.transformEntities(partner.entities, {rotate: {angle, anchor}});
+				partner.jointPoints.forEach((p) => {
+					const point = new Point(p.valueX, p.valueY).rotate(angle, anchor);
+					p.valueX = point.x;
+					p.valueY = point.y;
+				});
 			});
 			this.joinPartners();
 		}
@@ -1383,6 +1394,22 @@ export class CadViewer {
 		return this;
 	}
 
+	flipPartner(id: string, vertical = false, horizontal = false, anchor = new Point()) {
+		const partner = this.data.partners.find((v) => v.id === id);
+		if (partner) {
+			this.transformEntities(partner.entities, {flip: {vertical, horizontal, anchor}});
+			partner.jointPoints.forEach((p) => {
+				const point = new Point(p.valueX, p.valueY).flip(vertical, horizontal, anchor);
+				p.valueX = point.x;
+				p.valueY = point.y;
+			});
+			this.joinPartners();
+		} else {
+			console.warn(`partner ${id} not found.`);
+		}
+		return this;
+	}
+
 	flipComponent(name: string, vertical = false, horizontal = false, anchor = new Point()) {
 		const component = this.data.components.data.find((v) => v.name === name);
 		if (component) {
@@ -1390,6 +1417,22 @@ export class CadViewer {
 			this.reassembleComponents();
 		} else {
 			console.warn(`component ${name} not found.`);
+		}
+		return this;
+	}
+
+	rotatePartner(id: string, angle = 0, anchor?: Point) {
+		const partner = this.data.partners.find((v) => v.id === id);
+		if (partner) {
+			this.transformEntities(partner.entities, {rotate: {angle, anchor}});
+			partner.jointPoints.forEach((p) => {
+				const point = new Point(p.valueX, p.valueY).rotate(angle, anchor);
+				p.valueX = point.x;
+				p.valueY = point.y;
+			});
+			this.joinPartners();
+		} else {
+			console.warn(`partner ${id} not found.`);
 		}
 		return this;
 	}
