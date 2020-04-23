@@ -312,7 +312,11 @@ export class CadViewer {
 		}
 		container.text = text;
 		container.position.set(position.x, position.y);
-		container.anchor.set(0, 1);
+		if (entity.anchor) {
+			container.anchor.set(...entity.anchor);
+		} else {
+			container.anchor.set(0, 0);
+		}
 		container.scale.set(1 / this._scale, -1 / this._scale);
 		container.style = new PIXI.TextStyle({fontSize: fontSize * this._scale, fill: color});
 	}

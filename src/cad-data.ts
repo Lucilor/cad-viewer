@@ -29,7 +29,7 @@ export interface CadEntity {
 	selectable?: boolean;
 }
 
-declare type CadEntities0 = {[key:string]:CadEntity[]};
+declare type CadEntities0 = {[key: string]: CadEntity[]};
 export interface CadEntities extends CadEntities0 {
 	line?: CadLine[];
 	arc?: CadArc[];
@@ -64,6 +64,7 @@ export interface CadMText extends CadEntity {
 	insert: number[];
 	text: string;
 	font_size: number;
+	anchor: number[];
 }
 
 export interface CadDimension extends CadEntity {
