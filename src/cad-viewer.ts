@@ -679,6 +679,17 @@ export class CadViewer {
 		return this;
 	}
 
+	resize(width: number, height: number) {
+		if (!isNaN(width)) {
+			this.view.style.width = width + "px";
+		}
+		if (!isNaN(width)) {
+			this.view.style.height = height + "px";
+		}
+		this.app.resizeTo = this.view;
+		this.app.resize();
+	}
+
 	findLayerByName(layerName: string) {
 		for (const layer of this.data.layers) {
 			if (layer.name === layerName) {
