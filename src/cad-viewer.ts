@@ -406,11 +406,11 @@ export class CadViewer {
 		const entity1 = this.findEntity(entity.entity1.id) as CadLine;
 		const entity2 = this.findEntity(entity.entity2.id) as CadLine;
 		if (!entity1) {
-			console.warn(`线段${entity1.id}没找到`);
+			console.warn(`线段${entity.entity1.id}没找到`);
 			return null;
 		}
 		if (!entity2) {
-			console.warn(`线段${entity2.id}没找到`);
+			console.warn(`线段${entity.entity1.id}没找到`);
 			return null;
 		}
 		if (entity1.type !== CadTypes.Line) {
