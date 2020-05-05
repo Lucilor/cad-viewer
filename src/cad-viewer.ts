@@ -60,7 +60,6 @@ export interface CadViewerConfig {
 	hoverColor?: number;
 	showLineLength?: number;
 	padding?: number[] | number;
-	selectMode?: "none" | "single" | "multiple";
 	fps?: number;
 	showStats?: boolean;
 	reverseSimilarColor?: true;
@@ -268,12 +267,11 @@ export class CadViewer {
 	private _drawLine(entity: CadLine, style: CadStyle = {}) {
 		const {scene, objects, config} = this;
 		const showLineLength = config.showLineLength;
-		const {start, end} = entity;
-		const length = start.distanceTo(end);
+		const {start, end, length} = entity;
 		const middle = start.clone().add(end).divideScalar(2);
 		const {lineWidth, color, visible} = new CadStyle(style, this, entity);
 		const object = objects[entity.id] as Line;
-		if (!visible) {
+		if (!visible || length <= 0) {
 			scene.remove(object);
 			delete objects[entity.id];
 			return;
@@ -412,8 +410,8 @@ export class CadViewer {
 		if (!entity.entity1 || !entity.entity2 || !entity.entity1.id || !entity.entity2.id) {
 			canDraw = false;
 		}
-		const entity1 = this.data.findEntity(entity.entity1.id) as CadLine;
-		const entity2 = this.data.findEntity(entity.entity2.id) as CadLine;
+		const entity1 = this.data.findEntity(entity.entity1?.id) as CadLine;
+		const entity2 = this.data.findEntity(entity.entity2?.id) as CadLine;
 		if (!entity1 || !entity1.visible || !entity2 || !entity2.visible) {
 			canDraw = false;
 		}
@@ -514,15 +512,17 @@ export class CadViewer {
 		}
 		text = text.replace("<>", p3.distanceTo(p4).toFixed(2));
 		if (axis === "y") {
-			text.split("").join("\n");
+			text = text.split("").join("\n");
 		}
 		const sprite = new TextSprite({fontSize, fillStyle: colorStr, text});
-		// const sprite = new TextSprite({fontSize:200, fillStyle: "#ffffff", text: "AWEgw"});
 		const midPoint = new Vector3().add(p3).add(p4).divideScalar(2);
 		sprite.position.copy(midPoint);
-		sprite.center.set(0.5, 1);
+		if (axis === "x") {
+			this._setAnchor(sprite, midPoint, new Vector3(0.5, 1));
+		}
 		if (axis === "y") {
 			sprite.lineGap = 0;
+			this._setAnchor(sprite, midPoint, new Vector3(0, 0.5));
 		}
 		line.add(sprite);
 	}

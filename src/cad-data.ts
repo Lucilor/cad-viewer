@@ -1,6 +1,6 @@
 import {MathUtils, Vector2, ArcCurve, Vector3} from "three";
 import {index2RGB, Line, Point, Angle, Arc} from "@lucilor/utils";
-import {cloneDeep} from "lodash";
+import _ from "lodash";
 
 export const enum CadTypes {
 	Line = "LINE",
@@ -39,7 +39,7 @@ export class CadData {
 	jointPoints: CadJointPoint[];
 	parent: string;
 	partners: CadData[];
-	components: Components;
+	components: CadComponents;
 	readonly visible: boolean;
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
@@ -76,12 +76,12 @@ export class CadData {
 		}
 		this.parent = data.parent || "";
 		this.partners = [];
-		this.components = new Components(data.components || {});
 		if (Array.isArray(data.partners)) {
-			data.partners.forEach((v) => {
-				this.addPartner(new CadData(v));
-			});
+			(data.partners as []).forEach((v) => this.partners.push(new CadData(v)));
 		}
+		this.components = new CadComponents(data.components || {});
+		this.updatePartners();
+		this.updateComponents();
 		this.visible = data.visible === false ? false : true;
 	}
 
@@ -89,7 +89,7 @@ export class CadData {
 		this.updateBaseLines();
 		const exLayers = {};
 		this.layers.forEach((v) => {
-			exLayers[v.id] = {id: v.id, color: v._indexColor, name: v.name};
+			exLayers[v.id] = v.export();
 		});
 		const exOptions = {};
 		this.options.forEach((v) => {
@@ -105,8 +105,8 @@ export class CadData {
 			type: this.type,
 			conditions: this.conditions.filter((v) => v),
 			options: exOptions,
-			baseLines: cloneDeep(this.baseLines),
-			jointPoints: cloneDeep(this.jointPoints),
+			baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.idX && v.idY),
+			jointPoints: this.jointPoints.map((v) => v.export()),
 			parent: this.parent,
 			partners: this.partners.map((v) => v.export()),
 			components: this.components.export()
@@ -255,7 +255,9 @@ export class CadData {
 	}
 
 	updatePartners() {
-		this.partners.forEach((v) => this.addPartner(v));
+		const partners = this.partners.slice();
+		this.partners.length = 0;
+		partners.forEach((v) => this.addPartner(v));
 		this.partners.forEach((v) => v.updatePartners());
 		this.components.data.forEach((v) => v.updatePartners());
 	}
@@ -277,6 +279,258 @@ export class CadData {
 			data.push(component);
 		}
 		return this;
+	}
+
+	updateComponents() {
+		const data = this.components.data.slice();
+		const connections = this.components.connections.slice();
+		this.components.data.length = 0;
+		this.components.connections.length = 0;
+		data.forEach((v) => this.addComponent(v));
+		this.partners.forEach((v) => v.updateComponents());
+		this.components.data.forEach((v) => v.updateComponents());
+	}
+
+	assembleComponents(connection: CadConnection) {
+		const {names, lines, space, position, offset} = connection;
+		const components = this.components;
+		let c1: CadData;
+		let c2: CadData;
+		for (const c of components.data) {
+			if (c.name === names[0]) {
+				c1 = c;
+			}
+			if (c.name === names[1]) {
+				c2 = c;
+			}
+			if (c1 && c2) {
+				break;
+			}
+		}
+		if (!c1 || !c2) {
+			throw new Error("未找到配件");
+		}
+		let axis: "x" | "y";
+		const getLine = (e: CadCircle, l: Line) => {
+			if (!(e instanceof CadCircle)) {
+				throw new Error("不支持的实体");
+			}
+			const o = new Point(e.center.toArray());
+			if (!isFinite(l.slope)) {
+				return new Line(o, o.clone().add(new Point(0, 1)));
+			}
+			if (l.slope === 0) {
+				return new Line(o, o.clone().add(new Point(1, 0)));
+			}
+		};
+		const translate = [0, 0];
+		// if (typeof offset === "object") {
+		// 	["x", "y"].forEach(a => {
+		// 		if (typeof offset[a] === "number") {
+		// 			translate[a] += offset[a];
+		// 		}
+		// 	});
+		// }
+		const c1Entities = c1.getAllEntities();
+		const c2Entities = c2.getAllEntities();
+		if (position === "absolute") {
+			const e1 = c1.findEntity(lines[0]);
+			const e2 = c2.findEntity(lines[1]);
+			if (!e1 || !e2) {
+				throw new Error("未找到对应实体");
+			}
+			let spaceNum = Number(space);
+			if (isNaN(spaceNum)) {
+				spaceNum = 20;
+			}
+			let l1: Line;
+			let l2: Line;
+			if (e1 instanceof CadLine) {
+				const start = new Point(e1.start.toArray());
+				const end = new Point(e1.end.toArray());
+				l1 = new Line(start, end);
+			}
+			if (e2 instanceof CadLine) {
+				const start = new Point(e2.start.toArray());
+				const end = new Point(e2.end.toArray());
+				l2 = new Line(start, end);
+			}
+			if (!l1 && !l2) {
+				throw new Error("至少需要一条直线");
+			}
+			if (!l1) {
+				l1 = getLine(e1 as CadCircle, l2);
+			}
+			if (!l2) {
+				l2 = getLine(e2 as CadCircle, l1);
+			}
+			if (l1.slope === l2.slope) {
+				if (!isFinite(l1.slope)) {
+					translate[0] = l1.start.x - l2.start.x + spaceNum;
+					axis = "x";
+				} else if (l1.slope === 0) {
+					translate[1] = l1.start.y - l2.start.y + spaceNum;
+					axis = "y";
+				} else {
+					throw new Error("两条线不是横线或者竖线");
+				}
+			} else {
+				throw new Error("两条线不平行");
+			}
+			this.moveComponent(c2, translate, c1);
+		} else if (position === "relative") {
+			const match = space.match(/([0-9]*)(\+|-)?([0-9]*)/);
+			if (!match) {
+				throw new Error("相对定位的距离格式错误");
+			}
+			const spParent = Number(match[1]) / 100;
+			const op = match[2];
+			const spChildren = Number(match[3]) / 100;
+			if (["+", "-"].includes(op) && isNaN(spChildren)) {
+				throw new Error("相对定位的距离格式错误");
+			}
+			if (isNaN(spParent)) {
+				throw new Error("相对定位的距离格式错误");
+			}
+			const e1 = this.findEntity(lines[0]);
+			const e2 = this.findEntity(lines[1]);
+			const e3 = this.findEntity(lines[2]);
+			if (!e1 || !e2 || !e3) {
+				throw new Error("未找到对应实体");
+			}
+			if (!(e1 instanceof CadLine) || !(e2 instanceof CadLine)) {
+				throw new Error("必须先选两条直线");
+			}
+			const l1: Line = new Line(new Point(e1.start.toArray()), new Point(e1.end.toArray()));
+			const l2: Line = new Line(new Point(e2.start.toArray()), new Point(e2.end.toArray()));
+			let l3: Line;
+			if (e3 instanceof CadLine) {
+				const start = new Point(e3.start.toArray());
+				const end = new Point(e3.end.toArray());
+				l3 = new Line(start, end);
+			}
+			if (e3.type === CadTypes.Circle) {
+				l3 = getLine(e3 as CadCircle, l1);
+			}
+			if (!(l1.slope === l2.slope && l2.slope === l3.slope)) {
+				throw new Error("三条线必须相互平行");
+			}
+			const rect = c2.entities.getBounds();
+			if (!isFinite(l1.slope)) {
+				const d = (l2.start.x - l1.start.x) * spParent;
+				translate[0] = l1.start.x + d - l3.start.x;
+				if (op === "+") {
+					translate[0] += rect.width * spChildren;
+				}
+				if (op === "-") {
+					translate[0] -= rect.width * spChildren;
+				}
+				axis = "x";
+			} else if (l1.slope === 0) {
+				const d = (l2.start.y - l1.start.y) * spParent;
+				translate[1] = l1.start.y + d - l3.start.y;
+				if (op === "+") {
+					translate[1] += rect.height * spChildren;
+				}
+				if (op === "-") {
+					translate[1] -= rect.height * spChildren;
+				}
+				axis = "y";
+			} else {
+				throw new Error("三条线不是横线或者竖线");
+			}
+			this.moveComponent(c2, translate, c1);
+		}
+
+		const toRemove = [];
+		const connectedToC1: string[] = [];
+		const connectedToC2: string[] = [];
+		components.connections.forEach((conn) => {
+			if (conn.names[0] === c1.name) {
+				connectedToC1.push(conn.names[1]);
+			}
+			if (conn.names[1] === c1.name) {
+				connectedToC1.push(conn.names[0]);
+			}
+			if (conn.names[0] === c2.name) {
+				connectedToC2.push(conn.names[1]);
+			}
+			if (conn.names[1] === c2.name) {
+				connectedToC2.push(conn.names[0]);
+			}
+		});
+		const connectedToBoth = _.intersection(connectedToC1, connectedToC2);
+		components.connections.forEach((conn, i) => {
+			const arr = _.intersection(conn.names, [c1.name, c2.name]);
+			if (conn.names.includes(c2.name) && _.intersection(conn.names, connectedToBoth).length) {
+				toRemove.push(i);
+			}
+			if (arr.length === 2 && conn.axis === axis) {
+				toRemove.push(i);
+			}
+		});
+		components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
+		connection.axis = axis;
+		connection.space = connection.space ? connection.space : "0";
+		components.connections.push(_.cloneDeep(connection));
+
+		this.sortComponents();
+		return this;
+	}
+
+	sortComponents() {
+		this.components.data.sort((a, b) => {
+			const rect1 = a.getAllEntities().getBounds();
+			const rect2 = b.getAllEntities().getBounds();
+			return rect1.x - rect2.x;
+		});
+	}
+
+	moveComponent(curr: CadData, translate: number[], prev?: CadData) {
+		curr.transform({translate});
+		const map: object = {};
+		this.components.connections.forEach((conn) => {
+			if (conn.names.includes(curr.name)) {
+				conn.names.forEach((n) => {
+					if (n !== curr.name && n !== prev?.name) {
+						if (!map[n]) {
+							map[n] = {};
+						}
+						map[n][conn.axis] = conn.space;
+						if (typeof conn.offset !== "object") {
+							conn.offset = {};
+						}
+						if (conn.axis === "x") {
+							if (typeof conn.offset.y === "number") {
+								conn.offset.y += translate[1];
+							} else {
+								conn.offset.y = translate[1];
+							}
+						}
+						if (conn.axis === "y") {
+							if (typeof conn.offset.x === "number") {
+								conn.offset.x += translate[0];
+							} else {
+								conn.offset.x = translate[0];
+							}
+						}
+					}
+				});
+			}
+		});
+		for (const name in map) {
+			const next = this.components.data.find((v) => v.name === name);
+			if (next) {
+				const newTranslate = translate.slice();
+				if (map[name].x === undefined) {
+					newTranslate[0] = 0;
+				}
+				if (map[name].y === undefined) {
+					newTranslate[1] = 0;
+				}
+				this.moveComponent(next, newTranslate, curr);
+			}
+		}
 	}
 
 	show() {
@@ -390,8 +644,7 @@ export class CadEntities {
 		});
 		this.arc.forEach((entity) => {
 			if (entity.visible) {
-				const arcEntity = entity;
-				const {center, radius, start_angle, end_angle, clockwise} = arcEntity;
+				const {center, radius, start_angle, end_angle, clockwise} = entity;
 				const arc = new ArcCurve(
 					center.x,
 					center.y,
@@ -632,34 +885,32 @@ export class CadDimension extends CadEntity {
 	font_size: number;
 	dimstyle: string;
 	axis: "x" | "y";
-	entity1?: {
+	entity1: {
 		id: string;
 		location: "start" | "end" | "center";
 	};
-	entity2?: {
+	entity2: {
 		id: string;
 		location: "start" | "end" | "center";
 	};
 	distance: number;
-	cad1?: string;
-	cad2?: string;
-	mingzi?: string;
-	qujian?: string;
+	cad1: string;
+	cad2: string;
+	mingzi: string;
+	qujian: string;
 	constructor(data: any = {type: cadTypes.dimension}, layers: CadLayer[] = []) {
 		super(data, layers);
 		this.font_size = data.font_size || 16;
 		this.dimstyle = data.dimstyle || "";
 		["entity1", "entity2"].forEach((field) => {
+			this[field] = {id: "", location: "center"};
 			if (data[field]) {
-				this[field] = {id: "", location: "center"};
 				if (typeof data[field].id === "string") {
 					this[field].id = data[field].id;
 				}
 				if (["start", "end", "center"].includes(data[field].location)) {
 					this[field].location = data[field].location;
 				}
-			} else {
-				this[field] = null;
 			}
 		});
 		this.axis = data.axis || "x";
@@ -768,6 +1019,10 @@ export class CadBaseLine {
 		this.valueX = data.valueX || NaN;
 		this.valueY = data.valueY || NaN;
 	}
+
+	export() {
+		return {name: this.name, idX: this.idX, idY: this.idY, valueX: this.valueX, valueY: this.valueY};
+	}
 }
 
 export class CadJointPoint {
@@ -778,6 +1033,10 @@ export class CadJointPoint {
 		this.name = data.name || "";
 		this.valueX = data.valueX || NaN;
 		this.valueY = data.valueY || NaN;
+	}
+
+	export() {
+		return {name: this.name, valueX: this.valueX, valueY: this.valueY};
 	}
 }
 
@@ -790,7 +1049,7 @@ export class CadOption {
 	}
 }
 
-export interface Connection {
+export interface CadConnection {
 	names: string[];
 	lines: string[];
 	space: string;
@@ -801,9 +1060,9 @@ export interface Connection {
 		y?: number;
 	};
 }
-export class Components {
+export class CadComponents {
 	data: CadData[];
-	connections: Connection[];
+	connections: CadConnection[];
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
