@@ -1,6 +1,6 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "1.2.5",
+	"version": "1.2.7",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
@@ -25,22 +25,23 @@
 	},
 	"homepage": "https://github.com/Lucilor/cad-viewer#readme",
 	"devDependencies": {
-		"@types/lodash": "^4.14.150",
+		"@types/lodash": "^4.14.149",
+		"@types/uuid": "^7.0.2",
 		"clean-webpack-plugin": "^3.0.0",
 		"eslint": "^6.8.0",
-		"terser-webpack-plugin": "^2.3.6",
+		"terser-webpack-plugin": "^2.3.5",
 		"ts-loader": "^6.2.2",
-		"tslint": "^6.1.2",
+		"tslint": "^6.1.1",
 		"typescript": "^3.8.3",
-		"webpack": "^4.43.0",
+		"webpack": "^4.42.1",
 		"webpack-cli": "^3.3.11",
 		"webpack-merge": "^4.2.2",
 		"webpack-node-externals": "^1.7.2"
 	},
 	"dependencies": {
 		"@lucilor/utils": "^1.0.18",
-		"@seregpie/three.text-sprite": "^2.0.0",
 		"lodash": "^4.17.15",
-		"three": "^0.115.0"
+		"pixi.js": "^5.2.1",
+		"uuid": "^7.0.3"
 	}
 }

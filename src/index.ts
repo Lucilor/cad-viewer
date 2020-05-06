@@ -1,3 +1,50 @@
-export * from "./cad-data";
-export * from "./cad-viewer";
-export * from "./cad-viewer-controls";
+import {CadViewer} from "./cad-viewer";
+import {Events, Config, defaultConfig, transformData} from "./cad-viewer.misc";
+import {
+	CadTypes,
+	TextInfo,
+	CadEntity,
+	CadLine,
+	CadCircle,
+	CadArc,
+	CadMText,
+	CadDimension,
+	CadLWPolyline,
+	CadHatch,
+	CadLayer,
+	CadBaseLine,
+	CadJointPoint,
+	CadOption,
+	CadData,
+	CadRawData,
+	Components,
+	Connection,
+	ComponentPosition
+} from "./cad-data";
+
+export {
+	CadViewer,
+	Events,
+	CadTypes,
+	TextInfo,
+	CadEntity,
+	CadLine,
+	CadCircle,
+	CadArc,
+	CadMText,
+	CadDimension,
+	CadLWPolyline,
+	CadHatch,
+	CadLayer,
+	CadBaseLine,
+	CadJointPoint,
+	CadOption,
+	CadData,
+	CadRawData,
+	Components,
+	Connection,
+	ComponentPosition,
+	Config,
+	defaultConfig,
+	transformData
+};
