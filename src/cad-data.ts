@@ -1,16 +1,6 @@
-import {MathUtils, Vector2, ArcCurve, Vector3, Box3} from "three";
-import {index2RGB, Line, Point, Angle, Arc} from "@lucilor/utils";
+import {MathUtils, ArcCurve, Vector3, Box3, Matrix4} from "three";
+import {index2RGB, Line, Point} from "@lucilor/utils";
 import _ from "lodash";
-
-export const enum CadTypes {
-	Line = "LINE",
-	MText = "MTEXT",
-	Dimension = "DIMENSION",
-	Arc = "ARC",
-	Circle = "CIRCLE",
-	LWPolyline = "LWPOLYLINE",
-	Hatch = "HATCH"
-}
 
 export const cadTypes = {
 	line: "LINE",
@@ -21,10 +11,39 @@ export const cadTypes = {
 	hatch: "HATCH"
 };
 
-export interface CadTransform {
-	translate?: number[];
-	flip?: {vertical?: boolean; horizontal?: boolean; anchor?: number[]};
-	rotate?: {angle?: number; anchor?: number[]};
+export class CadTransformation {
+	translate = new Vector3();
+	flip = {vertical: false, horizontal: false, anchor: new Vector3()};
+	rotate = {angle: 0, anchor: new Vector3()};
+	get matrix() {
+		const matrix = new Matrix4();
+		const {translate, flip, rotate} = this;
+		matrix.makeRotationAxis(new Vector3(rotate.anchor.x, rotate.anchor.y, 1), rotate.angle);
+		matrix.setPosition(translate.x, translate.y, translate.z);
+		// TODO 翻转锚点
+		matrix.scale(new Vector3(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1, 1));
+		return matrix;
+	}
+
+	setTranslate(x = 0, y = 0, z = 0) {
+		this.translate.set(x, y, z);
+		return this;
+	}
+	setFlip(vertical = false, horizontal = false, anchor: number[] = []) {
+		this.flip.vertical = vertical;
+		this.flip.horizontal = horizontal;
+		this.flip.anchor.setX(anchor[0] || 0);
+		this.flip.anchor.setY(anchor[1] || 0);
+		this.flip.anchor.setZ(anchor[2] || 0);
+		return this;
+	}
+	setRotate(angle = 0, anchor: number[] = []) {
+		this.rotate.angle = angle;
+		this.rotate.anchor.setX(anchor[0] || 0);
+		this.rotate.anchor.setY(anchor[1] || 0);
+		this.rotate.anchor.setZ(anchor[2] || 0);
+		return this;
+	}
 }
 
 export class CadData {
@@ -175,35 +194,20 @@ export class CadData {
 		return this;
 	}
 
-	transform({translate, flip, rotate}: CadTransform) {
-		this.entities.transform({translate, flip, rotate});
-		this.partners.forEach((v) => v.transform({translate, flip, rotate}));
-		this.components.data.forEach((v) => v.transform({translate, flip, rotate}));
+	transform(t: CadTransformation) {
+		this.entities.transform(t);
+		this.partners.forEach((v) => v.transform(t));
+		this.components.data.forEach((v) => v.transform(t));
+		const matrix = t.matrix;
 		this.baseLines.forEach((v) => {
-			const point = new Point(v.valueX, v.valueY);
-			if (translate) {
-				point.add(translate[0], translate[1]);
-			}
-			if (flip) {
-				point.flip(flip.vertical, flip.horizontal, new Point(flip.anchor));
-			}
-			if (rotate) {
-				point.rotate(rotate.angle, new Point(rotate.anchor));
-			}
+			const point = new Vector3(v.valueX, v.valueY);
+			point.applyMatrix4(matrix);
 			v.valueX = point.x;
 			v.valueY = point.y;
 		});
 		this.jointPoints.forEach((v) => {
-			const point = new Point(v.valueX, v.valueY);
-			if (translate) {
-				point.add(translate[0], translate[1]);
-			}
-			if (flip) {
-				point.flip(flip.vertical, flip.horizontal, new Point(flip.anchor));
-			}
-			if (rotate) {
-				point.rotate(rotate.angle, new Point(rotate.anchor));
-			}
+			const point = new Vector3(v.valueX, v.valueY);
+			point.applyMatrix4(matrix);
 			v.valueX = point.x;
 			v.valueY = point.y;
 		});
@@ -244,7 +248,7 @@ export class CadData {
 				translate[0] += (rect1.width + rect2.width) / 2 + 15;
 			}
 		}
-		partner.transform({translate});
+		partner.transform(new CadTransformation().setTranslate(...translate));
 		const data = this.partners;
 		const prev = data.findIndex((v) => v.id === partner.id);
 		if (prev > -1) {
@@ -269,7 +273,7 @@ export class CadData {
 			const translate = [rect1.x - rect2.x, rect1.y - rect2.y];
 			translate[0] += (rect1.width + rect2.width) / 2 + 15;
 			// offset1[1] += (rect1.height - rect2.height) / 2;
-			component.transform({translate});
+			component.transform(new CadTransformation().setTranslate(...translate));
 		}
 		const data = this.components.data;
 		const prev = data.findIndex((v) => v.id === component.id);
@@ -287,6 +291,7 @@ export class CadData {
 		this.components.data.length = 0;
 		this.components.connections.length = 0;
 		data.forEach((v) => this.addComponent(v));
+		connections.forEach((c) => this.assembleComponents(c));
 		this.partners.forEach((v) => v.updateComponents());
 		this.components.data.forEach((v) => v.updateComponents());
 	}
@@ -384,6 +389,7 @@ export class CadData {
 			const spParent = Number(match[1]) / 100;
 			const op = match[2];
 			const spChildren = Number(match[3]) / 100;
+			console.log(match);
 			if (["+", "-"].includes(op) && isNaN(spChildren)) {
 				throw new Error("相对定位的距离格式错误");
 			}
@@ -407,8 +413,8 @@ export class CadData {
 				const end = new Point(e3.end.toArray());
 				l3 = new Line(start, end);
 			}
-			if (e3.type === CadTypes.Circle) {
-				l3 = getLine(e3 as CadCircle, l1);
+			if (e3 instanceof CadCircle) {
+				l3 = getLine(e3, l1);
 			}
 			if (!(l1.slope === l2.slope && l2.slope === l3.slope)) {
 				throw new Error("三条线必须相互平行");
@@ -485,7 +491,7 @@ export class CadData {
 	}
 
 	moveComponent(curr: CadData, translate: number[], prev?: CadData) {
-		curr.transform({translate});
+		curr.transform(new CadTransformation().setTranslate(...translate));
 		const map: object = {};
 		this.components.connections.forEach((conn) => {
 			if (conn.names.includes(curr.name)) {
@@ -617,7 +623,7 @@ export class CadEntities {
 		return result;
 	}
 
-	transform(params: CadTransform) {
+	transform(params: CadTransformation) {
 		Object.keys(cadTypes).forEach((v) => {
 			(this[v] as CadEntity[]).forEach((e) => e.transform(params));
 		});
@@ -667,6 +673,18 @@ export class CadEntities {
 			(this[type] as CadEntity[]).forEach(callback);
 		});
 	}
+
+	add(entity: CadEntity) {
+		if (entity instanceof CadEntity) {
+			const type = entity.type;
+			for (const key in cadTypes) {
+				if (cadTypes[key] === type) {
+					(this[key] as CadEntity[]).push(entity);
+				}
+			}
+		}
+		return this;
+	}
 }
 
 export class CadEntity {
@@ -707,7 +725,8 @@ export class CadEntity {
 		this.visible = data.visible === false ? false : true;
 	}
 
-	transform({translate, flip, rotate}: CadTransform) {}
+	transform({translate, flip, rotate}: CadTransformation) {}
+
 	export() {
 		return {
 			id: this.id,
@@ -745,20 +764,9 @@ export class CadLine extends CadEntity {
 		this.gongshi = data.gongshi || "";
 	}
 
-	transform({translate, flip, rotate}: CadTransform) {
-		const line = new Line(new Point(this.start.x, this.start.y), new Point(this.end.x, this.end.y));
-		if (translate) {
-			line.start.add(translate[0], translate[1]);
-			line.end.add(translate[0], translate[1]);
-		}
-		if (flip) {
-			line.flip(flip.vertical, flip.horizontal, new Point(flip.anchor));
-		}
-		if (rotate) {
-			line.rotate(rotate.angle, new Point(rotate.anchor));
-		}
-		this.start = new Vector3(line.start.x, line.start.y);
-		this.end = new Vector3(line.end.x, line.end.y);
+	transform({matrix}: CadTransformation) {
+		this.start.applyMatrix4(matrix);
+		this.end.applyMatrix4(matrix);
 	}
 
 	export() {
@@ -781,19 +789,8 @@ export class CadCircle extends CadEntity {
 		this.radius = data.radius || 0;
 	}
 
-	transform({translate, flip, rotate}: CadTransform) {
-		const center = new Point(this.center.x, this.center.y);
-		if (translate) {
-			this.center[0] += translate[0];
-			this.center[1] += translate[1];
-		}
-		if (flip) {
-			center.flip(flip.vertical, flip.horizontal, new Point(flip.anchor));
-		}
-		if (rotate) {
-			center.rotate(rotate.angle, new Point(rotate.anchor));
-		}
-		this.center = new Vector3(center.x, center.y);
+	transform({matrix}: CadTransformation) {
+		this.center.applyMatrix4(matrix);
 	}
 
 	export() {
@@ -810,6 +807,10 @@ export class CadArc extends CadEntity {
 	start_angle: number;
 	end_angle: number;
 	clockwise: boolean;
+	get curve() {
+		const {center, radius, start_angle, end_angle, clockwise} = this;
+		return new ArcCurve(center.x, center.y, radius, MathUtils.degToRad(start_angle), MathUtils.degToRad(end_angle), clockwise);
+	}
 	constructor(data: any = {type: cadTypes.arc}, layers: CadLayer[] = []) {
 		super(data, layers);
 		this.center = Array.isArray(data.center) ? new Vector3(...data.center) : new Vector3();
@@ -819,24 +820,17 @@ export class CadArc extends CadEntity {
 		this.clockwise = data.clockwise || false;
 	}
 
-	transform({translate, flip, rotate}: CadTransform) {
-		const start = new Angle(this.start_angle, "deg");
-		const end = new Angle(this.end_angle, "deg");
-		const center = new Point(this.center.x, this.center.y);
-		const arc = new Arc(center, this.radius, start, end, this.clockwise);
-		if (translate) {
-			arc.center.add(translate[0], translate[1]);
-		}
-		if (flip) {
-			arc.flip(flip.vertical, flip.horizontal, new Point(flip.anchor));
-		}
-		if (rotate) {
-			arc.rotate(rotate.angle, new Point(rotate.anchor));
-		}
-		this.center = new Vector3(center.x, center.y);
-		this.start_angle = arc.startAngle.deg;
-		this.end_angle = arc.endAngle.deg;
-		this.clockwise = arc.clockwise;
+	transform({matrix}: CadTransformation) {
+		const {center, curve} = this;
+		center.applyMatrix4(matrix);
+		const start2 = curve.getPoint(0);
+		const end2 = curve.getPoint(1);
+		const start = new Vector3(start2.x, start2.y).applyMatrix4(matrix);
+		const end = new Vector3(end2.x, end2.y).applyMatrix4(matrix);
+		const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
+		const endAngle = Math.atan2(end.y - center.y, end.x - center.x);
+		this.start_angle = MathUtils.radToDeg(startAngle);
+		this.end_angle = MathUtils.radToDeg(endAngle);
 	}
 
 	export() {
@@ -870,6 +864,11 @@ export class CadMtext extends CadEntity {
 			text: this.text,
 			anchor: this.anchor.toArray()
 		});
+	}
+
+	transform({matrix}: CadTransformation) {
+		this.insert.applyMatrix4(matrix);
+		// this.anchor.applyMatrix4(matrix);
 	}
 }
 
@@ -930,6 +929,7 @@ export class CadDimension extends CadEntity {
 }
 
 export class CadHatch extends CadEntity {
+	bgcolor: number[];
 	paths: {
 		edges: {
 			start: Vector3;
@@ -939,6 +939,7 @@ export class CadHatch extends CadEntity {
 	}[];
 	constructor(data: any = {type: cadTypes.hatch}, layers: CadLayer[] = []) {
 		super(data, layers);
+		this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
 		this.paths = [];
 		if (Array.isArray(data.paths)) {
 			data.paths.forEach((path) => {
@@ -971,6 +972,16 @@ export class CadHatch extends CadEntity {
 			paths.push({edges, vertices});
 		});
 		return Object.assign(super.export(), {paths});
+	}
+
+	transform({matrix}: CadTransformation) {
+		this.paths.forEach((path) => {
+			path.edges.forEach((edge) => {
+				edge.start.applyMatrix4(matrix);
+				edge.end.applyMatrix4(matrix);
+			});
+			path.vertices.forEach((vertice) => vertice.applyMatrix4(matrix));
+		});
 	}
 }
 

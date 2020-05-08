@@ -1,7 +1,7 @@
 import {CadViewer} from "./cad-viewer";
 import {Vector2, Vector3, Line, LineBasicMaterial, Object3D, MathUtils, Box2, BufferGeometry} from "three";
 import {EventEmitter} from "events";
-import {CadEntity} from "./cad-data";
+import {CadEntity, CadEntities} from "./cad-data";
 
 export interface CadViewerControlsConfig {
 	dragAxis?: "x" | "y" | "xy" | "";
@@ -41,7 +41,8 @@ export class CadViewerControls {
 		pTo: new Vector2(),
 		dragging: false,
 		button: NaN,
-		componentName: ""
+		componentName: "",
+		pointerLock: false
 	};
 	private _multiSelector: HTMLDivElement;
 	private _emitter = new EventEmitter();
@@ -75,10 +76,10 @@ export class CadViewerControls {
 		});
 		dom.addEventListener("pointermove", (event) => {
 			const p = new Vector2(event.clientX, event.clientY);
-			const {cad, currentObject} = this;
-			const {button, dragging} = this._status;
+			const {cad, _status, config} = this;
+			const {button, dragging} = _status;
 			if (dragging) {
-				const {pFrom, pTo, componentName} = this._status;
+				const {pFrom, pTo, componentName} = _status;
 				if (button === 1 || (event.shiftKey && button === 0)) {
 					const offset = new Vector2(p.x - pTo.x, pTo.y - p.y);
 					offset.divideScalar(cad.scale);
@@ -109,25 +110,15 @@ export class CadViewerControls {
 				const name: keyof CadEvents = "drag";
 				this._emitter.emit(name, event);
 			}
-			this._status.pTo.set(p.x, p.y);
-			if (this.config.selectMode !== "none") {
-				if (currentObject && currentObject.userData.selected !== true) {
-					(currentObject as any).material?.color?.set(cad.data.findEntity(currentObject.name)?.color);
-					this.currentObject = null;
-				}
-				const object = this._getInterSection(new Vector2(event.clientX, event.clientY));
-				const selectable = object && object.userData.selectable;
-				cad.dom.style.cursor = selectable ? "pointer" : "default";
-				if (selectable && object.userData.selected !== true) {
-					(object as any).material?.color?.set(cad.config.hoverColor);
-					this.currentObject = object;
-				}
+			_status.pTo.set(p.x, p.y);
+			if (config.selectMode !== "none" && !_status.pointerLock) {
+				this._hover(event);
 			}
 		});
 		["pointerup"].forEach((v) => {
 			dom.addEventListener(v, (event: PointerEvent) => {
 				const {camera, objects} = this.cad;
-				const {pFrom, pTo, dragging} = this._status;
+				const {pFrom, pTo, dragging, pointerLock} = this._status;
 				if (dragging) {
 					if (this._multiSelector.hidden === false) {
 						this._multiSelector.hidden = true;
@@ -171,36 +162,7 @@ export class CadViewerControls {
 				const p = new Vector2(event.clientX, event.clientY);
 				const offset = new Vector2(p.x - pTo.x, pTo.y - p.y);
 				if (Math.abs(offset.x) < 5 && Math.abs(offset.y) < 5) {
-					const object = this._getInterSection(p);
-					if (object) {
-						const entity = cad.data.findEntity(object.name);
-						if (object.userData.selected === true) {
-							if (object instanceof Line) {
-								if (object.material instanceof LineBasicMaterial) {
-									object.userData.selected = false;
-									object.material.color.set(entity?.color);
-								}
-							}
-							const name: keyof CadEvents = "entityunselect";
-							this._emitter.emit(name, event, entity, object);
-						} else if (object.userData.selectable !== false) {
-							if (object instanceof Line) {
-								if (object.material instanceof LineBasicMaterial) {
-									if (this.config.selectMode === "single") {
-										cad.unselectAll();
-									}
-									object.userData.selected = true;
-									if (typeof cad.config.selectedColor === "number") {
-										object.material.color.set(cad.config.selectedColor);
-									} else {
-										object.material.color.set(entity?.color);
-									}
-								}
-							}
-							const name: keyof CadEvents = "entityselect";
-							this._emitter.emit(name, event, entity, object);
-						}
-					}
+					this._click(event);
 				}
 				const name: keyof CadEvents = "click";
 				this._emitter.emit(name, event);
@@ -219,46 +181,52 @@ export class CadViewerControls {
 			const name: keyof CadEvents = "wheel";
 			this._emitter.emit(name, event);
 		});
-		dom.addEventListener("keydown", (event) => {
+		window.addEventListener("keydown", (event) => {
 			const {cad} = this;
 			const position = cad.position;
 			const step = 10 / cad.scale;
-			switch (event.key) {
-				case "w":
-				case "ArrowUp":
-					position.y += step;
-					break;
-				case "a":
-				case "ArrowLeft":
-					if (event.ctrlKey) {
-						if (this.config.selectMode === "multiple") {
-							cad.selectAll();
-						}
-					} else {
+			if (event.ctrlKey) {
+				if (event.key === "a") {
+					cad.selectAll();
+				}
+			} else {
+				switch (event.key) {
+					case "w":
+					case "ArrowUp":
+						position.y += step;
+						break;
+					case "a":
+					case "ArrowLeft":
 						position.x -= step;
-					}
-					break;
-				case "s":
-				case "ArrowDown":
-					position.y -= step;
-					break;
-				case "d":
-				case "ArrowRight":
-					position.x += step;
-					break;
-				case "Escape":
-					cad.unselectAll();
-					break;
-				case "[":
-					cad.scale -= 0.1;
-					break;
-				case "]":
-					cad.scale += 0.1;
-					break;
-				default:
+						break;
+					case "s":
+					case "ArrowDown":
+						position.y -= step;
+						break;
+					case "d":
+					case "ArrowRight":
+						position.x += step;
+						break;
+					case "Escape":
+						cad.unselectAll();
+						break;
+					case "[":
+						cad.scale -= 0.1;
+						break;
+					case "]":
+						cad.scale += 0.1;
+						break;
+					default:
+				}
 			}
 			const name: keyof CadEvents = "keyboard";
 			this._emitter.emit(name, event);
+		});
+		window.addEventListener("keyup", (event) => {
+			if (event.key === "Control") {
+				this._status.pointerLock = false;
+				this._unHover();
+			}
 		});
 	}
 
@@ -292,5 +260,67 @@ export class CadViewerControls {
 			return intersects[0].object;
 		}
 		return null;
+	}
+
+	private _hover(event: PointerEvent) {
+		const {cad, currentObject} = this;
+		if (currentObject && currentObject.userData.selected !== true) {
+			this._unHover();
+		}
+		const object = this._getInterSection(new Vector2(event.clientX, event.clientY));
+		const selectable = object && object.userData.selectable;
+		if (selectable && object.userData.selected !== true) {
+			cad.dom.style.cursor = "pointer";
+			object.userData.hover = true;
+			cad.render();
+			this.currentObject = object;
+			if (event.ctrlKey) {
+				this._status.pointerLock = true;
+			}
+		}
+	}
+
+	private _unHover() {
+		const {cad, currentObject} = this;
+		cad.dom.style.cursor = "default";
+		if (currentObject) {
+			currentObject.userData.hover = false;
+			cad.render();
+			this.currentObject = null;
+		}
+	}
+
+	private _click(event: PointerEvent) {
+		const {currentObject, cad, _status} = this;
+		const object = _status.pointerLock ? currentObject : this._getInterSection(new Vector2(event.clientX, event.clientY));
+		if (object) {
+			const entity = cad.data.findEntity(object.name);
+			if (object.userData.selected === true) {
+				if (object instanceof Line) {
+					if (object.material instanceof LineBasicMaterial) {
+						object.userData.selected = false;
+						object.material.color.set(entity?.color);
+					}
+				}
+				const name: keyof CadEvents = "entityunselect";
+				this._emitter.emit(name, event, entity, object);
+			} else if (object.userData.selectable !== false) {
+				if (object instanceof Line) {
+					if (object.material instanceof LineBasicMaterial) {
+						if (this.config.selectMode === "single") {
+							cad.unselectAll();
+						}
+						object.userData.selected = true;
+						if (typeof cad.config.selectedColor === "number") {
+							object.material.color.set(cad.config.selectedColor);
+						} else {
+							object.material.color.set(entity?.color);
+						}
+					}
+				}
+				const name: keyof CadEvents = "entityselect";
+				this._emitter.emit(name, event, entity, object);
+			}
+		}
 	}
 }

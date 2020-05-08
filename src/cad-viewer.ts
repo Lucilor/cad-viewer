@@ -15,12 +15,11 @@ import {
 	ShapeGeometry,
 	Shape,
 	Mesh,
-	MeshBasicMaterial,
-	Material
+	MeshBasicMaterial
 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
 import {CadViewerControls, CadViewerControlsConfig} from "./cad-viewer-controls";
-import {CadData, CadEntity, CadLine, CadTypes, CadArc, CadCircle, CadEntities, CadMtext, CadDimension, CadHatch} from "./cad-data";
+import {CadData, CadEntity, CadLine, CadArc, CadCircle, CadEntities, CadMtext, CadDimension, CadHatch} from "./cad-data";
 import TextSprite from "@seregpie/three.text-sprite";
 
 export class CadStyle {
@@ -33,10 +32,14 @@ export class CadStyle {
 		cad?: CadViewer,
 		entity?: CadEntity
 	) {
-		const selected = cad.objects[entity?.id]?.userData.selected;
+		const {selectable, selected, hover} = cad.objects[entity?.id]?.userData || {};
 		this.color = params.color || entity?.color || 0;
-		if (selected && typeof cad.config.selectedColor === "number") {
-			this.color = cad.config.selectedColor;
+		if (selectable) {
+			if (selected && typeof cad.config.selectedColor === "number") {
+				this.color = cad.config.selectedColor;
+			} else if (hover && typeof cad.config.hoverColor === "number") {
+				this.color = cad.config.hoverColor;
+			}
 		}
 		if (cad.config.reverseSimilarColor) {
 			this.color = cad.correctColor(this.color);
@@ -213,6 +216,10 @@ export class CadViewer {
 	}
 
 	render(center = false, entities?: CadEntities, style?: CadStyle) {
+		if (this._destroyed) {
+			console.warn("This instance has already been destroyed.");
+			return this;
+		}
 		const now = new Date().getTime();
 		const then = this._renderTimer.time + (1 / this.config.fps) * 1000;
 		if (now < then) {
@@ -260,7 +267,7 @@ export class CadViewer {
 
 	private _setAnchor(sprite: TextSprite, position: Vector3, anchor: Vector3) {
 		sprite.position.copy(position);
-		const offset = anchor.subScalar(0.5).multiply(new Vector3(-sprite.width, sprite.height));
+		const offset = anchor.clone().subScalar(0.5).multiply(new Vector3(-sprite.width, sprite.height));
 		sprite.position.add(new Vector3(offset.x, offset.y, 0));
 	}
 
@@ -389,6 +396,7 @@ export class CadViewer {
 			object.text = entity.text;
 			object.fontSize = fontSize * 1.25;
 			object.fillStyle = colorStr;
+			this._setAnchor(object, entity.insert, entity.anchor);
 		} else {
 			const sprite = new TextSprite({fontSize: fontSize * 1.25, fillStyle: colorStr, text});
 			sprite.userData.selectable = false;
@@ -562,7 +570,10 @@ export class CadViewer {
 			object.geometry = geometry;
 			object.material = material;
 		} else {
-			scene.add(new Mesh(geometry, material));
+			const mesh = new Mesh(geometry, material);
+			mesh.name = entity.id;
+			objects[entity.id] = mesh;
+			scene.add(mesh);
 		}
 	}
 
@@ -595,7 +606,7 @@ export class CadViewer {
 
 	destroy() {
 		if (this._destroyed) {
-			console.warn("This cad has already been destroyed.");
+			console.warn("This instance has already been destroyed.");
 		} else {
 			this.scene.dispose();
 			this.renderer.dispose();
@@ -604,11 +615,15 @@ export class CadViewer {
 		}
 	}
 
-	reset(data: CadData) {
+	reset(data?: CadData) {
 		this.scene.remove(...Object.values(this.objects));
 		this.objects = {};
-		this.data = data;
-		return this.render();
+		if (data instanceof CadData) {
+			this.data = data;
+		} else if (data) {
+			this.data = new CadData(data);
+		}
+		return this.render(true);
 	}
 
 	translatePoint(point: Vector2 | Vector3) {
