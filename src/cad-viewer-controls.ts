@@ -1,7 +1,7 @@
 import {CadViewer} from "./cad-viewer";
-import {Vector2, Vector3, Line, LineBasicMaterial, Object3D, MathUtils, Box2, BufferGeometry} from "three";
+import {Vector2, Vector3, Line, LineBasicMaterial, Object3D, MathUtils, Box2} from "three";
 import {EventEmitter} from "events";
-import {CadEntity, CadEntities} from "./cad-data";
+import {CadEntity} from "./cad-data/cad-entity";
 
 export interface CadViewerControlsConfig {
 	dragAxis?: "x" | "y" | "xy" | "";
@@ -41,8 +41,8 @@ export class CadViewerControls {
 		pTo: new Vector2(),
 		dragging: false,
 		button: NaN,
-		componentName: "",
-		pointerLock: false
+		pointerLock: false,
+		ctrl: false
 	};
 	private _multiSelector: HTMLDivElement;
 	private _emitter = new EventEmitter();
@@ -76,28 +76,20 @@ export class CadViewerControls {
 		});
 		dom.addEventListener("pointermove", (event) => {
 			const p = new Vector2(event.clientX, event.clientY);
-			const {cad, _status, config} = this;
+			const {cad, _status} = this;
 			const {button, dragging} = _status;
 			if (dragging) {
-				const {pFrom, pTo, componentName} = _status;
+				const {pFrom, pTo} = _status;
 				if (button === 1 || (event.shiftKey && button === 0)) {
 					const offset = new Vector2(p.x - pTo.x, pTo.y - p.y);
 					offset.divideScalar(cad.scale);
-					if (componentName) {
-						const component = cad.data.components.data.find((v) => v.name === componentName);
-						if (component) {
-							cad.moveComponent(component, offset);
-							cad.render();
-						}
-					} else {
-						if (!this.config.dragAxis.includes("x")) {
-							offset.x = 0;
-						}
-						if (!this.config.dragAxis.includes("y")) {
-							offset.y = 0;
-						}
-						cad.position.sub(new Vector3(offset.x, offset.y, 0));
+					if (!this.config.dragAxis.includes("x")) {
+						offset.x = 0;
 					}
+					if (!this.config.dragAxis.includes("y")) {
+						offset.y = 0;
+					}
+					cad.position.sub(new Vector3(offset.x, offset.y, 0));
 				} else if (button === 0) {
 					if (this.config.selectMode === "multiple") {
 						this._multiSelector.hidden = false;
@@ -111,14 +103,12 @@ export class CadViewerControls {
 				this._emitter.emit(name, event);
 			}
 			_status.pTo.set(p.x, p.y);
-			if (config.selectMode !== "none" && !_status.pointerLock) {
-				this._hover(event);
-			}
+			_status.ctrl = event.ctrlKey;
 		});
 		["pointerup"].forEach((v) => {
 			dom.addEventListener(v, (event: PointerEvent) => {
 				const {camera, objects} = this.cad;
-				const {pFrom, pTo, dragging, pointerLock} = this._status;
+				const {pFrom, pTo, dragging} = this._status;
 				if (dragging) {
 					if (this._multiSelector.hidden === false) {
 						this._multiSelector.hidden = true;
@@ -181,7 +171,7 @@ export class CadViewerControls {
 			const name: keyof CadEvents = "wheel";
 			this._emitter.emit(name, event);
 		});
-		window.addEventListener("keydown", (event) => {
+		dom.addEventListener("keydown", (event) => {
 			const {cad} = this;
 			const position = cad.position;
 			const step = 10 / cad.scale;
@@ -222,12 +212,21 @@ export class CadViewerControls {
 			const name: keyof CadEvents = "keyboard";
 			this._emitter.emit(name, event);
 		});
-		window.addEventListener("keyup", (event) => {
+		dom.addEventListener("keyup", (event) => {
 			if (event.key === "Control") {
 				this._status.pointerLock = false;
 				this._unHover();
 			}
 		});
+		dom.tabIndex = 0;
+		dom.focus();
+	}
+
+	update() {
+		const {config, _status} = this;
+		if (config.selectMode !== "none" && !_status.pointerLock) {
+			this._hover();
+		}
 	}
 
 	on<K extends keyof CadEvents>(
@@ -242,39 +241,30 @@ export class CadViewerControls {
 		return new Vector3(((point.x - rect.left) / rect.width) * 2 - 1, (-(point.y - rect.top) / rect.height) * 2 + 1, 0.5);
 	}
 
-	private _getWorldPostion(point: Vector2) {
-		return this._getNDC(point).unproject(this.cad.camera);
-	}
-
-	private _getScreenPosition(position: Vector3) {
-		const rect = this.cad.dom.getBoundingClientRect();
-		const {x, y} = position.clone().project(this.cad.camera);
-		return new Vector2(Math.floor(((x + 1) * rect.width) / 2 + rect.left), Math.floor(((1 - y) * rect.height) / 2 + rect.top));
-	}
-
 	private _getInterSection(pointer: Vector2) {
 		const {raycaster, camera, objects} = this.cad;
 		raycaster.setFromCamera(this._getNDC(pointer), camera);
 		const intersects = raycaster.intersectObjects(Object.values(objects));
-		if (intersects.length) {
-			return intersects[0].object;
+		const intersect = intersects[0]?.object;
+		if (intersect && intersect.visible) {
+			return intersect;
 		}
 		return null;
 	}
 
-	private _hover(event: PointerEvent) {
-		const {cad, currentObject} = this;
+	private _hover() {
+		const {cad, currentObject, _status} = this;
 		if (currentObject && currentObject.userData.selected !== true) {
 			this._unHover();
 		}
-		const object = this._getInterSection(new Vector2(event.clientX, event.clientY));
+		const object = this._getInterSection(_status.pTo);
 		const selectable = object && object.userData.selectable;
 		if (selectable && object.userData.selected !== true) {
 			cad.dom.style.cursor = "pointer";
 			object.userData.hover = true;
 			cad.render();
 			this.currentObject = object;
-			if (event.ctrlKey) {
+			if (_status.ctrl) {
 				this._status.pointerLock = true;
 			}
 		}
