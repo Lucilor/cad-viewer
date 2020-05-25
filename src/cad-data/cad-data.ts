@@ -5,13 +5,16 @@ import {CadEntities} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 import {CadTransformation} from "./cad-transformation";
 import {CadLine} from "./cad-entity/cad-line";
-import {getVectorFromArray} from "./utils";
+import {getVectorFromArray, isLinesParallel, mergeArray, separateArray} from "./utils";
 import {CadCircle} from "./cad-entity/cad-circle";
+import {CadEntity} from "./cad-entity/cad-entity";
+import {CadDimension} from "./cad-entity/cad-dimension";
 
 export class CadData {
 	entities: CadEntities;
 	layers: CadLayer[];
 	id: string;
+	originalId: string;
 	name: string;
 	type: string;
 	conditions: string[];
@@ -31,6 +34,7 @@ export class CadData {
 			throw new Error("Invalid data.");
 		}
 		this.id = typeof data.id === "string" ? data.id : MathUtils.generateUUID();
+		this.originalId = data.originalId || this.id;
 		this.name = typeof data.name === "string" ? data.name : "";
 		this.type = typeof data.type === "string" ? data.type : "";
 		this.layers = [];
@@ -71,7 +75,7 @@ export class CadData {
 		this.visible = data.visible === false ? false : true;
 		this.zhankaikuan = data.zhankaikuan || "";
 		this.zhankaigao = data.zhankaigao || "";
-		this.shuliang = data.shuliang || "";
+		this.shuliang = data.shuliang || "1";
 		this.huajian = data.huajian || "";
 	}
 
@@ -87,10 +91,11 @@ export class CadData {
 				exOptions[v.name] = v.value;
 			}
 		});
-		const result = {
+		return {
 			layers: exLayers,
 			entities: this.entities.export(),
 			id: this.id,
+			originalId: this.originalId,
 			name: this.name,
 			type: this.type,
 			conditions: this.conditions.filter((v) => v),
@@ -99,9 +104,12 @@ export class CadData {
 			jointPoints: this.jointPoints.map((v) => v.export()),
 			parent: this.parent,
 			partners: this.partners.map((v) => v.export()),
-			components: this.components.export()
+			components: this.components.export(),
+			zhankaikuan: this.zhankaikuan,
+			zhankaigao: this.zhankaigao,
+			shuliang: this.shuliang,
+			huajian: this.huajian
 		};
-		return result;
 	}
 
 	/**
@@ -131,45 +139,56 @@ export class CadData {
 		return this.getAllEntities().find(id);
 	}
 
-	clone() {
-		return new CadData(this.export());
-	}
-
-	private _mergeArray(arr1: any[], arr2: any[], field?: string) {
-		if (field) {
-			const keys = arr1.map((v) => v[field]);
-			arr2.forEach((v) => {
-				const idx = keys.indexOf(v[field]);
-				if (idx === -1) {
-					arr1.push(v);
-				} else {
-					arr1[idx] = v;
-				}
+	clone(resetIds = false) {
+		const data = new CadData(this.export());
+		if (resetIds) {
+			this.id = MathUtils.generateUUID();
+			this.layers = this.layers.map((v) => {
+				const nv = new CadLayer(v.export());
+				nv.id = MathUtils.generateUUID();
+				return nv;
 			});
-		} else {
-			arr1 = Array.from(new Set(arr1.concat(arr2)));
+			data.entities = data.entities.clone(true);
+			data.partners = data.partners.map((v) => v.clone(true));
+			data.components.data = data.components.data.map((v) => v.clone(true));
 		}
-		return arr1;
+		return data;
 	}
 
 	merge(data: CadData) {
 		this.layers = this.layers.concat(data.layers);
 		this.entities.merge(data.entities);
-		this.conditions = this._mergeArray(this.conditions, data.conditions);
-		this.options = this._mergeArray(this.options, data.options, "name");
-		this.partners = this._mergeArray(this.partners, data.partners, "id");
-		this.jointPoints = this._mergeArray(this.jointPoints, data.jointPoints, "name");
-		this.baseLines = this._mergeArray(this.baseLines, data.baseLines, "name");
-		this.components.connections = this._mergeArray(this.components.connections, data.components.connections);
-		this.components.data = this._mergeArray(this.components.data, data.components.data, "id");
+		this.conditions = mergeArray(this.conditions, data.conditions);
+		this.options = mergeArray(this.options, data.options, "name");
+		this.jointPoints = mergeArray(this.jointPoints, data.jointPoints, "name");
+		this.baseLines = mergeArray(this.baseLines, data.baseLines, "name");
+		this.partners = mergeArray(this.partners, data.partners, "id");
+		this.components.connections = mergeArray(this.components.connections, data.components.connections);
+		this.components.data = mergeArray(this.components.data, data.components.data, "id");
 		return this;
 	}
 
-	transform(t: CadTransformation) {
-		this.entities.transform(t);
-		this.partners.forEach((v) => v.transform(t));
-		this.components.data.forEach((v) => v.transform(t));
-		const matrix = t.matrix;
+	separate(data: CadData) {
+		const layerIds = data.layers.map((v) => v.id);
+		this.layers = this.layers.filter((v) => !layerIds.includes(v.id));
+		this.entities.separate(data.entities);
+		this.conditions = separateArray(this.conditions, data.conditions);
+		this.options = separateArray(this.options, data.options, "name");
+		this.jointPoints = separateArray(this.jointPoints, data.jointPoints, "name");
+		this.baseLines = separateArray(this.baseLines, data.baseLines, "name");
+		this.partners = separateArray(this.partners, data.partners, "id");
+		this.components.connections = separateArray(this.components.connections, data.components.connections);
+		this.components.data = separateArray(this.components.data, data.components.data, "id");
+		this.partners.forEach((v) => v.separate(data));
+		this.components.data.forEach((v) => v.separate(data));
+		return this;
+	}
+
+	transform(trans: CadTransformation) {
+		this.entities.transform(trans);
+		this.partners.forEach((v) => v.transform(trans));
+		this.components.data.forEach((v) => v.transform(trans));
+		const matrix = trans.matrix;
 		this.baseLines.forEach((v) => {
 			const point = new Vector2(v.valueX, v.valueY);
 			point.applyMatrix3(matrix);
@@ -221,7 +240,7 @@ export class CadData {
 				translate = new Vector2();
 			}
 		}
-		partner.transform(new CadTransformation().setTranslate(translate.x, translate.y));
+		partner.transform(new CadTransformation({translate}));
 		const data = this.partners;
 		const prev = data.findIndex((v) => v.id === partner.id);
 		if (prev > -1) {
@@ -241,14 +260,14 @@ export class CadData {
 	}
 
 	addComponent(component: CadData) {
-		const rect1 = this.getAllEntities().getBounds();
-		if (rect1.width && rect1.height) {
-			const rect2 = component.getAllEntities().getBounds();
-			const translate = [rect1.x - rect2.x, rect1.y - rect2.y];
-			translate[0] += (rect1.width + rect2.width) / 2 + 15;
-			// offset1[1] += (rect1.height - rect2.height) / 2;
-			component.transform(new CadTransformation().setTranslate(...translate));
-		}
+		// const rect1 = this.getAllEntities().getBounds();
+		// if (rect1.width && rect1.height) {
+		// 	const rect2 = component.getAllEntities().getBounds();
+		// 	const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
+		// 	translate.x += (rect1.width + rect2.width) / 2 + 15;
+		// 	// offset1[1] += (rect1.height - rect2.height) / 2;
+		// 	component.transform(new CadTransformation({translate}));
+		// }
 		const data = this.components.data;
 		const prev = data.findIndex((v) => v.id === component.id);
 		if (prev > -1) {
@@ -264,12 +283,7 @@ export class CadData {
 		const connections = this.components.connections.slice();
 		this.components.data.length = 0;
 		this.components.connections.length = 0;
-		data.forEach((v) => {
-			if (v.entities.length < 1 || (v.entities.length === 1 && v.entities.dimension.length)) {
-				return;
-			}
-			this.addComponent(v);
-		});
+		data.forEach((v) => this.addComponent(v));
 		try {
 			connections.forEach((c) => this.assembleComponents(c));
 		} catch (error) {}
@@ -286,10 +300,10 @@ export class CadData {
 		let c1: CadData;
 		let c2: CadData;
 		for (const c of components.data) {
-			if (c.id === ids[0]) {
+			if (c.id === ids[0] || c.originalId === ids[0]) {
 				c1 = c;
 			}
-			if (c.id === ids[1]) {
+			if (c.id === ids[1] || c.originalId === ids[1]) {
 				c2 = c;
 			}
 			if (c1 && c2) {
@@ -352,7 +366,7 @@ export class CadData {
 			if (!l2) {
 				l2 = getLine(e2 as CadCircle, l1);
 			}
-			if (l1.slope === l2.slope) {
+			if (isLinesParallel([l1, l2])) {
 				if (!isFinite(l1.slope)) {
 					translate.x = l1.start.x - l2.start.x + spaceNum;
 					axis = "x";
@@ -400,7 +414,7 @@ export class CadData {
 			if (e3 instanceof CadCircle) {
 				l3 = getLine(e3, l1);
 			}
-			if (!(l1.slope === l2.slope && l2.slope === l3.slope)) {
+			if (!isLinesParallel([l1, l2, l3])) {
 				throw new Error("三条线必须相互平行");
 			}
 			const rect = c2.entities.getBounds();
@@ -492,12 +506,6 @@ export class CadData {
 							map[id] = {};
 						}
 						map[id][conn.axis] = conn.space;
-						if (conn.axis === "x") {
-							conn.offset.y += translate.y;
-						}
-						if (conn.axis === "y") {
-							conn.offset.x = translate.x;
-						}
 					}
 				});
 			}
@@ -526,6 +534,71 @@ export class CadData {
 	hide() {
 		this.getAllEntities().forEach((e) => (e.visible = false));
 		return this;
+	}
+
+	directAssemble(component: CadData, accuracy = 1) {
+		const findLines = (entities: CadEntities): {[key: string]: CadLine} => {
+			let hLine: CadLine;
+			let vLine: CadLine;
+			for (const l of entities.line) {
+				if (Math.abs(l.slope) <= accuracy) {
+					hLine = l;
+				}
+				if (!isFinite(l.slope)) {
+					vLine = l;
+				}
+				if (hLine && vLine) {
+					break;
+				}
+			}
+			if (!hLine || !vLine) {
+				throw new Error("缺少水平或垂直的线");
+			}
+			return {x: vLine, y: hLine};
+		};
+
+		const lines = findLines(this.entities);
+		if (!lines) {
+			return;
+		}
+		const cLines = findLines(component.getAllEntities());
+		if (!cLines) {
+			return;
+		}
+		["x", "y"].forEach((axis) => {
+			const conn = new CadConnection({axis, position: "absolute"});
+			conn.ids = [this.id, component.id];
+			conn.names = [this.name, component.name];
+			conn.lines = [lines[axis].id, cLines[axis].id];
+			if (axis === "x") {
+				conn.space = (cLines[axis].start.x - lines[axis].start.x).toString();
+			}
+			if (axis === "y") {
+				conn.space = (cLines[axis].start.y - lines[axis].start.y).toString();
+			}
+			this.assembleComponents(conn);
+		});
+	}
+
+	getDimensionPoints({entity1, entity2}: CadDimension) {
+		const getPoint = (e: CadEntity, location: string) => {
+			if (e instanceof CadLine) {
+				if (location === "start") {
+					return e.start;
+				}
+				if (location === "end") {
+					return e.end;
+				}
+				if (location === "center") {
+					return e.middle;
+				}
+			}
+			return null;
+		};
+		return {
+			point1: getPoint(this.findEntity(entity1.id), entity1.location),
+			point2: getPoint(this.findEntity(entity2.id), entity2.location)
+		};
 	}
 }
 
@@ -579,16 +652,25 @@ export class CadConnection {
 	space: string;
 	position: "absolute" | "relative";
 	axis: "x" | "y";
-	offset: Vector2;
 
-	constructor(data: any) {
+	constructor(data: any = {}) {
 		this.ids = Array.isArray(data.ids) ? data.ids : [];
 		this.names = Array.isArray(data.names) ? data.names : [];
 		this.lines = Array.isArray(data.lines) ? data.lines : [];
 		this.space = data.space || "0";
 		this.position = data.position || "absolute";
 		this.axis = data.axis || "x";
-		this.offset = getVectorFromArray(data.offset);
+	}
+
+	export() {
+		return {
+			ids: this.ids,
+			names: this.names,
+			lines: this.lines,
+			space: this.space,
+			position: this.position,
+			axis: this.axis
+		};
 	}
 }
 export class CadComponents {
@@ -609,8 +691,9 @@ export class CadComponents {
 	}
 
 	export() {
-		const result = {data: [], connections: this.connections};
+		const result = {data: [], connections: []};
 		this.data.forEach((v) => result.data.push(v.export()));
+		this.connections.forEach((v) => result.connections.push(v.export()));
 		return result;
 	}
 }

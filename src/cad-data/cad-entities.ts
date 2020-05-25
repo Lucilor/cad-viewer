@@ -6,9 +6,10 @@ import {CadDimension} from "./cad-entity/cad-dimension";
 import {CadHatch} from "./cad-entity/cad-hatch";
 import {CadLayer} from "./cad-layer";
 import {CAD_TYPES, CadTypes} from "./cad-types";
-import {CadEntity} from "./cad-entity";
+import {CadEntity} from "./cad-entity/cad-entity";
 import {CadTransformation} from "./cad-transformation";
 import {Box2, ArcCurve, MathUtils, Vector2} from "three";
+import {mergeArray, separateArray} from "./utils";
 
 export class CadEntities {
 	line: CadLine[] = [];
@@ -61,21 +62,19 @@ export class CadEntities {
 
 	merge(entities: CadEntities) {
 		Object.keys(CAD_TYPES).forEach((type) => {
-			this[type] = this[type].concat(entities[type]);
+			this[type] = mergeArray(this[type], entities[type], "id");
 		});
 	}
 
 	separate(entities: CadEntities) {
 		Object.keys(CAD_TYPES).forEach((type) => {
-			const arr = entities[type] as CadEntity[];
-			const ids = arr.map((e) => e.id);
-			this[type] = (this[type] as CadEntity[]).filter((e) => !ids.includes(e.id));
+			this[type] = separateArray(this[type], entities[type], "id");
 		});
 	}
 
 	find(id: string) {
 		for (const type in CAD_TYPES) {
-			const result = (this[type] as CadEntity[]).find((e) => e.id === id);
+			const result = (this[type] as CadEntity[]).find((e) => e.id === id || e.originalId === id);
 			if (result) {
 				return result;
 			}
@@ -93,15 +92,32 @@ export class CadEntities {
 
 	export() {
 		const result = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
-		for (const type in CAD_TYPES) {
-			(this[type] as CadEntity[]).forEach((e) => (result[type][e.id] = e.export()));
+		for (const key in CAD_TYPES) {
+			const type = key as keyof CadTypes;
+			this[type].forEach((e: CadEntity) => {
+				if (e instanceof CadDimension) {
+					if (e.entity1.id && e.entity2.id) {
+						result[type][e.id] = e.export();
+					}
+				} else {
+					result[type][e.id] = e.export();
+				}
+			});
 		}
 		return result;
 	}
 
-	transform(params: CadTransformation) {
+	clone(resetIds = false) {
+		const result = new CadEntities(this.export());
+		if (resetIds) {
+			result.forEach((e) => (e.id = MathUtils.generateUUID()));
+		}
+		return result;
+	}
+
+	transform(trans: CadTransformation) {
 		for (const type in CAD_TYPES) {
-			(this[type] as CadEntity[]).forEach((e) => e.transform(params));
+			(this[type] as CadEntity[]).forEach((e) => e.transform(trans));
 		}
 	}
 
@@ -161,6 +177,19 @@ export class CadEntities {
 			this.forEachType((array, type, TYPE) => {
 				if (TYPE === entity.type) {
 					array.push(entity);
+				}
+			});
+		}
+		return this;
+	}
+
+	remove(entity: CadEntity) {
+		if (entity instanceof CadEntity) {
+			const id = entity.id;
+			this.forEachType((array) => {
+				const index = array.findIndex((e) => e.id === id);
+				if (index > -1) {
+					array.splice(index, 1);
 				}
 			});
 		}

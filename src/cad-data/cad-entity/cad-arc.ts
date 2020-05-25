@@ -1,4 +1,4 @@
-import {CadEntity} from ".";
+import {CadEntity} from "./cad-entity";
 import {Vector2, ArcCurve, MathUtils} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
@@ -25,7 +25,7 @@ export class CadArc extends CadEntity {
 		this.clockwise = data.clockwise || false;
 	}
 
-	transform({matrix}: CadTransformation) {
+	transform({matrix,flip}: CadTransformation) {
 		const {center, curve} = this;
 		center.applyMatrix3(matrix);
 		const start = curve.getPoint(0).applyMatrix3(matrix);
@@ -34,6 +34,9 @@ export class CadArc extends CadEntity {
 		const endAngle = Math.atan2(end.y - center.y, end.x - center.x);
 		this.start_angle = MathUtils.radToDeg(startAngle);
 		this.end_angle = MathUtils.radToDeg(endAngle);
+		if (flip.vertical !== flip.horizontal) {
+			this.clockwise = !this.clockwise;
+		}
 	}
 
 	export() {

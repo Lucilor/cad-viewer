@@ -1,4 +1,4 @@
-import {CadEntity} from ".";
+import {CadEntity} from "./cad-entity";
 import {Vector2} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
@@ -21,6 +21,9 @@ export class CadLine extends CadEntity {
 	get theta() {
 		const {start, end} = this;
 		return Math.atan2(start.y - end.y, start.x - end.x);
+	}
+	get middle() {
+		return this.start.clone().add(this.end).divideScalar(2);
 	}
 
 	constructor(data: any = {type: CAD_TYPES.line}, layers: CadLayer[] = []) {

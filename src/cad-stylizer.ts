@@ -1,0 +1,69 @@
+import {CadViewer} from "./cad-viewer";
+import {CadEntity} from "./cad-data/cad-entity/cad-entity";
+import {CadMtext} from "./cad-data/cad-entity/cad-mtext";
+import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
+import {Color} from "three";
+
+export interface CadStyle {
+	color?: Color;
+	linewidth?: number;
+	fontSize?: number;
+	opacity?: number;
+}
+
+export class CadStylizer {
+	cad: CadViewer;
+	constructor(cad: CadViewer) {
+		this.cad = cad;
+	}
+
+	get(entity: CadEntity, params: CadStyle = {}) {
+		const cad = this.cad;
+		const result: CadStyle = {};
+		const {selectable, selected, hover} = cad.objects[entity.id]?.userData || {};
+		result.color = new Color(params.color || entity?.color || 0);
+		if (selectable) {
+			if (selected && typeof cad.config.selectedColor === "number") {
+				// this.color = cad.config.selectedColor;
+			} else if (hover && typeof cad.config.hoverColor === "number") {
+				result.color = new Color(cad.config.hoverColor);
+			}
+		}
+		if (cad.config.reverseSimilarColor) {
+			this.correctColor(result.color);
+		}
+		result.linewidth = params.linewidth || 1;
+		let eFontSize: number = null;
+		if (entity instanceof CadMtext || entity instanceof CadDimension) {
+			eFontSize = entity.font_size;
+		}
+		if (entity instanceof CadDimension) {
+			result.color.setRGB(0, 1, 0);
+		}
+		result.fontSize = params.fontSize || eFontSize || 16;
+		result.opacity = entity.opacity;
+		if (typeof params.opacity === "number") {
+			result.opacity = params.opacity;
+		}
+		return result;
+	}
+
+	correctColor(color: Color, threshold = 5) {
+		if (this.cad.config.reverseSimilarColor) {
+			const colorNum = color.getHex();
+			if (Math.abs(colorNum - this.cad.config.backgroundColor) <= threshold) {
+				color.set(0xfffffff - colorNum);
+			}
+		}
+	}
+
+	getColorStyle(color: Color, a = 1) {
+		const {r, g, b} = color;
+		const arr = [r, g, b].map((v) => v * 255);
+		if (a > 0 && a < 1) {
+			return `rgba(${[...arr, a].join(",")})`;
+		} else {
+			return `rgb(${arr.join(",")})`;
+		}
+	}
+}

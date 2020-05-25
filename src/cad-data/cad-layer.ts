@@ -1,26 +1,28 @@
-import {index2RGB} from "@lucilor/utils";
-import {MathUtils} from "three";
+import {index2RGB, RGB2Index} from "@lucilor/utils";
+import {MathUtils, Color} from "three";
 
 export class CadLayer {
 	id: string;
-	color: number;
+	originalId: string;
+	color: Color;
 	name: string;
 	_indexColor: number;
 	constructor(data: any = {}) {
-		this.color = index2RGB(data.color, "number") || 0;
 		this.name = data.name || "";
 		this.id = data.id || MathUtils.generateUUID();
-		this.color = 0;
+		this.originalId = data.originalId || this.id;
+		this.color = new Color();
 		if (data._indexColor && typeof data.color === "number") {
 			this._indexColor = data._indexColor;
-			this.color = data.color;
+			this.color.set(data.color);
 		} else {
 			this._indexColor = data.color;
-			this.color = index2RGB(data.color, "number");
+			this.color.set(index2RGB(data.color, "number"));
 		}
 	}
 
 	export() {
-		return {id: this.id, color: this._indexColor, name: this.name};
+		this._indexColor = RGB2Index(this.color.getHex());
+		return {id: this.id, color: this._indexColor, name: this.name, originalId: this.originalId};
 	}
 }
