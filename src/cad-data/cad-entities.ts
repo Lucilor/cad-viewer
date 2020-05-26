@@ -149,8 +149,8 @@ export class CadEntities {
 		this.circle.forEach((entity) => {
 			if (entity.visible) {
 				const {center, radius} = entity;
-				box.expandByPoint(center.addScalar(radius));
-				box.expandByPoint(center.subScalar(radius));
+				box.expandByPoint(center.clone().addScalar(radius));
+				box.expandByPoint(center.clone().subScalar(radius));
 			}
 		});
 		const center = new Vector2();

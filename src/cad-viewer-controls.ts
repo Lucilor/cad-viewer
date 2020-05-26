@@ -121,7 +121,6 @@ export class CadViewerControls {
 					intersect = intersect.parent;
 				}
 				if (intersect.visible) {
-					console.log(intersects);
 					return intersect;
 				}
 			}
