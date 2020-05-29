@@ -9,6 +9,7 @@ export interface CadStyle {
 	linewidth?: number;
 	fontSize?: number;
 	opacity?: number;
+	fontStyle?: string;
 }
 
 export class CadStylizer {
@@ -19,12 +20,14 @@ export class CadStylizer {
 
 	get(entity: CadEntity, params: CadStyle = {}) {
 		const cad = this.cad;
-		const result: CadStyle = {};
+		const result: CadStyle = {fontStyle:"normal"};
 		const {selectable, selected, hover} = cad.objects[entity.id]?.userData || {};
 		result.color = new Color(params.color || entity?.color || 0);
 		if (selectable) {
-			if (selected && typeof cad.config.selectedColor === "number") {
-				// this.color = cad.config.selectedColor;
+			if (selected) {
+				if (entity instanceof CadMtext) {
+					result.fontStyle = "italic";
+				}
 			} else if (hover && typeof cad.config.hoverColor === "number") {
 				result.color = new Color(cad.config.hoverColor);
 			}

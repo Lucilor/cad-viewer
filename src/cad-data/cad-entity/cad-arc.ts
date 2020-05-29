@@ -25,7 +25,7 @@ export class CadArc extends CadEntity {
 		this.clockwise = data.clockwise || false;
 	}
 
-	transform({matrix,flip}: CadTransformation) {
+	transform({matrix, flip}: CadTransformation) {
 		const {center, curve} = this;
 		center.applyMatrix3(matrix);
 		const start = curve.getPoint(0).applyMatrix3(matrix);
@@ -37,6 +37,7 @@ export class CadArc extends CadEntity {
 		if (flip.vertical !== flip.horizontal) {
 			this.clockwise = !this.clockwise;
 		}
+		return this;
 	}
 
 	export() {
@@ -47,5 +48,13 @@ export class CadArc extends CadEntity {
 			end_angle: this.end_angle,
 			clockwise: this.clockwise
 		});
+	}
+
+	clone(resetId = false) {
+		const data = this.export();
+		if (resetId) {
+			delete data.id;
+		}
+		return new CadArc(data);
 	}
 }

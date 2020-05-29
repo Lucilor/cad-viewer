@@ -27,6 +27,7 @@ export class CadData {
 	zhankaikuan: string;
 	zhankaigao: string;
 	shuliang: string;
+	shuliangbeishu: string;
 	huajian: string;
 	readonly visible: boolean;
 	constructor(data: any = {}) {
@@ -73,9 +74,10 @@ export class CadData {
 		this.components = new CadComponents(data.components || {});
 		this.updateComponents();
 		this.visible = data.visible === false ? false : true;
-		this.zhankaikuan = data.zhankaikuan || "";
+		this.zhankaikuan = data.zhankaikuan || "ceil(总长)+0";
 		this.zhankaigao = data.zhankaigao || "";
 		this.shuliang = data.shuliang || "1";
+		this.shuliangbeishu = data.shuliangbeishu || "1";
 		this.huajian = data.huajian || "";
 	}
 
@@ -108,8 +110,12 @@ export class CadData {
 			zhankaikuan: this.zhankaikuan,
 			zhankaigao: this.zhankaigao,
 			shuliang: this.shuliang,
+			shuliangbeishu: this.shuliangbeishu,
 			huajian: this.huajian
 		};
+	}
+	export2(i = 0) {
+		return this.components.data[i].export();
 	}
 
 	/**
@@ -142,9 +148,10 @@ export class CadData {
 	clone(resetIds = false) {
 		const data = new CadData(this.export());
 		if (resetIds) {
-			this.id = MathUtils.generateUUID();
+			// this.id = MathUtils.generateUUID();
 			this.layers = this.layers.map((v) => {
 				const nv = new CadLayer(v.export());
+				nv.originalId = nv.id;
 				nv.id = MathUtils.generateUUID();
 				return nv;
 			});
@@ -286,7 +293,9 @@ export class CadData {
 		data.forEach((v) => this.addComponent(v));
 		try {
 			connections.forEach((c) => this.assembleComponents(c));
-		} catch (error) {}
+		} catch (error) {
+			console.warn(error);
+		}
 		this.partners.forEach((v) => v.updateComponents());
 		this.components.data.forEach((v) => v.updateComponents());
 		return this;
@@ -318,8 +327,11 @@ export class CadData {
 			c1.entities = this.entities;
 		}
 		if (!c2) {
-			c2 = new CadData();
-			c2.entities = this.entities;
+			c2 = c1;
+			c1 = new CadData();
+			c1.entities = this.entities;
+			lines.unshift(lines.pop());
+			ids.unshift(ids.pop());
 		}
 		let axis: "x" | "y";
 		const getLine = (e: CadCircle, l: Line) => {
@@ -341,10 +353,7 @@ export class CadData {
 			if (!e1 || !e2) {
 				throw new Error("未找到对应实体");
 			}
-			let spaceNum = Number(space);
-			if (isNaN(spaceNum)) {
-				spaceNum = 20;
-			}
+			const spaceNum = Number(space);
 			let l1: Line;
 			let l2: Line;
 			if (e1 instanceof CadLine) {
@@ -379,7 +388,9 @@ export class CadData {
 			} else {
 				throw new Error("两条线不平行");
 			}
-			this.moveComponent(c2, translate, c1);
+			if (isNaN(spaceNum)) {
+				translate.set(0, 0);
+			}
 		} else if (position === "relative") {
 			const match = space.match(/([0-9]*)(\+|-)?([0-9]*)/);
 			if (!match) {
@@ -441,7 +452,6 @@ export class CadData {
 			} else {
 				throw new Error("三条线不是横线或者竖线");
 			}
-			this.moveComponent(c2, translate, c1);
 		}
 
 		const toRemove = [];
@@ -461,9 +471,11 @@ export class CadData {
 				connectedToC2.push(conn.ids[0]);
 			}
 		});
+		connection.axis = axis;
+		connection.space = connection.space ? connection.space : "0";
 		const connectedToBoth = intersection(connectedToC1, connectedToC2);
 		components.connections.forEach((conn, i) => {
-			const arr = intersection(conn.ids, [c1.id, c2.id]);
+			const arr = intersection(conn.ids, [c1.id, c2.id, this.id]);
 			if (conn.ids.includes(c2.id) && intersection(conn.ids, connectedToBoth).length) {
 				toRemove.push(i);
 			}
@@ -472,11 +484,9 @@ export class CadData {
 			}
 		});
 		components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
-		connection.axis = axis;
-		connection.space = connection.space ? connection.space : "0";
+		this.moveComponent(c2, translate, c1);
 		components.connections.push(cloneDeep(connection));
 
-		this.sortComponents();
 		return this;
 	}
 

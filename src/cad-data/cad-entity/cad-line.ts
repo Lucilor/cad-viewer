@@ -8,9 +8,11 @@ import {CadTransformation} from "../cad-transformation";
 export class CadLine extends CadEntity {
 	start: Vector2;
 	end: Vector2;
-	mingzi?: string;
-	qujian?: string;
-	gongshi?: string;
+	mingzi: string;
+	qujian: string;
+	gongshi: string;
+	guanlianbianhuagongshi: string;
+
 	get length() {
 		return this.start.distanceTo(this.end);
 	}
@@ -33,11 +35,13 @@ export class CadLine extends CadEntity {
 		this.mingzi = data.mingzi || "";
 		this.qujian = data.qujian || "";
 		this.gongshi = data.gongshi || "";
+		this.guanlianbianhuagongshi = data.guanlianbianhuagongshi || "";
 	}
 
 	transform({matrix}: CadTransformation) {
 		this.start.applyMatrix3(matrix);
 		this.end.applyMatrix3(matrix);
+		return this;
 	}
 
 	export() {
@@ -46,7 +50,16 @@ export class CadLine extends CadEntity {
 			end: this.end.toArray(),
 			mingzi: this.mingzi,
 			qujian: this.qujian,
-			gongshi: this.gongshi
+			gongshi: this.gongshi,
+			guanlianbianhuagongshi: this.guanlianbianhuagongshi
 		});
+	}
+
+	clone(resetId = false) {
+		const data = this.export();
+		if (resetId) {
+			delete data.id;
+		}
+		return new CadLine(data);
 	}
 }

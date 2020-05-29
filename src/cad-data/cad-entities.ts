@@ -10,6 +10,7 @@ import {CadEntity} from "./cad-entity/cad-entity";
 import {CadTransformation} from "./cad-transformation";
 import {Box2, ArcCurve, MathUtils, Vector2} from "three";
 import {mergeArray, separateArray} from "./utils";
+import {uniqWith} from "lodash";
 
 export class CadEntities {
 	line: CadLine[] = [];
@@ -58,6 +59,7 @@ export class CadEntities {
 				this.hatch.push(new CadHatch(data.hatch[id], layers));
 			}
 		}
+		this.updateDimensions();
 	}
 
 	merge(entities: CadEntities) {
@@ -110,7 +112,10 @@ export class CadEntities {
 	clone(resetIds = false) {
 		const result = new CadEntities(this.export());
 		if (resetIds) {
-			result.forEach((e) => (e.id = MathUtils.generateUUID()));
+			result.forEach((e) => {
+				e.originalId = e.id;
+				e.id = MathUtils.generateUUID();
+			});
 		}
 		return result;
 	}
@@ -194,5 +199,11 @@ export class CadEntities {
 			});
 		}
 		return this;
+	}
+
+	updateDimensions() {
+		this.dimension = uniqWith(this.dimension, (a, b) => {
+			return a.entity1.id === b.entity1.id || a.entity2.id === b.entity1.id || a.entity1.id === b.entity2.id || a.id === b.id;
+		});
 	}
 }

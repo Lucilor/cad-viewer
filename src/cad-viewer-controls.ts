@@ -18,6 +18,7 @@ export interface CadEvents {
 	entityselect: [PointerEvent, CadEntity, Object3D];
 	entityunselect: [PointerEvent, CadEntity, Object3D];
 	entitiesselect: [PointerEvent, never, never];
+	entitiesdelete: [KeyboardEvent, never, never];
 	entitiesunselect: [PointerEvent, never, never];
 	dragstart: [PointerEvent, never, never];
 	drag: [PointerEvent, never, never];
@@ -203,6 +204,8 @@ export class CadViewerControls {
 					const object = objects[key];
 					object.geometry.computeBoundingBox();
 					const {min, max} = object.geometry.boundingBox;
+					min.add(object.position);
+					max.add(object.position);
 					const objBox = new Box2(new Vector2(min.x, min.y), new Vector2(max.x, max.y));
 					if (box.containsBox(objBox) && object.userData.selectable) {
 						toSelect.push(object);
@@ -238,9 +241,9 @@ export class CadViewerControls {
 		const {cad, config} = this;
 		if (config.enableScale) {
 			if (event.deltaY > 0) {
-				cad.scale = Math.max(config.minScale, cad.scale - 0.1);
+				cad.scale = Math.max(config.minScale, cad.scale / 1.1);
 			} else if (event.deltaY < 0) {
-				cad.scale = Math.min(config.maxScale, cad.scale + 0.1);
+				cad.scale = Math.min(config.maxScale, cad.scale * 1.1);
 			}
 		}
 		const name: keyof CadEvents = "wheel";
@@ -276,15 +279,18 @@ export class CadViewerControls {
 					break;
 				case "Escape":
 					cad.unselectAll();
+					this._emitter.emit("entitiesunselect" as keyof CadEvents, event);
 					break;
 				case "[":
-					cad.scale -= 0.1;
+					cad.scale /= 1.1;
 					break;
 				case "]":
-					cad.scale += 0.1;
+					cad.scale *= 1.1;
 					break;
 				case "Delete":
+				case "Backspace":
 					cad.removeEntities(cad.selectedEntities);
+					this._emitter.emit("entitiesdelete" as keyof CadEvents, event);
 					break;
 				default:
 			}
@@ -336,24 +342,14 @@ export class CadViewerControls {
 		if (this.config.selectMode !== "none" && object) {
 			const entity = cad.data.findEntity(object.name);
 			if (object.userData.selected === true) {
-				if (object instanceof Line) {
-					if (object.material instanceof LineBasicMaterial) {
-						object.userData.selected = false;
-					}
+				object.userData.selected = false;
+				this._emitter.emit("entityunselect" as keyof CadEvents, event, entity, object);
+			} else if (object.userData.selectable === true) {
+				if (this.config.selectMode === "single") {
+					cad.unselectAll();
 				}
-				const name: keyof CadEvents = "entityunselect";
-				this._emitter.emit(name, event, entity, object);
-			} else if (object.userData.selectable !== false) {
-				if (object instanceof Line) {
-					if (object.material instanceof LineBasicMaterial) {
-						if (this.config.selectMode === "single") {
-							cad.unselectAll();
-						}
-						object.userData.selected = true;
-					}
-				}
-				const name: keyof CadEvents = "entityselect";
-				this._emitter.emit(name, event, entity, object);
+				object.userData.selected = true;
+				this._emitter.emit("entityselect" as keyof CadEvents, event, entity, object);
 			}
 			_status.pointerLock = false;
 			this._hover();
@@ -361,7 +357,7 @@ export class CadViewerControls {
 	}
 
 	private _dragObject(p: Vector2, offset: Vector2) {
-		const {cad, currentObject: object,_multiSelector} = this;
+		const {cad, currentObject: object, _multiSelector} = this;
 		if (!object || !_multiSelector.hidden) {
 			return false;
 		}

@@ -71,7 +71,7 @@ export class CadViewer {
 	renderer: WebGLRenderer;
 	objects: {[key: string]: CadViewer["currentObject"]} = {};
 	raycaster = new Raycaster();
-	currentObject: Mesh | Line | TextSprite;
+	currentObject: Mesh | Line;
 	controls: CadViewerControls;
 	stats: Stats;
 	stylizer: CadStylizer;
@@ -175,6 +175,10 @@ export class CadViewer {
 	}
 
 	resize(width?: number, height?: number) {
+		if (this._destroyed) {
+			console.warn("This instance has already been destroyed.");
+			return;
+		}
 		if (width > 0) {
 			this.config.width = width;
 		} else {
@@ -283,7 +287,7 @@ export class CadViewer {
 		const showLineLength = config.showLineLength;
 		const {start, end, length, theta} = entity;
 		const middle = start.clone().add(end).divideScalar(2);
-		const {linewidth, color, opacity} = stylizer.get(entity, style);
+		const {linewidth, color, opacity, fontStyle} = stylizer.get(entity, style);
 		let object = objects[entity.id] as Line;
 		const slope = (start.y - end.y) / (start.x - end.x);
 		const anchor = new Vector2(0.5, 0.5);
@@ -311,6 +315,7 @@ export class CadViewer {
 				lengthText.text = Math.round(length).toString();
 				lengthText.fontSize = showLineLength;
 				lengthText.fillStyle = colorStr;
+				lengthText.fontStyle = fontStyle;
 				this._setAnchor(lengthText, middle, anchor);
 			}
 		} else {
@@ -322,8 +327,13 @@ export class CadViewer {
 			objects[entity.id] = object;
 			scene.add(object);
 			if (showLineLength > 0) {
-				const lengthText = new TextSprite({fontSize: showLineLength, fillStyle: colorStr, text: Math.round(length).toString()});
-				lengthText.padding = 0;
+				const lengthText = new TextSprite({
+					fontSize: showLineLength,
+					fillStyle: colorStr,
+					text: Math.round(length).toString(),
+					fontStyle
+				});
+				// lengthText.padding = 0;
 				this._setAnchor(lengthText, middle, anchor);
 				object.add(lengthText);
 			}
@@ -381,7 +391,7 @@ export class CadViewer {
 			return;
 		}
 		const {scene, objects, stylizer} = this;
-		const {fontSize, color, opacity} = stylizer.get(entity, style);
+		const {fontSize, color, opacity, fontStyle} = stylizer.get(entity, style);
 		let object = objects[entity.id] as TextSprite;
 		const colorStr = stylizer.getColorStyle(color, opacity);
 		const text = entity.text || "";
@@ -389,11 +399,12 @@ export class CadViewer {
 			object.text = entity.text;
 			object.fontSize = fontSize * 1.25;
 			object.fillStyle = colorStr;
+			object.fontStyle = fontStyle;
 		} else {
-			object = new TextSprite({fontSize: fontSize * 1.25, fillStyle: colorStr, text});
-			object.userData.selectable = false;
+			object = new TextSprite({fontSize: fontSize * 1.25, fillStyle: colorStr, text, fontStyle});
 			object.name = entity.id;
-			object.padding = 0;
+			object.userData.selectable = true;
+			// object.padding = 0;
 			objects[entity.id] = object;
 			scene.add(object);
 		}
@@ -413,8 +424,8 @@ export class CadViewer {
 		if (!entity.entity1 || !entity.entity2 || !entity.entity1.id || !entity.entity2.id) {
 			canDraw = false;
 		}
-		const entity1 = this.data.findEntity(entity.entity1?.id) as CadLine;
-		const entity2 = this.data.findEntity(entity.entity2?.id) as CadLine;
+		const entity1 = this.data.findEntity(entity.entity1.id) as CadLine;
+		const entity2 = this.data.findEntity(entity.entity2.id) as CadLine;
 		if (!entity1 || entity1.opacity === 0 || !entity2 || entity2.opacity === 0) {
 			canDraw = false;
 		}

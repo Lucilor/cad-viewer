@@ -30,5 +30,14 @@ export class CadMtext extends CadEntity {
 	transform({matrix}: CadTransformation) {
 		this.insert.applyMatrix3(matrix);
 		// this.anchor.applyMatrix3(matrix);
+		return this;
+	}
+
+	clone(resetId = false) {
+		const data = this.export();
+		if (resetId) {
+			delete data.id;
+		}
+		return new CadMtext(data);
 	}
 }

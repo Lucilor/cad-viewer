@@ -21,6 +21,7 @@ export class CadCircle extends CadEntity {
 
 	transform({matrix}: CadTransformation) {
 		this.center.applyMatrix3(matrix);
+		return this;
 	}
 
 	export() {
@@ -28,5 +29,13 @@ export class CadCircle extends CadEntity {
 			center: this.center.toArray(),
 			radius: this.radius
 		});
+	}
+
+	clone(resetId = false) {
+		const data = this.export();
+		if (resetId) {
+			delete data.id;
+		}
+		return new CadCircle(data);
 	}
 }

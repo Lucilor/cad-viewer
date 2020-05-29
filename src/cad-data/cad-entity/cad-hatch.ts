@@ -59,5 +59,14 @@ export class CadHatch extends CadEntity {
 			});
 			path.vertices.forEach((vertice) => vertice.applyMatrix3(matrix));
 		});
+		return this;
+	}
+
+	clone(resetId = false) {
+		const data = this.export();
+		if (resetId) {
+			delete data.id;
+		}
+		return new CadHatch(data);
 	}
 }

@@ -4,7 +4,7 @@ import {MathUtils, Color} from "three";
 import {index2RGB, RGB2Index} from "@lucilor/utils";
 import {CadTransformation} from "../cad-transformation";
 
-export class CadEntity {
+export abstract class CadEntity {
 	id: string;
 	originalId: string;
 	type: string;
@@ -46,7 +46,7 @@ export class CadEntity {
 		this.opacity = typeof data.opacity === "number" ? data.opacity : 1;
 	}
 
-	transform(_trans: CadTransformation) {}
+	abstract transform(trans: CadTransformation): this;
 
 	export() {
 		this._indexColor = RGB2Index(this.color.getHex());
@@ -58,4 +58,6 @@ export class CadEntity {
 			color: this._indexColor
 		};
 	}
+
+	abstract clone(resetId?: boolean): CadEntity;
 }
