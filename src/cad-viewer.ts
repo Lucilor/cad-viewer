@@ -661,10 +661,7 @@ export class CadViewer {
 	}
 
 	removeEntity(entity: CadEntity) {
-		this.scene.remove(this.objects[entity.id]);
-		delete this.objects[entity.id];
-		this.data.entities.remove(entity);
-		return this.render();
+		this.removeEntities(new CadEntities().add(entity));
 	}
 
 	addEntities(entities: CadEntities) {
@@ -677,7 +674,9 @@ export class CadViewer {
 			this.scene.remove(this.objects[e.id]);
 			delete this.objects[e.id];
 		});
-		this.data.entities.separate(entities);
+		const data = new CadData();
+		data.entities = entities;
+		this.data.separate(data);
 		return this.render();
 	}
 }
