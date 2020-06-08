@@ -20,7 +20,7 @@ export class CadStylizer {
 
 	get(entity: CadEntity, params: CadStyle = {}) {
 		const cad = this.cad;
-		const result: CadStyle = {fontStyle:"normal"};
+		const result: CadStyle = {fontStyle: "normal"};
 		const {selectable, selected, hover} = cad.objects[entity.id]?.userData || {};
 		result.color = new Color(params.color || entity?.color || 0);
 		if (selectable) {
@@ -28,7 +28,8 @@ export class CadStylizer {
 				if (entity instanceof CadMtext) {
 					result.fontStyle = "italic";
 				}
-			} else if (hover && typeof cad.config.hoverColor === "number") {
+			}
+			if (hover && typeof cad.config.hoverColor === "number") {
 				result.color = new Color(cad.config.hoverColor);
 			}
 		}

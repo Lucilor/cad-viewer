@@ -42,6 +42,7 @@ export interface CadViewerConfig {
 	selectedColor?: number;
 	hoverColor?: number;
 	showLineLength?: number;
+	showGongshi?: number;
 	padding?: number[] | number;
 	fps?: number;
 	showStats?: boolean;
@@ -60,6 +61,7 @@ export class CadViewer {
 		selectedColor: 0xffff00,
 		hoverColor: 0x00ffff,
 		showLineLength: 0,
+		showGongshi: 0,
 		padding: [0],
 		fps: 60,
 		showStats: false,
@@ -107,20 +109,7 @@ export class CadViewer {
 	constructor(data: CadData, config: CadViewerConfig = {}) {
 		this.data = data;
 		this.config = {...this.config, ...config};
-		const {width, height, padding, backgroundColor, backgroundAlpha} = this.config;
-		if (typeof padding === "number") {
-			this.config.padding = [padding, padding, padding, padding];
-		} else if (!Array.isArray(padding) || padding.length === 0) {
-			this.config.padding = [0, 0, 0, 0];
-		} else if (padding.length === 0) {
-			this.config.padding = [0, 0, 0, 0];
-		} else if (padding.length === 1) {
-			this.config.padding = [padding[0], padding[0], padding[0], padding[0]];
-		} else if (padding.length === 2) {
-			this.config.padding = [padding[0], padding[1], padding[0], padding[1]];
-		} else if (padding.length === 3) {
-			this.config.padding = [padding[0], padding[1], padding[0], padding[2]];
-		}
+		const {width, height, backgroundColor, backgroundAlpha} = this.config;
 
 		const scene = new Scene();
 		const camera = new PerspectiveCamera(60, width / height, 0.1, 15000);
@@ -231,7 +220,20 @@ export class CadViewer {
 	center(entities?: CadEntities) {
 		const rect = this.getBounds(entities);
 		const {width, height} = this;
-		const padding = this.config.padding;
+		let padding = this.config.padding;
+		if (typeof padding === "number") {
+			padding = [padding, padding, padding, padding];
+		} else if (!Array.isArray(padding) || padding.length === 0) {
+			padding = [0, 0, 0, 0];
+		} else if (padding.length === 0) {
+			padding = [0, 0, 0, 0];
+		} else if (padding.length === 1) {
+			padding = [padding[0], padding[0], padding[0], padding[0]];
+		} else if (padding.length === 2) {
+			padding = [padding[0], padding[1], padding[0], padding[1]];
+		} else if (padding.length === 3) {
+			padding = [padding[0], padding[1], padding[0], padding[2]];
+		}
 		const scaleX = (width - padding[1] - padding[3]) / rect.width;
 		const scaleY = (height - padding[0] - padding[2]) / rect.height;
 		const scale = Math.min(scaleX, scaleY);
@@ -284,19 +286,11 @@ export class CadViewer {
 			return;
 		}
 		const {scene, objects, config, stylizer} = this;
-		const showLineLength = config.showLineLength;
+		const {showLineLength, showGongshi} = config;
 		const {start, end, length, theta} = entity;
 		const middle = start.clone().add(end).divideScalar(2);
 		const {linewidth, color, opacity, fontStyle} = stylizer.get(entity, style);
 		let object = objects[entity.id] as Line;
-		const slope = (start.y - end.y) / (start.x - end.x);
-		const anchor = new Vector2(0.5, 0.5);
-		if (slope === 0) {
-			anchor.y = 1;
-		}
-		if (!isFinite(slope)) {
-			anchor.x = 1;
-		}
 		const dx = Math.cos(Math.PI / 2 - theta) * linewidth;
 		const dy = Math.sin(Math.PI / 2 - theta) * linewidth;
 		const shape = new Shape();
@@ -310,14 +304,6 @@ export class CadViewer {
 		if (object) {
 			object.geometry = new BufferGeometry().setFromPoints([start, end]);
 			this._setLineMaterial(object, color, linewidth, opacity);
-			const lengthText = object.children.find((o) => (o as any).isTextSprite) as TextSprite;
-			if (lengthText) {
-				lengthText.text = Math.round(length).toString();
-				lengthText.fontSize = showLineLength;
-				lengthText.fillStyle = colorStr;
-				lengthText.fontStyle = fontStyle;
-				this._setAnchor(lengthText, middle, anchor);
-			}
 		} else {
 			const geometry = new BufferGeometry().setFromPoints([start, end]);
 			const material = new LineBasicMaterial({color, linewidth});
@@ -326,17 +312,46 @@ export class CadViewer {
 			object.name = entity.id;
 			objects[entity.id] = object;
 			scene.add(object);
-			if (showLineLength > 0) {
-				const lengthText = new TextSprite({
-					fontSize: showLineLength,
-					fillStyle: colorStr,
-					text: Math.round(length).toString(),
-					fontStyle
-				});
-				// lengthText.padding = 0;
-				this._setAnchor(lengthText, middle, anchor);
+		}
+
+		const anchor = new Vector2(0.5, 1);
+		let gongshi = entity.mingzi && entity.gongshi ? entity.mingzi + "=" + entity.gongshi : entity.gongshi;
+		if (entity.isVertical(1)) {
+			anchor.set(1, 0.5);
+			gongshi = gongshi.split("").join("\n");
+		}
+		const anchor2 = new Vector2(1 - anchor.x, 1 - anchor.y);
+		let lengthText = object.children.find((o) => o.name === entity.id + "-length") as TextSprite;
+		let gongshiText = object.children.find((o) => o.name === entity.id + "-gongshi") as TextSprite;
+		if (showLineLength > 0) {
+			if (lengthText) {
+				lengthText.text = Math.round(length).toString();
+			} else {
+				lengthText = new TextSprite({text: Math.round(length).toString()});
+				lengthText.name = entity.id + "-length";
 				object.add(lengthText);
 			}
+			lengthText.fontSize = showLineLength;
+			lengthText.fillStyle = colorStr;
+			lengthText.fontStyle = fontStyle;
+			this._setAnchor(lengthText, middle, anchor);
+		} else {
+			object.remove(lengthText);
+		}
+		if (showGongshi > 0) {
+			if (gongshiText) {
+				gongshiText.text = gongshi;
+			} else {
+				gongshiText = new TextSprite({text: gongshi});
+				gongshiText.name = entity.id + "-gongshi";
+				object.add(gongshiText);
+			}
+			gongshiText.fontSize = showLineLength;
+			gongshiText.fillStyle = colorStr;
+			gongshiText.fontStyle = fontStyle;
+			this._setAnchor(gongshiText, middle, anchor2);
+		} else {
+			object.remove(gongshiText);
 		}
 	}
 
@@ -404,7 +419,7 @@ export class CadViewer {
 			object = new TextSprite({fontSize: fontSize * 1.25, fillStyle: colorStr, text, fontStyle});
 			object.name = entity.id;
 			object.userData.selectable = true;
-			// object.padding = 0;
+			object.padding = 0.1;
 			objects[entity.id] = object;
 			scene.add(object);
 		}
@@ -619,17 +634,37 @@ export class CadViewer {
 		return this.render(true);
 	}
 
-	translatePoint(point: Vector2 | Vector2) {
+	getScreenPoint(point: Vector2) {
 		const result = new Vector2();
-		const {scale, width, height} = this;
-		result.x = (point.x - this.position.x) * scale + width / 2;
-		result.y = height / 2 - (point.y - this.position.y) * scale;
+		const {scale, width, height, position} = this;
+		result.x = (point.x - position.x) * scale + width / 2;
+		result.y = height / 2 - (point.y - position.y) * scale;
+		return result;
+	}
+
+	getWorldPoint(point: Vector2) {
+		const result = new Vector2();
+		const {scale, width, height, position} = this;
+		result.x = (point.x - width / 2) / scale + position.x;
+		result.y = (height / 2 - point.y) / scale + position.y;
 		return result;
 	}
 
 	traverse(callback: (o: Object3D, e: CadEntity) => void, entities = this.data.getAllEntities(), include?: (keyof CadTypes)[]) {
 		entities.forEach((e) => this.objects[e.id]?.traverse((o) => callback(o, e)), include);
 		return this;
+	}
+
+	addEntity(entity: CadEntity) {
+		this.data.entities.add(entity);
+		return this.render();
+	}
+
+	removeEntity(entity: CadEntity) {
+		this.scene.remove(this.objects[entity.id]);
+		delete this.objects[entity.id];
+		this.data.entities.remove(entity);
+		return this.render();
 	}
 
 	addEntities(entities: CadEntities) {
@@ -642,9 +677,7 @@ export class CadViewer {
 			this.scene.remove(this.objects[e.id]);
 			delete this.objects[e.id];
 		});
-		const data = new CadData();
-		data.entities = entities;
-		this.data.separate(data);
+		this.data.entities.separate(entities);
 		return this.render();
 	}
 }

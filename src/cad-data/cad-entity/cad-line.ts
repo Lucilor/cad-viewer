@@ -62,4 +62,12 @@ export class CadLine extends CadEntity {
 		}
 		return new CadLine(data);
 	}
+
+	isVertical(accuracy = 0) {
+		return Math.abs(this.start.x - this.end.x) <= accuracy;
+	}
+
+	isHorizonal(accuracy = 0) {
+		return Math.abs(this.start.y - this.end.y) <= accuracy;
+	}
 }

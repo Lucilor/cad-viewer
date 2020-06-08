@@ -1,5 +1,4 @@
 import {MathUtils, Vector2} from "three";
-import {Line, Point} from "@lucilor/utils";
 import {intersection, cloneDeep} from "lodash";
 import {CadEntities} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
@@ -145,13 +144,38 @@ export class CadData {
 		return this.getAllEntities().find(id);
 	}
 
+	findChildren(ids: string[]) {
+		const result: CadData[] = [];
+		ids.forEach((id) => {
+			const child = this.findChild(id);
+			if (child) {
+				result.push(child);
+			}
+		});
+		return result;
+	}
+
+	findChild(id: string) {
+		const children = [...this.partners, ...this.components.data];
+		for (const data of children) {
+			if (data.id === id) {
+				return data;
+			} else {
+				const result = data.findChild(id);
+				if (result) {
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
 	clone(resetIds = false) {
 		const data = new CadData(this.export());
 		if (resetIds) {
 			// this.id = MathUtils.generateUUID();
 			this.layers = this.layers.map((v) => {
 				const nv = new CadLayer(v.export());
-				nv.originalId = nv.id;
 				nv.id = MathUtils.generateUUID();
 				return nv;
 			});
@@ -194,7 +218,7 @@ export class CadData {
 	transform(trans: CadTransformation) {
 		this.entities.transform(trans);
 		this.partners.forEach((v) => v.transform(trans));
-		this.components.data.forEach((v) => v.transform(trans));
+		this.components.transform(trans);
 		const matrix = trans.matrix;
 		this.baseLines.forEach((v) => {
 			const point = new Vector2(v.valueX, v.valueY);
@@ -271,9 +295,11 @@ export class CadData {
 		// if (rect1.width && rect1.height) {
 		// 	const rect2 = component.getAllEntities().getBounds();
 		// 	const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
-		// 	translate.x += (rect1.width + rect2.width) / 2 + 15;
-		// 	// offset1[1] += (rect1.height - rect2.height) / 2;
-		// 	component.transform(new CadTransformation({translate}));
+		// 	if (translate.x > 1000 || translate.y > 1000) {
+		// 		translate.x += (rect1.width + rect2.width) / 2 + 15;
+		// 		// offset1[1] += (rect1.height - rect2.height) / 2;
+		// 		component.transform(new CadTransformation({translate}));
+		// 	}
 		// }
 		const data = this.components.data;
 		const prev = data.findIndex((v) => v.id === component.id);
@@ -291,11 +317,13 @@ export class CadData {
 		this.components.data.length = 0;
 		this.components.connections.length = 0;
 		data.forEach((v) => this.addComponent(v));
-		try {
-			connections.forEach((c) => this.assembleComponents(c));
-		} catch (error) {
-			console.warn(error);
-		}
+		connections.forEach((c) => {
+			try {
+				this.assembleComponents(c);
+			} catch (error) {
+				console.warn(error);
+			}
+		});
 		this.partners.forEach((v) => v.updateComponents());
 		this.components.data.forEach((v) => v.updateComponents());
 		return this;
@@ -303,7 +331,7 @@ export class CadData {
 
 	// It is likely to throw an error.
 	// TODO: avoid it.
-	assembleComponents(connection: CadConnection) {
+	assembleComponents(connection: CadConnection, accuracy = 1) {
 		const {ids, lines, space, position} = connection;
 		const components = this.components;
 		let c1: CadData;
@@ -334,17 +362,16 @@ export class CadData {
 			ids.unshift(ids.pop());
 		}
 		let axis: "x" | "y";
-		const getLine = (e: CadCircle, l: Line) => {
-			if (!(e instanceof CadCircle)) {
-				throw new Error("不支持的实体");
+		const getLine = (e: CadCircle, l: CadLine) => {
+			const result = new CadLine();
+			result.start = e.center.clone();
+			result.end = e.center.clone();
+			if (l.isVertical(accuracy)) {
+				result.end.y += 1;
+			} else {
+				result.end.x += 1;
 			}
-			const o = new Point(e.center.toArray());
-			if (!isFinite(l.slope)) {
-				return new Line(o, o.clone().add(new Point(0, 1)));
-			}
-			if (l.slope === 0) {
-				return new Line(o, o.clone().add(new Point(1, 0)));
-			}
+			return result;
 		};
 		const translate = new Vector2();
 		if (position === "absolute") {
@@ -354,17 +381,13 @@ export class CadData {
 				throw new Error("未找到对应实体");
 			}
 			const spaceNum = Number(space);
-			let l1: Line;
-			let l2: Line;
+			let l1: CadLine;
+			let l2: CadLine;
 			if (e1 instanceof CadLine) {
-				const start = new Point(e1.start.toArray());
-				const end = new Point(e1.end.toArray());
-				l1 = new Line(start, end);
+				l1 = e1;
 			}
 			if (e2 instanceof CadLine) {
-				const start = new Point(e2.start.toArray());
-				const end = new Point(e2.end.toArray());
-				l2 = new Line(start, end);
+				l2 = e2;
 			}
 			if (!l1 && !l2) {
 				throw new Error("至少需要一条直线");
@@ -375,11 +398,11 @@ export class CadData {
 			if (!l2) {
 				l2 = getLine(e2 as CadCircle, l1);
 			}
-			if (isLinesParallel([l1, l2])) {
-				if (!isFinite(l1.slope)) {
+			if (isLinesParallel([l1, l2], accuracy)) {
+				if (l1.isVertical(accuracy)) {
 					translate.x = l1.start.x - l2.start.x + spaceNum;
 					axis = "x";
-				} else if (l1.slope === 0) {
+				} else if (l1.isHorizonal(accuracy)) {
 					translate.y = l1.start.y - l2.start.y + spaceNum;
 					axis = "y";
 				} else {
@@ -414,18 +437,16 @@ export class CadData {
 			if (!(e1 instanceof CadLine) || !(e2 instanceof CadLine)) {
 				throw new Error("必须先选两条直线");
 			}
-			const l1: Line = new Line(new Point(e1.start.toArray()), new Point(e1.end.toArray()));
-			const l2: Line = new Line(new Point(e2.start.toArray()), new Point(e2.end.toArray()));
-			let l3: Line;
+			const l1 = e1;
+			const l2 = e1;
+			let l3: CadLine;
 			if (e3 instanceof CadLine) {
-				const start = new Point(e3.start.toArray());
-				const end = new Point(e3.end.toArray());
-				l3 = new Line(start, end);
+				l3 = e3;
 			}
 			if (e3 instanceof CadCircle) {
 				l3 = getLine(e3, l1);
 			}
-			if (!isLinesParallel([l1, l2, l3])) {
+			if (!isLinesParallel([l1, l2, l3], accuracy)) {
 				throw new Error("三条线必须相互平行");
 			}
 			const rect = c2.entities.getBounds();
@@ -475,8 +496,8 @@ export class CadData {
 		connection.space = connection.space ? connection.space : "0";
 		const connectedToBoth = intersection(connectedToC1, connectedToC2);
 		components.connections.forEach((conn, i) => {
-			const arr = intersection(conn.ids, [c1.id, c2.id, this.id]);
-			if (conn.ids.includes(c2.id) && intersection(conn.ids, connectedToBoth).length) {
+			const arr = intersection(conn.ids, [c1.originalId, c2.originalId, this.originalId]);
+			if (conn.ids.includes(c2.originalId) && intersection(conn.ids, connectedToBoth).length) {
 				toRemove.push(i);
 			}
 			if (arr.length === 2 && conn.axis === axis) {
@@ -551,10 +572,12 @@ export class CadData {
 			let hLine: CadLine;
 			let vLine: CadLine;
 			for (const l of entities.line) {
-				if (Math.abs(l.slope) <= accuracy) {
-					hLine = l;
+				if (l.length <= accuracy) {
+					continue;
 				}
-				if (!isFinite(l.slope)) {
+				if (l.isHorizonal(accuracy)) {
+					hLine = l;
+				} else if (l.isVertical(accuracy)) {
 					vLine = l;
 				}
 				if (hLine && vLine) {
@@ -577,16 +600,16 @@ export class CadData {
 		}
 		["x", "y"].forEach((axis) => {
 			const conn = new CadConnection({axis, position: "absolute"});
-			conn.ids = [this.id, component.id];
+			conn.ids = [this.originalId, component.originalId];
 			conn.names = [this.name, component.name];
-			conn.lines = [lines[axis].id, cLines[axis].id];
+			conn.lines = [lines[axis].originalId, cLines[axis].originalId];
 			if (axis === "x") {
 				conn.space = (cLines[axis].start.x - lines[axis].start.x).toString();
 			}
 			if (axis === "y") {
 				conn.space = (cLines[axis].start.y - lines[axis].start.y).toString();
 			}
-			this.assembleComponents(conn);
+			this.assembleComponents(conn, accuracy);
 		});
 	}
 
@@ -698,6 +721,19 @@ export class CadComponents {
 		if (Array.isArray(data.connections)) {
 			data.connections.forEach((c) => this.connections.push(new CadConnection(c)));
 		}
+	}
+
+	transform(trans: CadTransformation) {
+		const {vertical, horizontal} = trans.flip;
+		this.connections.forEach((v) => {
+			if ((vertical && v.axis === "y") || (horizontal && v.axis === "x")) {
+				const space = -Number(v.space);
+				if (!isNaN(space)) {
+					v.space = space.toString();
+				}
+			}
+		});
+		this.data.forEach((v) => v.transform(trans));
 	}
 
 	export() {

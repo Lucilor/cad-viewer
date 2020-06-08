@@ -1,5 +1,5 @@
 import {Vector2} from "three";
-import {Line} from "@lucilor/utils";
+import {CadLine} from "./cad-entity/cad-line";
 
 export function getVectorFromArray(data: number[]) {
 	if (!Array.isArray(data)) {
@@ -9,10 +9,14 @@ export function getVectorFromArray(data: number[]) {
 	return new Vector2(...data);
 }
 
-export function isLinesParallel(lines: Line[], accurary = 0.1) {
+export function isLinesParallel(lines: CadLine[], accurary = 0) {
 	const line0 = lines[0];
+	const theta0 = Math.atan((line0.start.y - line0.end.y) / (line0.start.x - line0.end.x));
 	for (let i = 1; i < lines.length; i++) {
-		if (Math.abs(line0.slope - lines[i].slope) > accurary) {
+		const {start, end} = lines[i];
+		const theta1 = Math.atan((start.y - end.y) / (start.x - end.x));
+		const dTheta = Math.abs(theta0 - theta1);
+		if (dTheta !== Math.PI && dTheta > accurary) {
 			return false;
 		}
 	}
