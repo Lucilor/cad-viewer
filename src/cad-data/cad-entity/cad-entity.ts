@@ -1,6 +1,6 @@
 import {CadLayer} from "../cad-layer";
 import {CAD_TYPES} from "../cad-types";
-import {MathUtils, Color} from "three";
+import {MathUtils, Color, Mesh, Object3D} from "three";
 import {index2RGB, RGB2Index} from "@lucilor/utils";
 import {CadTransformation} from "../cad-transformation";
 
@@ -12,7 +12,12 @@ export abstract class CadEntity {
 	color: Color;
 	visible: boolean;
 	opacity: number;
+	selectable: boolean;
+	selected: boolean;
+	hover: boolean;
+	object?: Object3D = null;
 	_indexColor: number;
+
 	constructor(data: any = {}, layers: CadLayer[] = []) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
@@ -44,6 +49,9 @@ export abstract class CadEntity {
 		}
 		this.visible = data.visible === false ? false : true;
 		this.opacity = typeof data.opacity === "number" ? data.opacity : 1;
+		this.selectable = data.opacity === false ? false : true;
+		this.selected = data.selected === true ? true : false;
+		this.hover = data.hover === true ? true : false;
 	}
 
 	abstract transform(trans: CadTransformation): this;

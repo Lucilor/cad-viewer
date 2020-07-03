@@ -1,10 +1,10 @@
 import {MathUtils, Vector2} from "three";
-import {intersection, cloneDeep} from "lodash";
+import {intersection, cloneDeep, uniqWith} from "lodash";
 import {CadEntities} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 import {CadTransformation} from "./cad-transformation";
 import {CadLine} from "./cad-entity/cad-line";
-import {getVectorFromArray, isLinesParallel, mergeArray, separateArray} from "./utils";
+import {getVectorFromArray, isLinesParallel, mergeArray, separateArray, ExpressionsParser, Expressions} from "./utils";
 import {CadCircle} from "./cad-entity/cad-circle";
 import {CadEntity} from "./cad-entity/cad-entity";
 import {CadDimension} from "./cad-entity/cad-dimension";
@@ -13,7 +13,6 @@ export class CadData {
 	entities: CadEntities;
 	layers: CadLayer[];
 	id: string;
-	originalId: string;
 	name: string;
 	type: string;
 	conditions: string[];
@@ -28,13 +27,14 @@ export class CadData {
 	shuliang: string;
 	shuliangbeishu: string;
 	huajian: string;
+	needZhankai: boolean;
+	mubanfangda: boolean;
 	readonly visible: boolean;
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
 		}
 		this.id = typeof data.id === "string" ? data.id : MathUtils.generateUUID();
-		this.originalId = data.originalId || this.id;
 		this.name = typeof data.name === "string" ? data.name : "";
 		this.type = typeof data.type === "string" ? data.type : "";
 		this.layers = [];
@@ -78,6 +78,9 @@ export class CadData {
 		this.shuliang = data.shuliang || "1";
 		this.shuliangbeishu = data.shuliangbeishu || "1";
 		this.huajian = data.huajian || "";
+		this.needZhankai = data.needZhankai === false ? false : true;
+		this.mubanfangda = data.mubanfangda === false ? false : true;
+		this.updateDimensions();
 	}
 
 	export() {
@@ -96,7 +99,6 @@ export class CadData {
 			layers: exLayers,
 			entities: this.entities.export(),
 			id: this.id,
-			originalId: this.originalId,
 			name: this.name,
 			type: this.type,
 			conditions: this.conditions.filter((v) => v),
@@ -110,11 +112,23 @@ export class CadData {
 			zhankaigao: this.zhankaigao,
 			shuliang: this.shuliang,
 			shuliangbeishu: this.shuliangbeishu,
-			huajian: this.huajian
+			huajian: this.huajian,
+			needZhankai: this.needZhankai,
+			mubanfangda: this.mubanfangda
 		};
 	}
 	export2(i = 0) {
 		return this.components.data[i].export();
+	}
+
+	extractExpressions() {
+		const exps: Expressions = {};
+		this.getAllEntities().line.forEach((e) => {
+			if (e.mingzi && e.gongshi) {
+				exps[e.mingzi] = e.gongshi;
+			}
+		});
+		return new ExpressionsParser(exps);
 	}
 
 	/**
@@ -155,7 +169,7 @@ export class CadData {
 		return result;
 	}
 
-	findChild(id: string) {
+	findChild(id: string): CadData {
 		const children = [...this.partners, ...this.components.data];
 		for (const data of children) {
 			if (data.id === id) {
@@ -291,16 +305,16 @@ export class CadData {
 	}
 
 	addComponent(component: CadData) {
-		// const rect1 = this.getAllEntities().getBounds();
-		// if (rect1.width && rect1.height) {
-		// 	const rect2 = component.getAllEntities().getBounds();
-		// 	const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
-		// 	if (translate.x > 1000 || translate.y > 1000) {
-		// 		translate.x += (rect1.width + rect2.width) / 2 + 15;
-		// 		// offset1[1] += (rect1.height - rect2.height) / 2;
-		// 		component.transform(new CadTransformation({translate}));
-		// 	}
-		// }
+		const rect1 = this.getAllEntities().getBounds();
+		if (rect1.width && rect1.height) {
+			const rect2 = component.getAllEntities().getBounds();
+			const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
+			if (Math.abs(translate.x) > 1000 || Math.abs(translate.y) > 1000) {
+				translate.x += (rect1.width + rect2.width) / 2 + 15;
+				// offset1[1] += (rect1.height - rect2.height) / 2;
+				component.transform(new CadTransformation({translate}));
+			}
+		}
 		const data = this.components.data;
 		const prev = data.findIndex((v) => v.id === component.id);
 		if (prev > -1) {
@@ -329,6 +343,18 @@ export class CadData {
 		return this;
 	}
 
+	updateDimensions(parentDimensions?: CadDimension[]) {
+		if (Array.isArray(parentDimensions)) {
+			this.entities.dimension = this.entities.dimension.filter((v) => {
+				return parentDimensions.every((vv) => !v.equals(vv));
+			});
+		}
+		this.entities.dimension = uniqWith(this.entities.dimension, (a, b) => a.equals(b));
+		this.partners.forEach((v) => v.updateDimensions(this.entities.dimension));
+		this.components.data.forEach((v) => v.updateDimensions(this.entities.dimension));
+		return this;
+	}
+
 	// It is likely to throw an error.
 	// TODO: avoid it.
 	assembleComponents(connection: CadConnection, accuracy = 1) {
@@ -337,10 +363,10 @@ export class CadData {
 		let c1: CadData;
 		let c2: CadData;
 		for (const c of components.data) {
-			if (c.id === ids[0] || c.originalId === ids[0]) {
+			if (c.id === ids[0] || c.id === ids[0]) {
 				c1 = c;
 			}
-			if (c.id === ids[1] || c.originalId === ids[1]) {
+			if (c.id === ids[1] || c.id === ids[1]) {
 				c2 = c;
 			}
 			if (c1 && c2) {
@@ -496,8 +522,8 @@ export class CadData {
 		connection.space = connection.space ? connection.space : "0";
 		const connectedToBoth = intersection(connectedToC1, connectedToC2);
 		components.connections.forEach((conn, i) => {
-			const arr = intersection(conn.ids, [c1.originalId, c2.originalId, this.originalId]);
-			if (conn.ids.includes(c2.originalId) && intersection(conn.ids, connectedToBoth).length) {
+			const arr = intersection(conn.ids, [c1.id, c2.id, this.id]);
+			if (conn.ids.includes(c2.id) && intersection(conn.ids, connectedToBoth).length) {
 				toRemove.push(i);
 			}
 			if (arr.length === 2 && conn.axis === axis) {
@@ -600,7 +626,7 @@ export class CadData {
 		}
 		["x", "y"].forEach((axis) => {
 			const conn = new CadConnection({axis, position: "absolute"});
-			conn.ids = [this.originalId, component.originalId];
+			conn.ids = [this.id, component.id];
 			conn.names = [this.name, component.name];
 			conn.lines = [lines[axis].originalId, cLines[axis].originalId];
 			if (axis === "x") {

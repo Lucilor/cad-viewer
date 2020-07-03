@@ -21,7 +21,7 @@ export class CadStylizer {
 	get(entity: CadEntity, params: CadStyle = {}) {
 		const cad = this.cad;
 		const result: CadStyle = {fontStyle: "normal"};
-		const {selectable, selected, hover} = cad.objects[entity.id]?.userData || {};
+		const {selectable, selected, hover} = entity;
 		result.color = new Color(params.color || entity?.color || 0);
 		if (selectable) {
 			if (selected) {

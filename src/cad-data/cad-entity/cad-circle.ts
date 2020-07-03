@@ -1,5 +1,5 @@
 import {CadEntity} from "./cad-entity";
-import {Vector2, ArcCurve} from "three";
+import {Vector2, ArcCurve, Line} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {getVectorFromArray} from "../utils";
@@ -8,6 +8,8 @@ import {CadTransformation} from "../cad-transformation";
 export class CadCircle extends CadEntity {
 	center: Vector2;
 	radius: number;
+	object?: Line;
+
 	get curve() {
 		const {center, radius} = this;
 		return new ArcCurve(center.x, center.y, radius, 0, Math.PI * 2, true);

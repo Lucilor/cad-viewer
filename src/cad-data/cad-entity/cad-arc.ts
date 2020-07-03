@@ -1,13 +1,10 @@
-import {CadEntity} from "./cad-entity";
-import {Vector2, ArcCurve, MathUtils} from "three";
+import {CadCircle} from "./cad-circle";
+import {ArcCurve, MathUtils} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
-import {getVectorFromArray} from "../utils";
 import {CadTransformation} from "../cad-transformation";
 
-export class CadArc extends CadEntity {
-	center: Vector2;
-	radius: number;
+export class CadArc extends CadCircle {
 	start_angle: number;
 	end_angle: number;
 	clockwise: boolean;
@@ -18,8 +15,6 @@ export class CadArc extends CadEntity {
 
 	constructor(data: any = {type: CAD_TYPES.arc}, layers: CadLayer[] = []) {
 		super(data, layers);
-		this.center = getVectorFromArray(data.center);
-		this.radius = data.radius || 0;
 		this.start_angle = data.start_angle || 0;
 		this.end_angle = data.end_angle || 0;
 		this.clockwise = data.clockwise || false;
@@ -42,8 +37,6 @@ export class CadArc extends CadEntity {
 
 	export() {
 		return Object.assign(super.export(), {
-			center: this.center.toArray(),
-			radius: this.radius,
 			start_angle: this.start_angle,
 			end_angle: this.end_angle,
 			clockwise: this.clockwise

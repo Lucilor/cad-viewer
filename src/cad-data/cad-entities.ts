@@ -8,9 +8,8 @@ import {CadLayer} from "./cad-layer";
 import {CAD_TYPES, CadTypes} from "./cad-types";
 import {CadEntity} from "./cad-entity/cad-entity";
 import {CadTransformation} from "./cad-transformation";
-import {Box2, ArcCurve, MathUtils, Vector2} from "three";
+import {Box2, ArcCurve, MathUtils, Vector2, Object3D} from "three";
 import {mergeArray, separateArray} from "./utils";
-import {uniqWith, intersection} from "lodash";
 
 export class CadEntities {
 	line: CadLine[] = [];
@@ -19,9 +18,20 @@ export class CadEntities {
 	mtext: CadMtext[] = [];
 	dimension: CadDimension[] = [];
 	hatch: CadHatch[] = [];
+
 	get length() {
 		let result = 0;
 		this.forEachType((array) => (result += array.length));
+		return result;
+	}
+
+	get objects() {
+		const result: Object3D[] = [];
+		this.forEach((e) => {
+			if (e.object) {
+				result.push(e.object);
+			}
+		});
 		return result;
 	}
 
@@ -59,7 +69,6 @@ export class CadEntities {
 				this.hatch.push(new CadHatch(data.hatch[id], layers));
 			}
 		}
-		this.updateDimensions();
 	}
 
 	merge(entities: CadEntities) {
@@ -182,6 +191,12 @@ export class CadEntities {
 		this.forEachType((array) => array.forEach(callback), include);
 	}
 
+	toArray() {
+		const result: CadEntity[] = [];
+		this.forEach((e) => result.push(e));
+		return result;
+	}
+
 	add(entity: CadEntity) {
 		if (entity instanceof CadEntity) {
 			this.forEachType((array, type, TYPE) => {
@@ -204,13 +219,5 @@ export class CadEntities {
 			});
 		}
 		return this;
-	}
-
-	updateDimensions() {
-		this.dimension = uniqWith(this.dimension, (a, b) => {
-			const aIds = [a.entity1.id, a.entity2.id];
-			const bIds = [b.entity1.id, b.entity2.id];
-			return intersection(aIds, bIds).length === 2 || a.id === b.id;
-		});
 	}
 }
