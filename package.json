@@ -25,15 +25,15 @@
 	},
 	"homepage": "https://github.com/Lucilor/cad-viewer#readme",
 	"devDependencies": {
-		"@types/lodash": "^4.14.153",
+		"@types/lodash": "^4.14.157",
 		"clean-webpack-plugin": "^3.0.0",
-		"eslint": "^7.1.0",
-		"terser-webpack-plugin": "^3.0.2",
+		"eslint": "^7.3.1",
+		"terser-webpack-plugin": "^3.0.6",
 		"ts-loader": "^7.0.5",
 		"tslint": "^6.1.2",
-		"typescript": "^3.8.3",
+		"typescript": "^3.9.6",
 		"webpack": "^4.43.0",
-		"webpack-cli": "^3.3.11",
+		"webpack-cli": "^3.3.12",
 		"webpack-merge": "^4.2.2",
 		"webpack-node-externals": "^1.7.2"
 	},
@@ -41,6 +41,6 @@
 		"@lucilor/utils": "^1.0.19",
 		"@seregpie/three.text-sprite": "^2.0.0",
 		"lodash": "^4.17.15",
-		"three": "^0.117.1"
+		"three": "^0.118.3"
 	}
 }
