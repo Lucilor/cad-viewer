@@ -50,7 +50,8 @@ export class CadViewerControls extends EventEmitter {
 		pTo: new Vector2(),
 		dragging: false,
 		button: NaN,
-		ctrl: false
+		ctrl: false,
+		pTime: -Infinity
 	};
 	private _multiSelector: HTMLDivElement;
 	constructor(cad: CadViewer, config?: CadViewerControlsConfig) {
@@ -114,7 +115,12 @@ export class CadViewerControls extends EventEmitter {
 
 	private _getInterSection(pointer: Vector2) {
 		const {raycaster, camera, data} = this.cad;
-		const objects = data.getAllEntities().objects;
+		const objects: Object3D[] = [];
+		data.getAllEntities().forEach((e) => {
+			if (e.object && e.visible && e.selectable) {
+				objects.push(e.object);
+			}
+		});
 		const points = [pointer];
 		const d = 1;
 		points.push(pointer.clone().add(new Vector2(d, 0)));
@@ -133,21 +139,24 @@ export class CadViewerControls extends EventEmitter {
 				while (intersect.parent.type !== "Scene") {
 					intersect = intersect.parent;
 				}
-				const result = data.findEntity(intersect.name);
-				if (result.visible) {
-					return result;
-				}
+				return data.findEntity(intersect.name);
 			}
 		}
 		return null;
 	}
 
 	private _pointerDown(event: PointerEvent) {
-		const {clientX: x, clientY: y} = event;
-		this._status.pFrom.set(x, y);
-		this._status.pTo.set(x, y);
-		this._status.dragging = true;
-		this._status.button = event.button;
+		const {clientX: x, clientY: y, button} = event;
+		const _status = this._status;
+		_status.pFrom.set(x, y);
+		_status.pTo.set(x, y);
+		_status.button = button;
+		if (button === 1 && performance.now() - _status.pTime <= 500) {
+			this.cad.render(true);
+		} else {
+			_status.dragging = true;
+		}
+		this._status.pTime = performance.now();
 		this.emit("dragstart", event);
 	}
 
