@@ -313,7 +313,7 @@ export class CadViewer {
 			delete material.defines?.USE_DASH;
 		}
 		material.color.set(color);
-		material.setValues({linewidth, opacity});
+		material.setValues({linewidth, opacity, transparent:true});
 		material.needsUpdate = true;
 		line.computeLineDistances();
 	}
