@@ -1,14 +1,15 @@
 import {CadEntity} from "./cad-entity";
-import {Vector2, ArcCurve, Line} from "three";
+import {Vector2, ArcCurve} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {getVectorFromArray} from "../utils";
 import {CadTransformation} from "../cad-transformation";
+import {Line2} from "three/examples/jsm/lines/Line2";
 
 export class CadCircle extends CadEntity {
 	center: Vector2;
 	radius: number;
-	object?: Line;
+	object?: Line2;
 
 	get curve() {
 		const {center, radius} = this;

@@ -94,3 +94,11 @@ export class ExpressionsParser {
 		return Array.from(vars);
 	}
 }
+
+export function lineweight2linewidth(value: number) {
+	return value / 50 / 0.25;
+}
+
+export function linewidth2lineweight(value: number) {
+	return value * 50 * 0.25;
+}

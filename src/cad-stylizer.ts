@@ -36,7 +36,14 @@ export class CadStylizer {
 		if (cad.config.reverseSimilarColor) {
 			this.correctColor(result.color);
 		}
-		result.linewidth = params.linewidth || 1;
+		if (params.linewidth > 0) {
+			console.log(params);
+			result.linewidth = params.linewidth;
+		} else if (entity.linewidth > 0) {
+			result.linewidth = entity.linewidth;
+		} else {
+			result.linewidth = 1;
+		}
 		let eFontSize: number = null;
 		if (entity instanceof CadMtext || entity instanceof CadDimension) {
 			eFontSize = entity.font_size;

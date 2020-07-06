@@ -3,6 +3,7 @@ import {CAD_TYPES} from "../cad-types";
 import {MathUtils, Color, Object3D} from "three";
 import {index2RGB, RGB2Index} from "@lucilor/utils";
 import {CadTransformation} from "../cad-transformation";
+import {lineweight2linewidth, linewidth2lineweight} from "../utils";
 
 export abstract class CadEntity {
 	id: string;
@@ -10,6 +11,7 @@ export abstract class CadEntity {
 	type: string;
 	layer: string;
 	color: Color;
+	linewidth: number;
 	visible: boolean;
 	opacity: number;
 	selectable: boolean;
@@ -18,6 +20,7 @@ export abstract class CadEntity {
 	object?: Object3D = null;
 	info?: {[key: string]: any} = {};
 	_indexColor: number;
+	_lineweight: number;
 
 	constructor(data: any = {}, layers: CadLayer[] = []) {
 		if (typeof data !== "object") {
@@ -48,6 +51,19 @@ export abstract class CadEntity {
 				}
 			}
 		}
+		this.linewidth = typeof data.linewidth === "number" ? data.linewidth : 1;
+		this._lineweight = -3;
+		if (typeof data.lineweight === "number") {
+			this._lineweight = data.lineweight;
+			if (data.lineweight >= 0) {
+				this.linewidth = lineweight2linewidth(data.lineweight);
+			} else if (data.lineweight === -1) {
+				const layer = layers.find((layer) => layer.name === this.layer);
+				if (layer) {
+					this.linewidth = layer.linewidth;
+				}
+			}
+		}
 		this.visible = data.visible === false ? false : true;
 		this.opacity = typeof data.opacity === "number" ? data.opacity : 1;
 		this.selectable = data.opacity === false ? false : true;
@@ -64,7 +80,8 @@ export abstract class CadEntity {
 			originalId: this.originalId,
 			layer: this.layer,
 			type: this.type,
-			color: this._indexColor
+			color: this._indexColor,
+			lineweight: linewidth2lineweight(this.linewidth)
 		};
 	}
 

@@ -1,9 +1,10 @@
 import {CadEntity} from "./cad-entity";
-import {Vector2, Line} from "three";
+import {Vector2} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {getVectorFromArray, isBetween} from "../utils";
 import {CadTransformation} from "../cad-transformation";
+import {Line2} from "three/examples/jsm/lines/Line2";
 
 export class CadLine extends CadEntity {
 	start: Vector2;
@@ -12,7 +13,7 @@ export class CadLine extends CadEntity {
 	qujian: string;
 	gongshi: string;
 	guanlianbianhuagongshi: string;
-	object?: Line;
+	object?: Line2;
 
 	get valid() {
 		const {start, end} = this;

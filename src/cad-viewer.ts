@@ -2,21 +2,16 @@ import {
 	Scene,
 	PerspectiveCamera,
 	WebGLRenderer,
-	LineBasicMaterial,
 	Vector2,
-	Line,
 	MathUtils,
 	Raycaster,
-	Geometry,
 	Color,
 	ShapeGeometry,
 	Shape,
 	Mesh,
 	MeshBasicMaterial,
 	Material,
-	BufferGeometry,
 	Vector3,
-	LineDashedMaterial,
 	BoxGeometry,
 	AmbientLight
 } from "three";
@@ -34,6 +29,9 @@ import {CadArc} from "./cad-data/cad-entity/cad-arc";
 import {CadHatch} from "./cad-data/cad-entity/cad-hatch";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {CadTypes} from "./cad-data/cad-types";
+import {Line2} from "three/examples/jsm/lines/Line2";
+import {LineGeometry} from "three/examples/jsm/lines/LineGeometry";
+import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 
 export interface CadViewerConfig {
 	width?: number;
@@ -116,6 +114,7 @@ export class CadViewer {
 		const renderer = new WebGLRenderer({preserveDrawingBuffer: true, antialias});
 		renderer.setClearColor(backgroundColor, backgroundAlpha);
 		renderer.setSize(width, height);
+		renderer.setPixelRatio(window.devicePixelRatio);
 
 		camera.position.set(0, 0, 0);
 		camera.lookAt(0, 0, 0);
@@ -259,17 +258,6 @@ export class CadViewer {
 		sprite.position.add(new Vector3(offset.x, offset.y));
 	}
 
-	private _setLineMaterial(entity: CadEntity, color: Color, linewidth: number, opacity: number) {
-		const params = {color, linewidth, opacity, transparent: true};
-		const object = entity.object as Line;
-		if (entity.selected) {
-			object.material = new LineDashedMaterial({...params, gapSize: 4});
-			object.computeLineDistances();
-		} else {
-			object.material = new LineBasicMaterial(params);
-		}
-	}
-
 	private _checkEntity(entity: CadEntity) {
 		const {scene} = this;
 		let canDraw = entity.visible;
@@ -296,6 +284,40 @@ export class CadViewer {
 		return canDraw;
 	}
 
+	private _getLineObject(points: Vector2[], color: Color, linewidth: number, opacity: number) {
+		const resolution = new Vector2(this.width, this.height);
+		const positions = Array<number>();
+		points.forEach((p) => positions.push(p.x, p.y, 0));
+		const geometry = new LineGeometry().setPositions(positions);
+		const material = new LineMaterial({color: color.getHex(), linewidth, resolution, opacity});
+		return new Line2(geometry, material);
+	}
+
+	private _updateLineObject(entity: CadEntity, points: Vector2[], color: Color, linewidth: number, opacity = 1) {
+		const line = entity.object as Line2;
+		if (!(line instanceof Line2)) {
+			return;
+		}
+		const geometry = line.geometry as LineGeometry;
+		const material = line.material as LineMaterial;
+		const positions = Array<number>();
+		points.forEach((p) => positions.push(p.x, p.y, 0));
+		geometry.setPositions(positions);
+		if (entity.selected) {
+			material.dashed = true;
+			material.gapSize = 1;
+			material.dashScale = 0.5;
+			material.defines.USE_DASH = "";
+		} else {
+			material.dashed = false;
+			delete material.defines?.USE_DASH;
+		}
+		material.color.set(color);
+		material.setValues({linewidth, opacity});
+		material.needsUpdate = true;
+		line.computeLineDistances();
+	}
+
 	private _drawLine(entity: CadLine, style: CadStyle) {
 		if (!this._checkEntity(entity)) {
 			return;
@@ -317,12 +339,9 @@ export class CadViewer {
 
 		const colorStr = stylizer.getColorStyle(color, opacity);
 		if (object) {
-			object.geometry = new BufferGeometry().setFromPoints([start, end]);
-			this._setLineMaterial(entity, color, linewidth, opacity);
+			this._updateLineObject(entity, [start, end], color, linewidth, opacity);
 		} else {
-			const geometry = new BufferGeometry().setFromPoints([start, end]);
-			const material = new LineBasicMaterial({color, linewidth});
-			object = new Line(geometry, material);
+			object = this._getLineObject([start, end], color, linewidth, opacity);
 			object.name = entity.id;
 			scene.add(object);
 			entity.object = object;
@@ -402,12 +421,9 @@ export class CadViewer {
 		const points = curve.getPoints(50);
 		const {linewidth, color, opacity} = this.stylizer.get(entity, style);
 		if (object) {
-			object.geometry = new Geometry().setFromPoints(points);
-			this._setLineMaterial(entity, color, linewidth, opacity);
+			this._updateLineObject(entity, points, color, linewidth, opacity);
 		} else {
-			const geometry = new Geometry().setFromPoints(points);
-			const material = new LineBasicMaterial({color, linewidth});
-			object = new Line(geometry, material);
+			object = this._getLineObject(points, color, linewidth, opacity);
 			object.name = entity.id;
 			scene.add(object);
 			entity.object = object;
@@ -424,12 +440,9 @@ export class CadViewer {
 		const points = curve.getPoints(50);
 		const {linewidth: linewidth, color, opacity} = this.stylizer.get(entity, style);
 		if (object) {
-			object.geometry = new Geometry().setFromPoints(points);
-			this._setLineMaterial(entity, color, linewidth, opacity);
+			this._updateLineObject(entity, points, color, linewidth, opacity);
 		} else {
-			const geometry = new Geometry().setFromPoints(points);
-			const material = new LineBasicMaterial({color, linewidth});
-			object = new Line(geometry, material);
+			object = this._getLineObject(points, color, linewidth, opacity);
 			object.name = entity.id;
 			scene.add(object);
 			entity.object = object;
@@ -509,14 +522,12 @@ export class CadViewer {
 			arrow2[2] = arrow2[0].clone().add(new Vector2(arrowSize, arrowLength));
 		}
 
-		const geometry = new Geometry().setFromPoints([p1, p3, p4, p2]);
+		const points = [p1, p3, p4, p2];
 		if (object) {
 			object.remove(...object.children);
-			object.geometry = geometry;
-			this._setLineMaterial(entity, color, linewidth, opacity);
+			this._updateLineObject(entity, points, color, linewidth, opacity);
 		} else {
-			const material = new LineBasicMaterial({color, linewidth, opacity, transparent: true});
-			object = new Line(geometry, material);
+			object = this._getLineObject(points, color, linewidth, opacity);
 			object.renderOrder = -1;
 			object.name = entity.id;
 			scene.add(object);

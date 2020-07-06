@@ -2,7 +2,8 @@ import {CadEntity} from "./cad-entity";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {intersection} from "lodash";
-import {Line} from "three";
+import {CadTransformation} from "../cad-transformation";
+import {Line2} from "three/examples/jsm/lines/Line2";
 
 export class CadDimension extends CadEntity {
 	font_size: number;
@@ -21,7 +22,7 @@ export class CadDimension extends CadEntity {
 	cad2: string;
 	mingzi: string;
 	qujian: string;
-	object?: Line;
+	object?: Line2;
 
 	constructor(data: any = {type: CAD_TYPES.dimension}, layers: CadLayer[] = []) {
 		super(data, layers);
@@ -49,7 +50,13 @@ export class CadDimension extends CadEntity {
 		this.qujian = data.qujian || "";
 	}
 
-	transform() {
+	transform({flip}: CadTransformation) {
+		if (flip.vertical && this.axis === "x") {
+			this.distance = -this.distance;
+		}
+		if (flip.horizontal && this.axis === "y") {
+			this.distance = -this.distance;
+		}
 		return this;
 	}
 
