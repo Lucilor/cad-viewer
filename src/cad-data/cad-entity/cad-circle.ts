@@ -16,8 +16,8 @@ export class CadCircle extends CadEntity {
 		return new ArcCurve(center.x, center.y, radius, 0, Math.PI * 2, true);
 	}
 
-	constructor(data: any = {type: CAD_TYPES.circle}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.circle}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.center = getVectorFromArray(data.center);
 		this.radius = data.radius || 0;
 	}
@@ -28,17 +28,18 @@ export class CadCircle extends CadEntity {
 	}
 
 	export() {
-		return Object.assign(super.export(), {
+		return {
+			...super.export(),
 			center: this.center.toArray(),
 			radius: this.radius
-		});
+		};
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadCircle(data);
+		return new CadCircle(this, [], resetId);
+	}
+
+	equals(entity: CadCircle) {
+		return this.radius === entity.radius && this.center.equals(entity.center);
 	}
 }

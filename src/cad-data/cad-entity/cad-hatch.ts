@@ -16,8 +16,8 @@ export class CadHatch extends CadEntity {
 	}[];
 	object?: Mesh;
 
-	constructor(data: any = {type: CAD_TYPES.hatch}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.hatch}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
 		this.paths = [];
 		if (Array.isArray(data.paths)) {
@@ -50,7 +50,7 @@ export class CadHatch extends CadEntity {
 			path.vertices.forEach((vertice) => vertices.push(vertice.toArray()));
 			paths.push({edges, vertices});
 		});
-		return Object.assign(super.export(), {paths});
+		return {...super.export(), paths};
 	}
 
 	transform({matrix}: CadTransformation) {
@@ -65,10 +65,11 @@ export class CadHatch extends CadEntity {
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadHatch(data);
+		return new CadHatch(this, [], resetId);
+	}
+
+	equals(entity: CadHatch) {
+		// TODO: not yet implemented
+		return false;
 	}
 }

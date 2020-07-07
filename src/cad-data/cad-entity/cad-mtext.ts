@@ -13,8 +13,8 @@ export class CadMtext extends CadEntity {
 	anchor: Vector2;
 	object?: TextSprite;
 
-	constructor(data: any = {type: CAD_TYPES.mtext}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.mtext}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.insert = getVectorFromArray(data.insert);
 		this.font_size = data.font_size || 16;
 		this.text = data.text || "";
@@ -22,25 +22,30 @@ export class CadMtext extends CadEntity {
 	}
 
 	export() {
-		return Object.assign(super.export(), {
+		return {
+			...super.export(),
 			insert: this.insert.toArray(),
 			font_size: this.font_size,
 			text: this.text,
 			anchor: this.anchor.toArray()
-		});
+		};
 	}
 
 	transform({matrix}: CadTransformation) {
 		this.insert.applyMatrix3(matrix);
-		// this.anchor.applyMatrix3(matrix);
 		return this;
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadMtext(data);
+		return new CadMtext(this, [], resetId);
+	}
+
+	equals(entity: CadMtext) {
+		return (
+			this.insert.equals(entity.insert) &&
+			this.font_size === entity.font_size &&
+			this.text === entity.text &&
+			this.anchor.equals(entity.anchor)
+		);
 	}
 }

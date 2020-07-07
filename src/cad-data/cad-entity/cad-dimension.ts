@@ -23,8 +23,8 @@ export class CadDimension extends CadEntity {
 	qujian: string;
 	object?: Line2;
 
-	constructor(data: any = {type: CAD_TYPES.dimension}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.dimension}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.font_size = data.font_size || 16;
 		if (this.font_size === 2.5) {
 			this.font_size = 36;
@@ -54,7 +54,8 @@ export class CadDimension extends CadEntity {
 	}
 
 	export() {
-		return Object.assign(super.export(), {
+		return {
+			...super.export(),
 			dimstyle: this.dimstyle,
 			font_size: this.font_size,
 			axis: this.axis,
@@ -65,15 +66,11 @@ export class CadDimension extends CadEntity {
 			cad2: this.cad2,
 			mingzi: this.mingzi,
 			qujian: this.qujian
-		});
+		};
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadDimension(data);
+		return new CadDimension(this, [], resetId);
 	}
 
 	equals(dimension: CadDimension) {

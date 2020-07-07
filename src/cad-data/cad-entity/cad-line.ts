@@ -37,8 +37,8 @@ export class CadLine extends CadEntity {
 		return this.start.clone().add(this.end).divideScalar(2);
 	}
 
-	constructor(data: any = {type: CAD_TYPES.line}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.line}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.start = getVectorFromArray(data.start);
 		this.end = getVectorFromArray(data.end);
 		this.mingzi = data.mingzi || "";
@@ -54,22 +54,23 @@ export class CadLine extends CadEntity {
 	}
 
 	export() {
-		return Object.assign(super.export(), {
+		return {
+			...super.export(),
 			start: this.start.toArray(),
 			end: this.end.toArray(),
 			mingzi: this.mingzi,
 			qujian: this.qujian,
 			gongshi: this.gongshi,
 			guanlianbianhuagongshi: this.guanlianbianhuagongshi
-		});
+		};
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadLine(data);
+		return new CadLine(this, [], resetId);
+	}
+
+	equals(entity: CadLine) {
+		return this.start.equals(entity.start) && this.end.equals(entity.end);
 	}
 
 	isVertical(accuracy = 0) {

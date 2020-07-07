@@ -1,7 +1,10 @@
-import {Vector2} from "three";
+import {Vector2, MathUtils} from "three";
 import {CadLine} from "./cad-entity/cad-line";
 
-export function getVectorFromArray(data: number[]) {
+export function getVectorFromArray(data: number[] | Vector2) {
+	if (data instanceof Vector2) {
+		return data;
+	}
 	if (!Array.isArray(data)) {
 		return new Vector2();
 	}
@@ -101,4 +104,8 @@ export function lineweight2linewidth(value: number) {
 
 export function linewidth2lineweight(value: number) {
 	return value * 100 * 0.25;
+}
+
+export function clampAngle(angle: number) {
+	MathUtils.clamp(angle, 0, Math.PI * 2);
 }

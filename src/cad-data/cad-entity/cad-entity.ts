@@ -22,7 +22,7 @@ export abstract class CadEntity {
 	_indexColor: number;
 	_lineweight: number;
 
-	constructor(data: any = {}, layers: CadLayer[] = []) {
+	constructor(data: any = {}, layers: CadLayer[], resetId: boolean) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
 		}
@@ -31,25 +31,29 @@ export abstract class CadEntity {
 		} else {
 			throw new Error(`Unrecognized cad type: ${data.type}`);
 		}
-		this.id = typeof data.id === "string" ? data.id : MathUtils.generateUUID();
+		if (typeof data.id === "string" && !resetId) {
+			this.id = data.id;
+		} else {
+			this.id = MathUtils.generateUUID();
+		}
 		this.originalId = data.originalId || this.id;
 		this.layer = typeof data.layer === "string" ? data.layer : "0";
 		this.color = new Color();
-		if (data._indexColor && typeof data.color === "number") {
-			this._indexColor = data._indexColor;
-			this.color.set(data.color);
-		} else {
-			if (typeof data.color === "number") {
-				this._indexColor = data.color;
-				if (data.color === 256) {
-					const layer = layers.find((layer) => layer.name === this.layer);
-					if (layer) {
-						this.color.set(layer.color);
-					}
-				} else {
-					this.color.set(index2RGB(data.color, "number"));
+		if (typeof data.color === "number") {
+			this._indexColor = data.color;
+			if (data.color === 256) {
+				const layer = layers.find((layer) => layer.name === this.layer);
+				if (layer) {
+					this.color.set(layer.color);
 				}
+			} else {
+				this.color.set(index2RGB(data.color, "number"));
 			}
+		} else {
+			if (data.color instanceof Color) {
+				this.color = data.color;
+			}
+			this._indexColor = RGB2Index(this.color.getHex());
 		}
 		this.linewidth = typeof data.linewidth === "number" ? data.linewidth : 1;
 		this._lineweight = -3;
@@ -66,9 +70,12 @@ export abstract class CadEntity {
 		}
 		this.visible = data.visible === false ? false : true;
 		this.opacity = typeof data.opacity === "number" ? data.opacity : 1;
-		this.selectable = data.opacity === false ? false : true;
+		this.selectable = data.selectable === false ? false : true;
 		this.selected = data.selected === true ? true : false;
 		this.hover = data.hover === true ? true : false;
+		if (data.info !== undefined) {
+			this.info = data.info;
+		}
 	}
 
 	abstract transform(trans: CadTransformation): this;
@@ -86,4 +93,6 @@ export abstract class CadEntity {
 	}
 
 	abstract clone(resetId?: boolean): CadEntity;
+
+	abstract equals(entity: CadEntity): boolean;
 }

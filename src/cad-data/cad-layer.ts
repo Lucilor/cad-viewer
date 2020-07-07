@@ -16,12 +16,14 @@ export class CadLayer {
 		this.id = data.id || MathUtils.generateUUID();
 		this.originalId = data.originalId || this.id;
 		this.color = new Color();
-		if (data._indexColor && typeof data.color === "number") {
-			this._indexColor = data._indexColor;
-			this.color.set(data.color);
-		} else {
+		if (typeof data.color === "number") {
 			this._indexColor = data.color;
 			this.color.set(index2RGB(data.color, "number"));
+		} else {
+			if (data.color instanceof Color) {
+				this.color = data.color;
+			}
+			this._indexColor = RGB2Index(this.color.getHex());
 		}
 		this.linewidth = typeof data.lineWidth === "number" ? data.lineWidth : 1;
 		this._lineweight = -3;

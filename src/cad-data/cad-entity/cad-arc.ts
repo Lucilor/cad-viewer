@@ -3,6 +3,7 @@ import {ArcCurve, MathUtils} from "three";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {CadTransformation} from "../cad-transformation";
+import {clampAngle} from "../utils";
 
 export class CadArc extends CadCircle {
 	start_angle: number;
@@ -13,8 +14,8 @@ export class CadArc extends CadCircle {
 		return new ArcCurve(center.x, center.y, radius, MathUtils.degToRad(start_angle), MathUtils.degToRad(end_angle), clockwise);
 	}
 
-	constructor(data: any = {type: CAD_TYPES.arc}, layers: CadLayer[] = []) {
-		super(data, layers);
+	constructor(data: any = {type: CAD_TYPES.arc}, layers: CadLayer[] = [], resetId = false) {
+		super(data, layers, resetId);
 		this.start_angle = data.start_angle || 0;
 		this.end_angle = data.end_angle || 0;
 		this.clockwise = data.clockwise || false;
@@ -36,18 +37,23 @@ export class CadArc extends CadCircle {
 	}
 
 	export() {
-		return Object.assign(super.export(), {
+		return {
+			...super.export(),
 			start_angle: this.start_angle,
 			end_angle: this.end_angle,
 			clockwise: this.clockwise
-		});
+		};
 	}
 
 	clone(resetId = false) {
-		const data = this.export();
-		if (resetId) {
-			delete data.id;
-		}
-		return new CadArc(data);
+		return new CadArc(this, [], resetId);
+	}
+
+	equals(entity: CadArc) {
+		const startAngle1 = clampAngle(this.start_angle);
+		const endAngle1 = clampAngle(this.end_angle);
+		const startAngle2 = clampAngle(entity.start_angle);
+		const endAngle2 = clampAngle(entity.end_angle);
+		return super.equals(entity) && startAngle1 === startAngle2 && endAngle1 === endAngle2 && this.clockwise === entity.clockwise;
 	}
 }

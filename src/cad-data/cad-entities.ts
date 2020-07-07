@@ -35,40 +35,30 @@ export class CadEntities {
 		return result;
 	}
 
-	constructor(data: any = {}, layers: CadLayer[] = []) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetIds = false) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
 		}
-		if (typeof data.line === "object") {
-			for (const id in data.line) {
-				this.line.push(new CadLine(data.line[id], layers));
+		Object.keys(CAD_TYPES).forEach((type: keyof CadTypes) => {
+			const group = data[type];
+			if (Array.isArray(group)) {
+				group.forEach((v) => this[type].push(v.clone(resetIds)));
+			} else if (typeof group === "object") {
+				if (type === "arc") {
+					Object.values(group).forEach((v) => this[type].push(new CadArc(v, layers, resetIds)));
+				} else if (type === "circle") {
+					Object.values(group).forEach((v) => this[type].push(new CadArc(v, layers, resetIds)));
+				} else if (type === "dimension") {
+					Object.values(group).forEach((v) => this[type].push(new CadDimension(v, layers, resetIds)));
+				} else if (type === "hatch") {
+					Object.values(group).forEach((v) => this[type].push(new CadHatch(v, layers, resetIds)));
+				} else if (type === "line") {
+					Object.values(group).forEach((v) => this[type].push(new CadLine(v, layers, resetIds)));
+				} else if (type === "mtext") {
+					Object.values(group).forEach((v) => this[type].push(new CadMtext(v, layers, resetIds)));
+				}
 			}
-		}
-		if (typeof data.circle === "object") {
-			for (const id in data.circle) {
-				this.circle.push(new CadCircle(data.circle[id], layers));
-			}
-		}
-		if (typeof data.arc === "object") {
-			for (const id in data.arc) {
-				this.arc.push(new CadArc(data.arc[id], layers));
-			}
-		}
-		if (typeof data.mtext === "object") {
-			for (const id in data.mtext) {
-				this.mtext.push(new CadMtext(data.mtext[id], layers));
-			}
-		}
-		if (typeof data.dimension === "object") {
-			for (const id in data.dimension) {
-				this.dimension.push(new CadDimension(data.dimension[id], layers));
-			}
-		}
-		if (typeof data.hatch === "object") {
-			for (const id in data.hatch) {
-				this.hatch.push(new CadHatch(data.hatch[id], layers));
-			}
-		}
+		});
 	}
 
 	merge(entities: CadEntities) {
@@ -119,14 +109,7 @@ export class CadEntities {
 	}
 
 	clone(resetIds = false) {
-		const result = new CadEntities(this.export());
-		if (resetIds) {
-			result.forEach((e) => {
-				e.originalId = e.id;
-				e.id = MathUtils.generateUUID();
-			});
-		}
-		return result;
+		return new CadEntities(this, [], resetIds);
 	}
 
 	transform(trans: CadTransformation) {

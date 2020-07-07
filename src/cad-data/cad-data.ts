@@ -182,9 +182,8 @@ export class CadData {
 	}
 
 	clone(resetIds = false) {
-		const data = new CadData(this.export());
+		const data = new CadData(this);
 		if (resetIds) {
-			// this.id = MathUtils.generateUUID();
 			this.layers = this.layers.map((v) => {
 				const nv = new CadLayer(v.export());
 				nv.id = MathUtils.generateUUID();
