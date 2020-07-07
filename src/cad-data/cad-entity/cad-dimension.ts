@@ -2,7 +2,6 @@ import {CadEntity} from "./cad-entity";
 import {CAD_TYPES} from "../cad-types";
 import {CadLayer} from "../cad-layer";
 import {intersection} from "lodash";
-import {CadTransformation} from "../cad-transformation";
 import {Line2} from "three/examples/jsm/lines/Line2";
 
 export class CadDimension extends CadEntity {
@@ -50,13 +49,7 @@ export class CadDimension extends CadEntity {
 		this.qujian = data.qujian || "";
 	}
 
-	transform({flip}: CadTransformation) {
-		if (flip.vertical && this.axis === "x") {
-			this.distance = -this.distance;
-		}
-		if (flip.horizontal && this.axis === "y") {
-			this.distance = -this.distance;
-		}
+	transform() {
 		return this;
 	}
 

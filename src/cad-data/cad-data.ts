@@ -6,7 +6,6 @@ import {CadTransformation} from "./cad-transformation";
 import {CadLine} from "./cad-entity/cad-line";
 import {getVectorFromArray, isLinesParallel, mergeArray, separateArray, ExpressionsParser, Expressions} from "./utils";
 import {CadCircle} from "./cad-entity/cad-circle";
-import {CadEntity} from "./cad-entity/cad-entity";
 import {CadDimension} from "./cad-entity/cad-dimension";
 
 export class CadData {
@@ -245,6 +244,20 @@ export class CadData {
 			point.applyMatrix3(matrix);
 			v.valueX = point.x;
 			v.valueY = point.y;
+		});
+		this.entities.dimension.forEach((e) => {
+			if (trans.flip.vertical && e.axis === "x") {
+				const [p1, p2] = this.getDimensionPoints(e);
+				if (p1 && p2) {
+					e.distance = -Math.abs(p1.y - p2.y) - e.distance;
+				}
+			}
+			if (trans.flip.horizontal && e.axis === "y") {
+				const [p1, p2] = this.getDimensionPoints(e);
+				if (p1 && p2) {
+					e.distance = -Math.abs(p1.x - p2.x) - e.distance;
+				}
+			}
 		});
 	}
 
@@ -640,7 +653,8 @@ export class CadData {
 	}
 
 	getDimensionPoints({entity1, entity2}: CadDimension) {
-		const getPoint = (e: CadEntity, location: string) => {
+		const getPoint = ({id, location}: CadDimension["entity1"]) => {
+			const e = this.findEntity(id);
 			if (e instanceof CadLine) {
 				if (location === "start") {
 					return e.start;
@@ -654,10 +668,7 @@ export class CadData {
 			}
 			return null;
 		};
-		return {
-			point1: getPoint(this.findEntity(entity1.id), entity1.location),
-			point2: getPoint(this.findEntity(entity2.id), entity2.location)
-		};
+		return [getPoint(entity1), getPoint(entity2)];
 	}
 }
 

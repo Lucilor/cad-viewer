@@ -313,7 +313,7 @@ export class CadViewer {
 			delete material.defines?.USE_DASH;
 		}
 		material.color.set(color);
-		material.setValues({linewidth, opacity, transparent:true});
+		material.setValues({linewidth, opacity, transparent: true});
 		material.needsUpdate = true;
 		line.computeLineDistances();
 	}
@@ -323,8 +323,8 @@ export class CadViewer {
 			return;
 		}
 		const {scene, config, stylizer} = this;
-		const {showLineLength, showGongshi, validateLines} = config;
-		const {start, end, length, theta, valid} = entity;
+		const {showLineLength, showGongshi} = config;
+		const {start, end, length, theta} = entity;
 		let object = entity.object;
 		const middle = start.clone().add(end).divideScalar(2);
 		const {linewidth, color, opacity, fontStyle} = stylizer.get(entity, style);
@@ -385,29 +385,12 @@ export class CadViewer {
 				gongshiText.name = entity.id + "-gongshi";
 				object.add(gongshiText);
 			}
-			gongshiText.fontSize = showLineLength;
+			gongshiText.fontSize = showGongshi;
 			gongshiText.fillStyle = colorStr;
 			gongshiText.fontStyle = fontStyle;
 			this._setAnchor(gongshiText, middle, anchor2);
 		} else {
 			object.remove(gongshiText);
-		}
-
-		let rect = object.children.find((o) => o.name === entity.id + "-rect") as Mesh;
-		if (validateLines && !valid) {
-			if (rect) {
-			} else {
-				const geometry = new BoxGeometry(length, 6, 1);
-				const material = new MeshBasicMaterial({color: 0xff0000});
-				rect = new Mesh(geometry, material);
-				object.add(rect);
-				rect.name = entity.id + "-rect";
-			}
-			rect.rotation.set(0, 0, 0);
-			rect.rotateOnAxis(new Vector3(0, 0, 1), theta);
-			rect.position.set(middle.x, middle.y, 0);
-		} else {
-			object.remove(rect);
 		}
 	}
 
@@ -484,7 +467,7 @@ export class CadViewer {
 		const {linewidth, color, fontSize, opacity} = stylizer.get(entity, style);
 		const colorStr = stylizer.getColorStyle(color, opacity);
 
-		let {point1: p1, point2: p2} = this.data.getDimensionPoints(entity);
+		let [p1, p2] = this.data.getDimensionPoints(entity);
 		let p3 = p1.clone();
 		let p4 = p2.clone();
 		const arrow1: Vector2[] = [];

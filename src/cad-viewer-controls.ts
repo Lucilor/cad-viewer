@@ -391,7 +391,7 @@ export class CadViewerControls extends EventEmitter {
 			return false;
 		}
 		if (entity instanceof CadDimension) {
-			let {point1, point2} = cad.data.getDimensionPoints(entity);
+			let [point1, point2] = cad.data.getDimensionPoints(entity);
 			if (!point1 || !point2) {
 				return false;
 			}

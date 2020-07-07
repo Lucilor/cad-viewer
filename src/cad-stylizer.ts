@@ -3,6 +3,7 @@ import {CadEntity} from "./cad-data/cad-entity/cad-entity";
 import {CadMtext} from "./cad-data/cad-entity/cad-mtext";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {Color} from "three";
+import {CadLine} from "./cad-data/cad-entity/cad-line";
 
 export interface CadStyle {
 	color?: Color;
@@ -37,7 +38,6 @@ export class CadStylizer {
 			this.correctColor(result.color);
 		}
 		if (params.linewidth > 0) {
-			console.log(params);
 			result.linewidth = params.linewidth;
 		} else if (entity.linewidth > 0) {
 			result.linewidth = entity.linewidth;
@@ -56,6 +56,12 @@ export class CadStylizer {
 		if (typeof params.opacity === "number") {
 			result.opacity = params.opacity;
 		}
+
+		if (cad.config.validateLines && entity instanceof CadLine && !entity.valid) {
+			result.linewidth *= 10;
+			result.color.set(0xff0000);
+		}
+
 		return result;
 	}
 
