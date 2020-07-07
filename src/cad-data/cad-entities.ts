@@ -8,7 +8,7 @@ import {CadLayer} from "./cad-layer";
 import {CAD_TYPES, CadTypes} from "./cad-types";
 import {CadEntity} from "./cad-entity/cad-entity";
 import {CadTransformation} from "./cad-transformation";
-import {Box2, ArcCurve, MathUtils, Vector2, Object3D} from "three";
+import {MathUtils, Object3D} from "three";
 import {mergeArray, separateArray} from "./utils";
 
 export class CadEntities {
@@ -133,50 +133,6 @@ export class CadEntities {
 		for (const type in CAD_TYPES) {
 			(this[type] as CadEntity[]).forEach((e) => e.transform(trans));
 		}
-	}
-
-	getBoundingBox() {
-		const box = new Box2();
-		this.line.forEach((entity) => {
-			if (entity.visible) {
-				box.expandByPoint(entity.start);
-				box.expandByPoint(entity.end);
-			}
-		});
-		this.arc.forEach((entity) => {
-			if (entity.visible) {
-				const {center, radius, start_angle, end_angle, clockwise} = entity;
-				const arc = new ArcCurve(
-					center.x,
-					center.y,
-					radius,
-					MathUtils.degToRad(start_angle),
-					MathUtils.degToRad(end_angle),
-					clockwise
-				);
-				const start = arc.getPoint(0);
-				const end = arc.getPoint(1);
-				box.expandByPoint(new Vector2(start.x, start.y));
-				box.expandByPoint(new Vector2(end.x, end.y));
-			}
-		});
-		this.circle.forEach((entity) => {
-			if (entity.visible) {
-				const {center, radius} = entity;
-				box.expandByPoint(center.clone().addScalar(radius));
-				box.expandByPoint(center.clone().subScalar(radius));
-			}
-		});
-		return box;
-	}
-
-	getBounds() {
-		const box = this.getBoundingBox();
-		const center = new Vector2();
-		const size = new Vector2();
-		box.getCenter(center);
-		box.getSize(size);
-		return {x: center.x, y: center.y, width: size.x, height: size.y};
 	}
 
 	forEachType(callback: (array: CadEntity[], type: keyof CadTypes, TYPE: string) => void, include?: (keyof CadTypes)[]) {

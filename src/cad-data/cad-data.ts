@@ -1,4 +1,4 @@
-import {MathUtils, Vector2} from "three";
+import {MathUtils, Vector2, Box2} from "three";
 import {intersection, cloneDeep, uniqWith} from "lodash";
 import {CadEntities} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
@@ -7,6 +7,7 @@ import {CadLine} from "./cad-entity/cad-line";
 import {getVectorFromArray, isLinesParallel, mergeArray, separateArray, ExpressionsParser, Expressions} from "./utils";
 import {CadCircle} from "./cad-entity/cad-circle";
 import {CadDimension} from "./cad-entity/cad-dimension";
+import {CadArc} from "./cad-entity/cad-arc";
 
 export class CadData {
 	entities: CadEntities;
@@ -115,9 +116,6 @@ export class CadData {
 			needZhankai: this.needZhankai,
 			mubanfangda: this.mubanfangda
 		};
-	}
-	export2(i = 0) {
-		return this.components.data[i].export();
 	}
 
 	extractExpressions() {
@@ -289,9 +287,9 @@ export class CadData {
 			}
 		}
 		if (!translate) {
-			const rect1 = this.getAllEntities().getBounds();
+			const rect1 = this.getBounds();
 			if (rect1.width && rect1.height) {
-				const rect2 = partner.getAllEntities().getBounds();
+				const rect2 = partner.getBounds();
 				translate = getVectorFromArray([rect1.x - rect2.x, rect1.y - rect2.y]);
 				translate.x += (rect1.width + rect2.width) / 2 + 15;
 			} else {
@@ -318,9 +316,9 @@ export class CadData {
 	}
 
 	addComponent(component: CadData) {
-		const rect1 = this.getAllEntities().getBounds();
+		const rect1 = this.getBounds();
 		if (rect1.width && rect1.height) {
-			const rect2 = component.getAllEntities().getBounds();
+			const rect2 = component.getBounds();
 			const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
 			if (Math.abs(translate.x) > 1000 || Math.abs(translate.y) > 1000) {
 				translate.x += (rect1.width + rect2.width) / 2 + 15;
@@ -488,7 +486,9 @@ export class CadData {
 			if (!isLinesParallel([l1, l2, l3], accuracy)) {
 				throw new Error("三条线必须相互平行");
 			}
-			const rect = c2.entities.getBounds();
+			const tmpData = new CadData();
+			tmpData.entities = c2.entities;
+			const rect = tmpData.getBounds();
 			if (!isFinite(l1.slope)) {
 				const d = (l2.start.x - l1.start.x) * spParent;
 				translate.x = l1.start.x + d - l3.start.x;
@@ -552,8 +552,8 @@ export class CadData {
 
 	sortComponents() {
 		this.components.data.sort((a, b) => {
-			const rect1 = a.getAllEntities().getBounds();
-			const rect2 = b.getAllEntities().getBounds();
+			const rect1 = a.getBounds();
+			const rect2 = b.getBounds();
 			return rect1.x - rect2.x;
 		});
 	}
@@ -652,7 +652,7 @@ export class CadData {
 		});
 	}
 
-	getDimensionPoints({entity1, entity2}: CadDimension) {
+	getDimensionPoints({entity1, entity2, distance, axis}: CadDimension) {
 		const getPoint = ({id, location}: CadDimension["entity1"]) => {
 			const e = this.findEntity(id);
 			if (e instanceof CadLine) {
@@ -668,7 +668,65 @@ export class CadData {
 			}
 			return null;
 		};
-		return [getPoint(entity1), getPoint(entity2)];
+		let p1 = getPoint(entity1);
+		let p2 = getPoint(entity2);
+		if (!p1 || !p2) {
+			return [];
+		}
+		let p3 = p1.clone();
+		let p4 = p2.clone();
+		if (axis === "x") {
+			const y = Math.max(p3.y, p4.y);
+			p3.y = y + distance;
+			p4.y = y + distance;
+			if (p3.x > p4.x) {
+				[p3, p4] = [p4, p3];
+				[p1, p2] = [p2, p1];
+			}
+		}
+		if (axis === "y") {
+			const x = Math.max(p3.x, p4.x);
+			p3.x = x + distance;
+			p4.x = x + distance;
+			if (p3.y < p4.y) {
+				[p3, p4] = [p4, p3];
+				[p1, p2] = [p2, p1];
+			}
+		}
+		return [p1, p2, p3, p4];
+	}
+
+	getBoundingBox() {
+		const box = new Box2();
+		const entities = this.getAllEntities();
+		entities.forEach((e) => {
+			if (!e.visible) {
+				return;
+			}
+			if (e instanceof CadLine) {
+				box.expandByPoint(e.start);
+				box.expandByPoint(e.end);
+			}
+			if (e instanceof CadCircle || e instanceof CadArc) {
+				const curve = e.curve;
+				box.expandByPoint(curve.getPoint(0));
+				box.expandByPoint(curve.getPoint(0.5));
+				box.expandByPoint(curve.getPoint(1));
+			}
+			if (e instanceof CadDimension) {
+				this.getDimensionPoints(e).forEach((p) => box.expandByPoint(p));
+			}
+		});
+		return box;
+	}
+
+	getBounds() {
+		const box = this.getBoundingBox();
+		const center = new Vector2();
+		const size = new Vector2();
+		box.getCenter(center);
+		box.getSize(size);
+		return {x: center.x, y: center.y, width: size.x, height: size.y};
 	}
 }
 

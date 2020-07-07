@@ -12,7 +12,6 @@ import {
 	MeshBasicMaterial,
 	Material,
 	Vector3,
-	BoxGeometry,
 	AmbientLight
 } from "three";
 import Stats from "three/examples/jsm/libs/stats.module";
@@ -247,9 +246,11 @@ export class CadViewer {
 
 	getBounds(entities?: CadEntities) {
 		if (!entities) {
-			entities = this.data.getAllEntities();
+			return this.data.getBounds();
 		}
-		return entities.getBounds();
+		const data = new CadData();
+		data.entities = entities;
+		return data.getBounds();
 	}
 
 	private _setAnchor(sprite: TextSprite, position: Vector2, anchor: Vector2) {
@@ -462,26 +463,17 @@ export class CadViewer {
 			return;
 		}
 		const {scene, stylizer} = this;
-		const {mingzi, qujian, axis, distance} = entity;
+		const {mingzi, qujian, axis} = entity;
 		let object = entity.object;
 		const {linewidth, color, fontSize, opacity} = stylizer.get(entity, style);
 		const colorStr = stylizer.getColorStyle(color, opacity);
 
-		let [p1, p2] = this.data.getDimensionPoints(entity);
-		let p3 = p1.clone();
-		let p4 = p2.clone();
+		const [p1, p2, p3, p4] = this.data.getDimensionPoints(entity);
 		const arrow1: Vector2[] = [];
 		const arrow2: Vector2[] = [];
 		const arrowSize = 1;
 		const arrowLength = arrowSize * Math.sqrt(3);
 		if (axis === "x") {
-			const y = Math.max(p3.y, p4.y);
-			p3.y = y + distance;
-			p4.y = y + distance;
-			if (p3.x > p4.x) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
 			arrow1[0] = p3.clone();
 			arrow1[1] = arrow1[0].clone().add(new Vector2(arrowLength, -arrowSize));
 			arrow1[2] = arrow1[0].clone().add(new Vector2(arrowLength, arrowSize));
@@ -490,13 +482,6 @@ export class CadViewer {
 			arrow2[2] = arrow2[0].clone().add(new Vector2(-arrowLength, arrowSize));
 		}
 		if (axis === "y") {
-			const x = Math.max(p3.x, p4.x);
-			p3.x = x + distance;
-			p4.x = x + distance;
-			if (p3.y < p4.y) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
 			arrow1[0] = p3.clone();
 			arrow1[1] = arrow1[0].clone().add(new Vector2(-arrowSize, -arrowLength));
 			arrow1[2] = arrow1[0].clone().add(new Vector2(arrowSize, -arrowLength));
