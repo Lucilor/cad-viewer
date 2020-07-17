@@ -48,18 +48,17 @@ export class CadStylizer {
 		if (entity instanceof CadMtext || entity instanceof CadDimension) {
 			eFontSize = entity.font_size;
 		}
-		if (entity instanceof CadDimension) {
-			result.color.setRGB(0, 1, 0);
-		}
 		result.fontSize = params.fontSize || eFontSize || 16;
 		result.opacity = entity.opacity;
 		if (typeof params.opacity === "number") {
 			result.opacity = params.opacity;
 		}
 
-		if (cad.config.validateLines && entity instanceof CadLine && !entity.valid) {
-			result.linewidth *= 10;
-			result.color.set(0xff0000);
+		if (cad.config.validateLines && entity instanceof CadLine) {
+			if (!entity.valid || entity.info.error) {
+				result.linewidth *= 10;
+				result.color.set(0xff0000);
+			}
 		}
 
 		return result;

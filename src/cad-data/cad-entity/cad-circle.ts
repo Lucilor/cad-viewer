@@ -15,11 +15,14 @@ export class CadCircle extends CadEntity {
 		const {center, radius} = this;
 		return new ArcCurve(center.x, center.y, radius, 0, Math.PI * 2, true);
 	}
+	get length() {
+		return this.curve.getLength();
+	}
 
 	constructor(data: any = {type: CAD_TYPES.circle}, layers: CadLayer[] = [], resetId = false) {
 		super(data, layers, resetId);
 		this.center = getVectorFromArray(data.center);
-		this.radius = data.radius || 0;
+		this.radius = data.radius ?? 0;
 	}
 
 	transform({matrix}: CadTransformation) {

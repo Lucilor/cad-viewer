@@ -13,8 +13,8 @@ export class CadLayer {
 
 	constructor(data: any = {}) {
 		this.name = data.name || "";
-		this.id = data.id || MathUtils.generateUUID();
-		this.originalId = data.originalId || this.id;
+		this.id = data.id ?? MathUtils.generateUUID();
+		this.originalId = data.originalId ?? this.id;
 		this.color = new Color();
 		if (typeof data.color === "number") {
 			this._indexColor = data.color;

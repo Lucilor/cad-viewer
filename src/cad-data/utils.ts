@@ -99,11 +99,21 @@ export class ExpressionsParser {
 }
 
 export function lineweight2linewidth(value: number) {
-	return value / 100 / 0.25;
+	if (value >= 0.3) {
+		return 2;
+	} else {
+		return 1;
+	}
+	// return value / 100 / 0.25;
 }
 
 export function linewidth2lineweight(value: number) {
-	return value * 100 * 0.25;
+	if (value >= 2) {
+		return 0.3;
+	} else {
+		return 0.25;
+	}
+	// return value * 100 * 0.25;
 }
 
 export function clampAngle(angle: number) {

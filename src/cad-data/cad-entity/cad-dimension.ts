@@ -41,12 +41,12 @@ export class CadDimension extends CadEntity {
 				}
 			}
 		});
-		this.axis = data.axis || "x";
-		this.distance = data.distance || 16;
-		this.cad1 = data.cad1 || "";
-		this.cad2 = data.cad2 || "";
-		this.mingzi = data.mingzi || "";
-		this.qujian = data.qujian || "";
+		this.axis = data.axis ?? "x";
+		this.distance = data.distance ?? 20;
+		this.cad1 = data.cad1 ?? "";
+		this.cad2 = data.cad2 ?? "";
+		this.mingzi = data.mingzi ?? "";
+		this.qujian = data.qujian ?? "";
 	}
 
 	transform() {

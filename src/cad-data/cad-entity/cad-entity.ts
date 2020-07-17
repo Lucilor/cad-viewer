@@ -1,5 +1,5 @@
 import {CadLayer} from "../cad-layer";
-import {CAD_TYPES} from "../cad-types";
+import {CAD_TYPES, CadTypes} from "../cad-types";
 import {MathUtils, Color, Object3D} from "three";
 import {index2RGB, RGB2Index} from "@lucilor/utils";
 import {CadTransformation} from "../cad-transformation";
@@ -8,7 +8,7 @@ import {lineweight2linewidth, linewidth2lineweight} from "../utils";
 export abstract class CadEntity {
 	id: string;
 	originalId: string;
-	type: string;
+	type: keyof CadTypes;
 	layer: string;
 	color: Color;
 	linewidth: number;
@@ -18,7 +18,7 @@ export abstract class CadEntity {
 	selected: boolean;
 	hover: boolean;
 	object?: Object3D = null;
-	info?: {[key: string]: any} = {};
+	info?: {[key: string]: any};
 	_indexColor: number;
 	_lineweight: number;
 
@@ -29,15 +29,15 @@ export abstract class CadEntity {
 		if (Object.values(CAD_TYPES).includes(data.type)) {
 			this.type = data.type;
 		} else {
-			throw new Error(`Unrecognized cad type: ${data.type}`);
+			throw new Error(`Unrecognized cad entity type: ${data.type}`);
 		}
 		if (typeof data.id === "string" && !resetId) {
 			this.id = data.id;
 		} else {
 			this.id = MathUtils.generateUUID();
 		}
-		this.originalId = data.originalId || this.id;
-		this.layer = typeof data.layer === "string" ? data.layer : "0";
+		this.originalId = data.originalId ?? this.id;
+		this.layer = data.layer ?? "0";
 		this.color = new Color();
 		if (typeof data.color === "number") {
 			this._indexColor = data.color;
@@ -51,11 +51,11 @@ export abstract class CadEntity {
 			}
 		} else {
 			if (data.color instanceof Color) {
-				this.color = data.color;
+				this.color.set(data.color);
 			}
 			this._indexColor = RGB2Index(this.color.getHex());
 		}
-		this.linewidth = typeof data.linewidth === "number" ? data.linewidth : 1;
+		this.linewidth = data.linewidth ?? 1;
 		this._lineweight = -3;
 		if (typeof data.lineweight === "number") {
 			this._lineweight = data.lineweight;
@@ -68,14 +68,12 @@ export abstract class CadEntity {
 				}
 			}
 		}
-		this.visible = data.visible === false ? false : true;
-		this.opacity = typeof data.opacity === "number" ? data.opacity : 1;
-		this.selectable = data.selectable === false ? false : true;
-		this.selected = data.selected === true ? true : false;
-		this.hover = data.hover === true ? true : false;
-		if (data.info !== undefined) {
-			this.info = data.info;
-		}
+		this.visible = data.visible ?? true;
+		this.opacity = data.opacity ?? 1;
+		this.selectable = data.selectable ?? true;
+		this.selected = data.selected ?? false;
+		this.hover = data.hover ?? false;
+		this.info = data.info ?? {};
 	}
 
 	abstract transform(trans: CadTransformation): this;

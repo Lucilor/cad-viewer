@@ -16,8 +16,8 @@ export class CadMtext extends CadEntity {
 	constructor(data: any = {type: CAD_TYPES.mtext}, layers: CadLayer[] = [], resetId = false) {
 		super(data, layers, resetId);
 		this.insert = getVectorFromArray(data.insert);
-		this.font_size = data.font_size || 16;
-		this.text = data.text || "";
+		this.font_size = data.font_size ?? 16;
+		this.text = data.text ?? "";
 		this.anchor = getVectorFromArray(data.anchor);
 	}
 

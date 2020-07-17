@@ -8,7 +8,7 @@ import {CadLayer} from "./cad-layer";
 import {CAD_TYPES, CadTypes} from "./cad-types";
 import {CadEntity} from "./cad-entity/cad-entity";
 import {CadTransformation} from "./cad-transformation";
-import {MathUtils, Object3D} from "three";
+import {Object3D} from "three";
 import {mergeArray, separateArray} from "./utils";
 
 export class CadEntities {
@@ -47,7 +47,7 @@ export class CadEntities {
 				if (type === "arc") {
 					Object.values(group).forEach((v) => this[type].push(new CadArc(v, layers, resetIds)));
 				} else if (type === "circle") {
-					Object.values(group).forEach((v) => this[type].push(new CadArc(v, layers, resetIds)));
+					Object.values(group).forEach((v) => this[type].push(new CadCircle(v, layers, resetIds)));
 				} else if (type === "dimension") {
 					Object.values(group).forEach((v) => this[type].push(new CadDimension(v, layers, resetIds)));
 				} else if (type === "hatch") {
