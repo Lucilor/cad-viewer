@@ -30,6 +30,9 @@ export class CadData {
 	needZhankai: boolean;
 	mubanfangda: boolean;
 	kailiaomuban: string;
+	kailiaoshibaokeng: boolean;
+	bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形";
+	bancaiwenlifangxiang: "垂直" | "水平";
 	readonly visible: boolean;
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
@@ -48,8 +51,12 @@ export class CadData {
 		this.conditions = Array.isArray(data.conditions) ? data.conditions : [];
 		this.options = [];
 		if (typeof data.options === "object") {
-			for (const key in data.options) {
-				this.options.push(new CadOption(key, data.options[key]));
+			if (Array.isArray(data.options)) {
+				data.options.forEach((v: CadOption) => this.options.push(new CadOption(v)));
+			} else {
+				for (const key in data.options) {
+					this.options.push(new CadOption(key, data.options[key]));
+				}
 			}
 		}
 		this.baseLines = [];
@@ -82,6 +89,9 @@ export class CadData {
 		this.needZhankai = data.needZhankai ?? true;
 		this.mubanfangda = data.mubanfangda ?? true;
 		this.kailiaomuban = data.kailiaomuban ?? "";
+		this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
+		this.bianxingfangshi = data.bianxingfangshi ?? "自由";
+		this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
 		this.updateDimensions();
 	}
 
@@ -117,12 +127,11 @@ export class CadData {
 			huajian: this.huajian,
 			needZhankai: this.needZhankai,
 			mubanfangda: this.mubanfangda,
-			kailiaomuban: this.kailiaomuban
+			kailiaomuban: this.kailiaomuban,
+			kailiaoshibaokeng: this.kailiaoshibaokeng,
+			bianxingfangshi: this.bianxingfangshi,
+			bancaiwenlifangxiang: this.bancaiwenlifangxiang
 		};
-	}
-
-	export2(i = 0) {
-		return this.components.data[i].export();
 	}
 
 	extractExpressions() {
@@ -201,6 +210,10 @@ export class CadData {
 			data.components.data = data.components.data.map((v) => v.clone(true));
 		}
 		return data;
+	}
+
+	copy(data: CadData) {
+		this.separate(this).merge(data.clone());
 	}
 
 	merge(data: CadData) {
@@ -352,7 +365,8 @@ export class CadData {
 			try {
 				this.assembleComponents(c);
 			} catch (error) {
-				console.warn(error);
+				// TODO: warn error
+				// console.warn(error);
 			}
 		});
 		this.partners.forEach((v) => v.updateComponents());
@@ -560,7 +574,7 @@ export class CadData {
 		this.components.data.sort((a, b) => {
 			const rect1 = a.getBounds();
 			const rect2 = b.getBounds();
-			return rect1.x - rect2.x;
+			return rect1.x - rect2.x + rect2.y - rect1.y;
 		});
 	}
 
@@ -620,13 +634,10 @@ export class CadData {
 				if (l.length <= accuracy) {
 					continue;
 				}
-				if (l.isHorizonal(accuracy)) {
+				if (l.isHorizonal(accuracy) && (!hLine || hLine.start.y > l.start.y)) {
 					hLine = l;
-				} else if (l.isVertical(accuracy)) {
+				} else if (l.isVertical(accuracy) && (!vLine || vLine.start.x > l.start.x)) {
 					vLine = l;
-				}
-				if (hLine && vLine) {
-					break;
 				}
 			}
 			if (!hLine || !vLine) {
@@ -715,7 +726,6 @@ export class CadData {
 			}
 			if (e instanceof CadCircle) {
 				const curve = e.curve;
-				console.log(e);
 				if (e instanceof CadArc) {
 					box.expandByPoint(curve.getPoint(0));
 					box.expandByPoint(curve.getPoint(0.5));
@@ -780,9 +790,14 @@ export class CadJointPoint {
 export class CadOption {
 	name: string;
 	value: string;
-	constructor(name = "", value = "") {
-		this.name = name;
-		this.value = value;
+	constructor(name: string | CadOption = "", value = "") {
+		if (name instanceof CadOption) {
+			this.name = name.name;
+			this.value = name.value;
+		} else {
+			this.name = name;
+			this.value = value;
+		}
 	}
 }
 

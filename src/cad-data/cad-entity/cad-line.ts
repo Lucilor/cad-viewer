@@ -7,6 +7,7 @@ import {CadTransformation} from "../cad-transformation";
 import {Line2} from "three/examples/jsm/lines/Line2";
 
 export class CadLine extends CadEntity {
+	object?: Line2;
 	start: Vector2;
 	end: Vector2;
 	mingzi: string;
@@ -14,7 +15,7 @@ export class CadLine extends CadEntity {
 	gongshi: string;
 	guanlianbianhuagongshi: string;
 	kongwei: string;
-	object?: Line2;
+	nextZhewan: "自动" | "无" | "1mm" | "6mm";
 
 	get valid() {
 		const {start, end} = this;
@@ -47,6 +48,7 @@ export class CadLine extends CadEntity {
 		this.gongshi = data.gongshi ?? "";
 		this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
 		this.kongwei = data.kongwei ?? "";
+		this.nextZhewan = data.nextZhewan ?? "自动";
 	}
 
 	transform({matrix}: CadTransformation) {
@@ -64,7 +66,8 @@ export class CadLine extends CadEntity {
 			qujian: this.qujian,
 			gongshi: this.gongshi,
 			guanlianbianhuagongshi: this.guanlianbianhuagongshi,
-			kongwei: this.kongwei
+			kongwei: this.kongwei,
+			nextZhewan: this.nextZhewan
 		};
 	}
 

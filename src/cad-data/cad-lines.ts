@@ -143,9 +143,6 @@ export function sortLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
 		}
 		const startPoint = startLine.end;
 		const adjLines = findAllAdjacentLines(map, startLine, startPoint).entities;
-		if (adjLines.length < 1) {
-			continue;
-		}
 		for (let i = 1; i < adjLines.length; i++) {
 			const prev = adjLines[i - 1];
 			const curr = adjLines[i];
@@ -153,7 +150,11 @@ export function sortLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
 				swapStartEnd(curr);
 			}
 		}
-		exclude.push(adjLines[adjLines.length - 1].id);
+		if (adjLines.length) {
+			exclude.push(adjLines[adjLines.length - 1].id);
+		} else {
+			exclude.push(startLine.id);
+		}
 		const lines = [startLine, ...adjLines];
 		result.push(lines);
 	}
