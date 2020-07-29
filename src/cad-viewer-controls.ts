@@ -4,6 +4,7 @@ import {EventEmitter} from "events";
 import {CadEntity} from "./cad-data/cad-entity/cad-entity";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadTransformation} from "./cad-data/cad-transformation";
+import {CadEntities} from "./cad-data/cad-entities";
 
 export interface CadViewerControlsConfig {
 	dragAxis?: "x" | "y" | "xy" | "";
@@ -54,7 +55,6 @@ export class CadViewerControls extends EventEmitter {
 		pTime: -Infinity
 	};
 	private _multiSelector: HTMLDivElement;
-	private _renderTimer = -1;
 	constructor(cad: CadViewer, config?: CadViewerControlsConfig) {
 		super();
 		this.cad = cad;
@@ -76,10 +76,10 @@ export class CadViewerControls extends EventEmitter {
 		dom.appendChild(this._multiSelector);
 
 		dom.addEventListener("pointerdown", this._pointerDown.bind(this));
-		dom.addEventListener("pointermove", this._pointerMove.bind(this));
+		dom.addEventListener("pointermove", (e) => cad.invoke(this._pointerMove.bind(this, e)));
 		dom.addEventListener("pointerup", this._pointerUp.bind(this));
 		dom.addEventListener("pointerleave", this._pointerUp.bind(this));
-		dom.addEventListener("wheel", this._wheel.bind(this));
+		dom.addEventListener("wheel", (e) => cad.invoke(this._wheel.bind(this, e)));
 		dom.addEventListener("keydown", this._keyDown.bind(this));
 		dom.addEventListener("keyup", this._keyUp.bind(this));
 		dom.tabIndex = 0;
@@ -348,7 +348,7 @@ export class CadViewerControls extends EventEmitter {
 		const selectable = entity && entity.selectable;
 		if (selectable) {
 			entity.hover = true;
-			cad.render();
+			cad.render(null, new CadEntities().add(entity));
 			cad.dom.style.cursor = "pointer";
 			this.currentEntity = entity;
 			if (_status.ctrl) {
@@ -364,7 +364,7 @@ export class CadViewerControls extends EventEmitter {
 		if (currentEntity) {
 			cad.dom.style.cursor = "default";
 			currentEntity.hover = false;
-			cad.render();
+			cad.render(null, new CadEntities().add(currentEntity));
 			this.currentEntity = null;
 		}
 	}
@@ -405,13 +405,13 @@ export class CadViewerControls extends EventEmitter {
 			const right = Math.max(point1.x, point2.x);
 			const top = Math.max(point1.y, point2.y);
 			const bottom = Math.min(point1.y, point2.y);
-			const scale = cad.scale;
+			offset.divideScalar(cad.scale);
 			if (entity.axis === "x") {
 				if (p.x >= left && p.x <= right) {
 					entity.distance += offset.y;
 				} else if (p.y >= bottom && p.y <= top) {
 					entity.axis = "y";
-					entity.distance = (p.x - right) / scale;
+					entity.distance = p.x - right;
 				} else {
 					entity.distance += offset.y;
 				}
@@ -421,18 +421,27 @@ export class CadViewerControls extends EventEmitter {
 					entity.distance += offset.x;
 				} else if (p.x >= left && p.x <= right) {
 					entity.axis = "x";
-					entity.distance = (bottom - p.y) / scale;
+					entity.distance = bottom - p.y;
 				} else {
-					entity.distance += offset.x / scale;
+					entity.distance += offset.x;
 				}
 			}
 			this.pointerLock = true;
+			cad.render(null, new CadEntities().add(entity));
 		} else if (entity.selected && config.entitiesDraggable) {
-			const entities = cad.selectedEntities;
-			entities.transform(new CadTransformation({translate: offset}));
+			const selected = cad.selectedEntities;
+			const notSelected = cad.notSelectedEntities;
+			if (selected.length <= notSelected.length) {
+				selected.transform(new CadTransformation({translate: offset}));
+				cad.render(null, selected);
+			} else {
+				offset.multiplyScalar(-1);
+				cad.position.add(new Vector3(offset.x, offset.y, 0));
+				notSelected.transform(new CadTransformation({translate: offset}));
+				cad.render(null, notSelected);
+			}
 			this.pointerLock = true;
 		}
-		cad.render();
 		return true;
 	}
 }

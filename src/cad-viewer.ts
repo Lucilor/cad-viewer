@@ -52,7 +52,7 @@ export interface CadViewerConfig {
 }
 
 export class CadViewer {
-	private _renderTimer = {id: null, time: 0};
+	private _timer = {timeout: null, time: 0};
 	private _destroyed = false;
 	data: CadData;
 	config: CadViewerConfig = {
@@ -107,6 +107,10 @@ export class CadViewer {
 	}
 	get selectedEntities() {
 		const result = this.data.getAllEntities().filter((e) => e.selected);
+		return result;
+	}
+	get notSelectedEntities() {
+		const result = this.data.getAllEntities().filter((e) => !e.selected);
 		return result;
 	}
 
@@ -195,31 +199,26 @@ export class CadViewer {
 	}
 
 	render(center = false, entities?: CadEntities, style: CadStyle = {}) {
-		const {_destroyed, _renderTimer, config} = this;
-		if (_destroyed) {
+		if (this._destroyed) {
 			console.warn("This instance has already been destroyed.");
 			return this;
 		}
-		const now = performance.now();
-		const then = _renderTimer.time + (1 / config.fps) * 1000;
-		if (now < then) {
-			window.clearTimeout(_renderTimer.id);
-			_renderTimer.id = setTimeout(() => this.render(center, entities, style), then - now);
-			return this;
-		}
-		_renderTimer.time = now;
-		if (!entities) {
-			entities = this.data.getAllEntities();
-		}
-		if (center) {
-			this.center();
-		}
-		entities.line.forEach((e) => this._drawLine(e, style));
-		entities.arc.forEach((e) => this._drawArc(e, style));
-		entities.circle.forEach((e) => this._drawCircle(e, style));
-		entities.mtext.forEach((e) => this._drawMtext(e, style));
-		entities.dimension.forEach((e) => this._drawDimension(e, style));
-		entities.hatch.forEach((e) => this._drawHatch(e, style));
+		const fn = () => {
+			if (!entities) {
+				entities = this.data.getAllEntities();
+			}
+			if (center) {
+				this.center();
+			}
+			entities.line.forEach((e) => this._drawLine(e, style));
+			entities.arc.forEach((e) => this._drawArc(e, style));
+			entities.circle.forEach((e) => this._drawCircle(e, style));
+			entities.mtext.forEach((e) => this._drawMtext(e, style));
+			entities.dimension.forEach((e) => this._drawDimension(e, style));
+			entities.hatch.forEach((e) => this._drawHatch(e, style));
+		};
+		// this.checkFps(fn);
+		fn();
 		return this;
 	}
 
@@ -695,5 +694,17 @@ export class CadViewer {
 		data.entities = entities;
 		this.data.separate(data);
 		return this.render();
+	}
+
+	invoke(fn: (...args: any) => void) {
+		const now = performance.now();
+		const then = this._timer.time + (1 / this.config.fps) * 1000;
+		if (now < then) {
+			clearTimeout(this._timer.timeout);
+			this._timer.timeout = setTimeout(fn, then - now);
+		} else {
+			fn();
+			this._timer.time = now;
+		}
 	}
 }
