@@ -39,7 +39,8 @@ export class CadLine extends CadEntity {
 		return this.start.clone().add(this.end).divideScalar(2);
 	}
 
-	constructor(data: any = {type: CAD_TYPES.line}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.line;
 		super(data, layers, resetId);
 		this.start = getVectorFromArray(data.start);
 		this.end = getVectorFromArray(data.end);

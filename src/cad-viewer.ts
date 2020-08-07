@@ -481,7 +481,6 @@ export class CadViewer {
 		let object = entity.object;
 		const {linewidth, color, fontSize, opacity} = stylizer.get(entity, style);
 		const colorStr = stylizer.getColorStyle(color, opacity);
-
 		const [p1, p2, p3, p4] = this.data.getDimensionPoints(entity);
 		const arrow1: Vector2[] = [];
 		const arrow2: Vector2[] = [];

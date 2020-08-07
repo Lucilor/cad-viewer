@@ -16,7 +16,8 @@ export class CadHatch extends CadEntity {
 	}[];
 	object?: Mesh;
 
-	constructor(data: any = {type: CAD_TYPES.hatch}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.hatch;
 		super(data, layers, resetId);
 		this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
 		this.paths = [];

@@ -1,5 +1,5 @@
 import {CadViewer} from "./cad-viewer";
-import {Vector2, Vector3, Object3D, MathUtils, Box2, Mesh} from "three";
+import {Vector2, Vector3, Object3D, MathUtils, Box2, Mesh, Plane} from "three";
 import {EventEmitter} from "events";
 import {CadEntity} from "./cad-data/cad-entity/cad-entity";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
@@ -55,6 +55,7 @@ export class CadViewerControls extends EventEmitter {
 		pTime: -Infinity
 	};
 	private _multiSelector: HTMLDivElement;
+
 	constructor(cad: CadViewer, config?: CadViewerControlsConfig) {
 		super();
 		this.cad = cad;
@@ -112,6 +113,22 @@ export class CadViewerControls extends EventEmitter {
 	private _getNDC(point: Vector2) {
 		const {width, height, top, left} = this.cad.renderer.domElement.getBoundingClientRect();
 		return new Vector3(((point.x - left) / width) * 2 - 1, (-(point.y - top) / height) * 2 + 1, 0.5);
+	}
+
+	private _getNDCReverse(point: Vector3) {
+		const rect = this.cad.renderer.domElement.getBoundingClientRect();
+		const a = rect.width / 2;
+		const b = rect.height / 2;
+		return new Vector2(point.x * a + a + rect.left, -point.y * b + b + rect.top);
+	}
+
+	private _getWorldPoint(ndc: Vector3) {
+		const {raycaster, camera} = this.cad;
+		raycaster.setFromCamera(ndc, camera);
+		const plane = new Plane(new Vector3(0, 0, 1));
+		const p = new Vector3();
+		raycaster.ray.intersectPlane(plane, p);
+		return p;
 	}
 
 	private _getInterSection(pointer: Vector2) {
@@ -405,7 +422,6 @@ export class CadViewerControls extends EventEmitter {
 			const right = Math.max(point1.x, point2.x);
 			const top = Math.max(point1.y, point2.y);
 			const bottom = Math.min(point1.y, point2.y);
-			offset.divideScalar(cad.scale);
 			if (entity.axis === "x") {
 				if (p.x >= left && p.x <= right) {
 					entity.distance += offset.y;

@@ -19,7 +19,8 @@ export class CadCircle extends CadEntity {
 		return this.curve.getLength();
 	}
 
-	constructor(data: any = {type: CAD_TYPES.circle}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.circle;
 		super(data, layers, resetId);
 		this.center = getVectorFromArray(data.center);
 		this.radius = data.radius ?? 0;

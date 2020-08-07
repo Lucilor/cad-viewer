@@ -13,7 +13,8 @@ export class CadMtext extends CadEntity {
 	anchor: Vector2;
 	object?: TextSprite;
 
-	constructor(data: any = {type: CAD_TYPES.mtext}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.mtext;
 		super(data, layers, resetId);
 		this.insert = getVectorFromArray(data.insert);
 		this.font_size = data.font_size ?? 16;

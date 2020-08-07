@@ -20,7 +20,8 @@ export class CadArc extends CadCircle {
 		return this.curve.getPoint(1);
 	}
 
-	constructor(data: any = {type: CAD_TYPES.arc}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.arc;
 		super(data, layers, resetId);
 		this.start_angle = data.start_angle ?? 0;
 		this.end_angle = data.end_angle ?? 0;

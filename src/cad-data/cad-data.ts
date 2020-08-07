@@ -6,7 +6,7 @@ import {CadTransformation} from "./cad-transformation";
 import {CadLine} from "./cad-entity/cad-line";
 import {getVectorFromArray, isLinesParallel, mergeArray, separateArray, ExpressionsParser, Expressions} from "./utils";
 import {CadCircle} from "./cad-entity/cad-circle";
-import {CadDimension} from "./cad-entity/cad-dimension";
+import {CadDimension, CadDimensionEntity} from "./cad-entity/cad-dimension";
 import {CadArc} from "./cad-entity/cad-arc";
 
 export class CadData {
@@ -33,6 +33,7 @@ export class CadData {
 	kailiaoshibaokeng: boolean;
 	bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形";
 	bancaiwenlifangxiang: "垂直" | "水平";
+	kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版";
 	readonly visible: boolean;
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
@@ -92,6 +93,7 @@ export class CadData {
 		this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
 		this.bianxingfangshi = data.bianxingfangshi ?? "自由";
 		this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
+		this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
 		this.updateDimensions();
 	}
 
@@ -130,7 +132,8 @@ export class CadData {
 			kailiaomuban: this.kailiaomuban,
 			kailiaoshibaokeng: this.kailiaoshibaokeng,
 			bianxingfangshi: this.bianxingfangshi,
-			bancaiwenlifangxiang: this.bancaiwenlifangxiang
+			bancaiwenlifangxiang: this.bancaiwenlifangxiang,
+			kailiaopaibanfangshi: this.kailiaopaibanfangshi
 		};
 	}
 
@@ -339,7 +342,7 @@ export class CadData {
 		if (rect1.width && rect1.height) {
 			const rect2 = component.getBounds();
 			const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
-			if (Math.abs(translate.x) > 1000 || Math.abs(translate.y) > 1000) {
+			if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
 				translate.x += (rect1.width + rect2.width) / 2 + 15;
 				// offset1[1] += (rect1.height - rect2.height) / 2;
 				component.transform(new CadTransformation({translate}));
@@ -381,6 +384,15 @@ export class CadData {
 			});
 		}
 		this.entities.dimension = uniqWith(this.entities.dimension, (a, b) => a.equals(b));
+		const tmp = this.entities.dimension;
+		this.entities.dimension = [];
+		const rect = this.getBounds();
+		this.entities.dimension.forEach((e) => {
+			if (e.mingzi === "宽度标注") {
+				e.distance2 = rect.y + rect.height / 2 + 40;
+			}
+		});
+		this.entities.dimension = tmp;
 		this.partners.forEach((v) => v.updateDimensions(this.entities.dimension));
 		this.components.data.forEach((v) => v.updateDimensions(this.entities.dimension));
 		return this;
@@ -669,18 +681,29 @@ export class CadData {
 		});
 	}
 
-	getDimensionPoints({entity1, entity2, distance, axis}: CadDimension) {
-		const getPoint = ({id, location}: CadDimension["entity1"]) => {
+	getDimensionPoints({entity1, entity2, distance, axis, distance2}: CadDimension) {
+		const getPoint = ({id, location}: CadDimensionEntity) => {
 			const e = this.findEntity(id);
 			if (e instanceof CadLine) {
+				const {start, end, middle} = e.clone();
 				if (location === "start") {
-					return e.start;
-				}
-				if (location === "end") {
-					return e.end;
-				}
-				if (location === "center") {
-					return e.middle;
+					return start;
+				} else if (location === "end") {
+					return end;
+				} else if (location === "center") {
+					return middle;
+				} else if (location === "min") {
+					if (axis === "x") {
+						return start.y < end.y ? start : end;
+					} else if (axis === "y") {
+						return start.x < end.x ? start : end;
+					}
+				} else if (location === "max") {
+					if (axis === "x") {
+						return start.y > end.y ? start : end;
+					} else if (axis === "y") {
+						return start.x > end.x ? start : end;
+					}
 				}
 			}
 			return null;
@@ -709,6 +732,9 @@ export class CadData {
 				[p3, p4] = [p4, p3];
 				[p1, p2] = [p2, p1];
 			}
+		}
+		if (distance2 !== undefined) {
+			[p3, p4].forEach((p) => (p.y = distance2));
 		}
 		return [p1, p2, p3, p4];
 	}

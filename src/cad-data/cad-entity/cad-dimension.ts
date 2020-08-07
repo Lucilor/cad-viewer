@@ -4,26 +4,27 @@ import {CadLayer} from "../cad-layer";
 import {intersection} from "lodash";
 import {Line2} from "three/examples/jsm/lines/Line2";
 
+export interface CadDimensionEntity {
+	id: string;
+	location: "start" | "end" | "center" | "min" | "max";
+}
+
 export class CadDimension extends CadEntity {
 	font_size: number;
 	dimstyle: string;
 	axis: "x" | "y";
-	entity1: {
-		id: string;
-		location: "start" | "end" | "center";
-	};
-	entity2: {
-		id: string;
-		location: "start" | "end" | "center";
-	};
+	entity1: CadDimensionEntity;
+	entity2: CadDimensionEntity;
 	distance: number;
+	distance2?: number;
 	cad1: string;
 	cad2: string;
 	mingzi: string;
 	qujian: string;
 	object?: Line2;
 
-	constructor(data: any = {type: CAD_TYPES.dimension}, layers: CadLayer[] = [], resetId = false) {
+	constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+		data.type = CAD_TYPES.dimension;
 		super(data, layers, resetId);
 		this.font_size = data.font_size || 16;
 		if (this.font_size === 2.5) {
