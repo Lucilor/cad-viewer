@@ -338,14 +338,20 @@ export class CadViewer extends EventEmitter {
 				if (entity.info.isLengthText) {
 					entity.text = Math.round(parent.length).toString();
 					entity.font_size = lineLength;
-					entity.visible = !hideLineLength;
+					if (hideLineLength) {
+						el.remove();
+						entity.el = null;
+					}
 					offset = getVectorFromArray(entity.info.offset);
 				}
 				if (entity.info.isGongshiText) {
 					entity.text = parent.gongshi;
 					entity.font_size = lineGongshi;
-					entity.visible = !hideLineGongshi;
 					offset = getVectorFromArray(entity.info.offset);
+					if (hideLineGongshi) {
+						el.remove();
+						entity.el = null;
+					}
 				}
 				if (offset) {
 					if (Math.abs(offset.x) >= 150 || Math.abs(offset.y) >= 150) {

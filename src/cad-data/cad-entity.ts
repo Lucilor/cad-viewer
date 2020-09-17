@@ -6,7 +6,7 @@ import {G, Matrix, MatrixAlias} from "@svgdotjs/svg.js";
 import Color from "color";
 import {v4} from "uuid";
 import {CadEntities} from "./cad-entities";
-import {intersection} from "lodash";
+import {cloneDeep, intersection} from "lodash";
 
 export abstract class CadEntity {
 	id: string;
@@ -113,7 +113,7 @@ export abstract class CadEntity {
 			}
 		}
 		if (typeof data.info === "object" && !Array.isArray(data.info)) {
-			this.info = data.info;
+			this.info = cloneDeep(data.info);
 		} else {
 			this.info = {};
 		}

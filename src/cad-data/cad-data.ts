@@ -5,7 +5,7 @@ import {v4} from "uuid";
 import {CadEntities} from "./cad-entities";
 import {CadLine, CadDimension, CadCircle} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
-import {Expressions, ExpressionsParser, mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "./utils";
+import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "./utils";
 
 export class CadData {
 	entities: CadEntities;
@@ -33,6 +33,7 @@ export class CadData {
 	bancaiwenlifangxiang: "垂直" | "水平";
 	kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版";
 	morenkailiaobancai: string;
+	suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料";
 	readonly visible: boolean;
 
 	constructor(data: any = {}) {
@@ -95,6 +96,7 @@ export class CadData {
 		this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
 		this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
 		this.morenkailiaobancai = data.morenkailiaobancai ?? "";
+		this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
 		this.updateDimensions();
 	}
 
@@ -135,7 +137,8 @@ export class CadData {
 			bianxingfangshi: this.bianxingfangshi,
 			bancaiwenlifangxiang: this.bancaiwenlifangxiang,
 			kailiaopaibanfangshi: this.kailiaopaibanfangshi,
-			morenkailiaobancai: this.morenkailiaobancai
+			morenkailiaobancai: this.morenkailiaobancai,
+			suanliaochuli: this.suanliaochuli
 		};
 	}
 
