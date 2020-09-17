@@ -1,17 +1,7 @@
-export interface CadTypes {
-	line: string;
-	mtext: string;
-	dimension: string;
-	arc: string;
-	circle: string;
-	hatch: string;
-}
+export type CadType = "LINE" | "MTEXT" | "DIMENSION" | "ARC" | "CIRCLE" | "HATCH";
 
-export const CAD_TYPES: CadTypes = {
-	line: "LINE",
-	mtext: "MTEXT",
-	dimension: "DIMENSION",
-	arc: "ARC",
-	circle: "CIRCLE",
-	hatch: "HATCH"
-};
+export const cadTypes: CadType[] = ["LINE", "MTEXT", "DIMENSION", "ARC", "CIRCLE", "HATCH"];
+
+export type CadTypeKey = "line" | "mtext" | "dimension" | "arc" | "circle" | "hatch";
+
+export const cadTypesKey: CadTypeKey[] = ["line", "mtext", "dimension", "arc", "circle", "hatch"];

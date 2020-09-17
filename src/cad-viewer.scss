@@ -1,0 +1,50 @@
+.cad-viewer {
+	svg {
+		box-sizing: border-box;
+
+		* {
+			user-select: none;
+			&.selectable {
+				cursor: pointer;
+			}
+		}
+
+		g {
+			&:hover.selectable {
+				line,
+				circle,
+				path {
+					stroke: cyan;
+					&[fill]:not([fill="none"]) {
+						fill: cyan;
+					}
+				}
+
+				text {
+					fill: cyan;
+					&[stroke]:not([stroke="none"]) {
+						stroke: cyan;
+					}
+				}
+			}
+
+			// &.selected.selectable {
+			// 	line,
+			// 	circle,
+			// 	path[fill="none"] {
+			// 		stroke-dasharray: 25, 7;
+			// 	}
+
+			// 	text {
+			// 		font-style: italic;
+			// 	}
+			// }
+		}
+	}
+
+	.multi-selector {
+		position: absolute;
+		background-color: rgba(29, 149, 234, 0.3);
+		border: white solid 1px;
+	}
+}

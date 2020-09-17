@@ -39,10 +39,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@lucilor/utils@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@lucilor/utils/-/utils-1.1.0.tgz#6ef6745c79bb286366a3da05cc19601d3a0c6cc4"
-  integrity sha512-BWcmA73wToSWyRoU9/a3Vo4WwQ0qldQzDg5Yzkv6FgeNYB1fs8899JRrR+ukdS/LkCRfM1EDU0Dfu8bGWrc9fw==
+"@lucilor/utils@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@lucilor/utils/-/utils-1.1.1.tgz#54fb169d6ed80834c0e9e0920cd217c805deefe9"
+  integrity sha512-hxpIpQIxGkMORZfN+LlB0VTHXiboiJutNEeixZyOVA46/M1Vg3cKkH0JDk/9TgiBrdmBG5DfLckR8KxqrIB+EA==
   dependencies:
     "@svgdotjs/svg.js" "^3.0.16"
     color "^3.1.2"
@@ -54,18 +54,6 @@
   integrity sha512-Uv6h1sT+0DrblvIrolFtbvM1FgWm+/sy4B3pvLp67Zys+thcukzS5ekn7HsZFGpWP4Q3fYJCljbWQE/XivMRLw==
   dependencies:
     mkdirp "^1.0.4"
-
-"@seregpie/three.text-sprite@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@seregpie/three.text-sprite/-/three.text-sprite-2.0.0.tgz#4868b7084992726d78e70a0d9186bf577b3b15e0"
-  integrity sha512-YaHmMNOmaXDGEOam1/STmVkI/rBdQqfcKlhcgHqhujjUG5skF2uc5cWYig0u3inn0m9oYsp6xqWb3rwtMOdoRg==
-  dependencies:
-    "@seregpie/three.text-texture" "^2.0.1"
-
-"@seregpie/three.text-texture@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@seregpie/three.text-texture/-/three.text-texture-2.0.1.tgz#2f0b1aaa429bfc84c8c5e3f7b0503d9faa2079ea"
-  integrity sha512-9uO/mP5PyGyl1LqrkObe9OOAwL/jp9rKjdphWf5gUH8LHDJuNy5GQCjr+nKqJG2lGID8gMNNnub1CSALl4BZHw==
 
 "@svgdotjs/svg.js@^3.0.16":
   version "3.0.16"
@@ -126,6 +114,11 @@
   integrity sha512-KswB5C7Kwduwjj04Ykz+AjvPcfgv/37Za24O2EDzYNbwyzOo8+ydtvzUfZ5UMguiVu29Gx44l1A6VsPPcmYu9w==
   dependencies:
     source-map "^0.6.1"
+
+"@types/uuid@^8.3.0":
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.0.tgz#215c231dff736d5ba92410e6d602050cce7e273f"
+  integrity sha512-eQ9qFW/fhfGJF8WKHGEHZEyVWfZxrT+6CLIJGBcZPfxUh/+BnEj+UCGYMlr9qZuX/2AltsvwrGqp0LhEW8D0zQ==
 
 "@types/webpack-sources@*":
   version "1.4.2"
@@ -3329,11 +3322,6 @@ text-table@^0.2.0:
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
   integrity sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
 
-three@^0.120.1:
-  version "0.120.1"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.120.1.tgz#dbd8894f8ab87c109f1602933e7c740c98137377"
-  integrity sha512-ktaCRFUR7JUZcKec+cBRz+oBex5pOVaJhrtxvFF2T7on53o9UkEux+/Nh1g/4zeb4t/pbxIFcADbn/ACu3LC1g==
-
 through2@^2.0.0:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/through2/-/through2-2.0.5.tgz#01c1e39eb31d07cb7d03a96a70823260b23132cd"
@@ -3535,6 +3523,11 @@ util@^0.11.0:
   integrity sha512-HShAsny+zS2TZfaXxD9tYj4HQGlBezXZMZuM/S5PKLLoZkShZiGk9o5CzukI1LVHZvjdvZ2Sj1aW/Ndn2NB/HQ==
   dependencies:
     inherits "2.0.3"
+
+uuid@^8.3.0:
+  version "8.3.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.0.tgz#ab738085ca22dc9a8c92725e459b1d507df5d6ea"
+  integrity sha512-fX6Z5o4m6XsXBdli9g7DtWgAx+osMsRRZFKma1mIUsLCz6vRvv+pz5VNbyu9UEDzpMWulZfvpgb/cmDXVulYFQ==
 
 v8-compile-cache@^2.0.3, v8-compile-cache@^2.1.1:
   version "2.1.1"

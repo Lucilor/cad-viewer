@@ -1,6 +1,7 @@
 import {index2RGB, RGB2Index} from "@lucilor/utils";
-import {MathUtils, Color} from "three";
 import {lineweight2linewidth, linewidth2lineweight} from "./utils";
+import Color from "color";
+import {v4} from "uuid";
 
 export class CadLayer {
 	id: string;
@@ -13,17 +14,17 @@ export class CadLayer {
 
 	constructor(data: any = {}) {
 		this.name = data.name || "";
-		this.id = data.id ?? MathUtils.generateUUID();
+		this.id = data.id ?? v4();
 		this.originalId = data.originalId ?? this.id;
 		this.color = new Color();
 		if (typeof data.color === "number") {
 			this._indexColor = data.color;
-			this.color.set(index2RGB(data.color, "number"));
+			this.color = new Color(index2RGB(data.color, "number"));
 		} else {
 			if (data.color instanceof Color) {
 				this.color = data.color;
 			}
-			this._indexColor = RGB2Index(this.color.getHex());
+			this._indexColor = RGB2Index(this.color.hex());
 		}
 		this.linewidth = typeof data.lineWidth === "number" ? data.lineWidth : 1;
 		this._lineweight = -3;
@@ -36,7 +37,7 @@ export class CadLayer {
 	}
 
 	export() {
-		this._indexColor = RGB2Index(this.color.getHex());
+		this._indexColor = RGB2Index(this.color.hex());
 		return {
 			id: this.id,
 			color: this._indexColor,

@@ -1,12 +1,9 @@
 import {CadViewer} from "./cad-viewer";
-import {CadEntity} from "./cad-data/cad-entity/cad-entity";
-import {CadMtext} from "./cad-data/cad-entity/cad-mtext";
-import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
-import {Color} from "three";
-import {CadLine} from "./cad-data/cad-entity/cad-line";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
+import Color from "color";
 
 export interface CadStyle {
-	color?: Color;
+	color?: string;
 	linewidth?: number;
 	fontSize?: number;
 	opacity?: number;
@@ -22,21 +19,7 @@ export class CadStylizer {
 	get(entity: CadEntity, params: CadStyle = {}) {
 		const cad = this.cad;
 		const result: CadStyle = {fontStyle: "normal"};
-		const {selectable, selected, hover} = entity;
-		result.color = new Color(params.color || entity?.color || 0);
-		if (selectable) {
-			if (selected) {
-				if (entity instanceof CadMtext) {
-					result.fontStyle = "italic";
-				}
-			}
-			if (hover && typeof cad.config.hoverColor === "number") {
-				result.color = new Color(cad.config.hoverColor);
-			}
-		}
-		if (cad.config.reverseSimilarColor) {
-			this.correctColor(result.color);
-		}
+		let color = new Color(params.color || entity?.color || 0);
 		if (params.linewidth > 0) {
 			result.linewidth = params.linewidth;
 		} else if (entity.linewidth > 0) {
@@ -54,28 +37,37 @@ export class CadStylizer {
 			result.opacity = params.opacity;
 		}
 
-		if (cad.config.validateLines && entity instanceof CadLine) {
+		const {validateLines, reverseSimilarColor, minLinewidth} = cad.config();
+		if (validateLines && entity instanceof CadLine) {
 			if (!entity.valid || entity.info.error) {
 				result.linewidth *= 10;
-				result.color.set(0xff0000);
+				color = new Color(0xff0000);
 			}
+		}
+		if (reverseSimilarColor) {
+			color = this.correctColor(color);
+		}
+		result.color = color.hex();
+		if (!(entity instanceof CadHatch)) {
+			// ? make lines easier to select
+			result.linewidth = Math.max(minLinewidth, result.linewidth);
 		}
 
 		return result;
 	}
 
 	correctColor(color: Color, threshold = 5) {
-		if (this.cad.config.reverseSimilarColor) {
-			const colorNum = color.getHex();
-			if (Math.abs(colorNum - this.cad.config.backgroundColor) <= threshold) {
-				color.set(0xfffffff - colorNum);
+		const {reverseSimilarColor, backgroundColor} = this.cad.config();
+		if (reverseSimilarColor) {
+			if (Math.abs(color.rgbNumber() - new Color(backgroundColor).rgbNumber()) <= threshold) {
+				return color.negate();
 			}
 		}
+		return color;
 	}
 
 	getColorStyle(color: Color, a = 1) {
-		const {r, g, b} = color;
-		const arr = [r, g, b].map((v) => v * 255);
+		const arr = [color.red(), color.green(), color.blue()].map((v) => v * 255);
 		if (a > 0 && a < 1) {
 			return `rgba(${[...arr, a].join(",")})`;
 		} else {

@@ -1,13 +1,11 @@
-import {MathUtils, Vector2, Box2} from "three";
-import {intersection, cloneDeep, uniqWith} from "lodash";
+import {Point} from "@lucilor/utils";
+import {MatrixAlias, Matrix} from "@svgdotjs/svg.js";
+import {uniqWith, intersection, cloneDeep} from "lodash";
+import {v4} from "uuid";
 import {CadEntities} from "./cad-entities";
+import {CadLine, CadDimension, CadCircle} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
-import {CadTransformation} from "./cad-transformation";
-import {CadLine} from "./cad-entity/cad-line";
-import {getVectorFromArray, isLinesParallel, mergeArray, separateArray, ExpressionsParser, Expressions} from "./utils";
-import {CadCircle} from "./cad-entity/cad-circle";
-import {CadDimension, CadDimensionEntity} from "./cad-entity/cad-dimension";
-import {CadArc} from "./cad-entity/cad-arc";
+import {Expressions, ExpressionsParser, mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "./utils";
 
 export class CadData {
 	entities: CadEntities;
@@ -34,12 +32,14 @@ export class CadData {
 	bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形";
 	bancaiwenlifangxiang: "垂直" | "水平";
 	kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版";
+	morenkailiaobancai: string;
 	readonly visible: boolean;
+
 	constructor(data: any = {}) {
 		if (typeof data !== "object") {
 			throw new Error("Invalid data.");
 		}
-		this.id = data.id || MathUtils.generateUUID();
+		this.id = data.id || v4();
 		this.name = data.name ?? "";
 		this.type = data.type ?? "";
 		this.layers = [];
@@ -94,6 +94,7 @@ export class CadData {
 		this.bianxingfangshi = data.bianxingfangshi ?? "自由";
 		this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
 		this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
+		this.morenkailiaobancai = data.morenkailiaobancai ?? "";
 		this.updateDimensions();
 	}
 
@@ -133,40 +134,20 @@ export class CadData {
 			kailiaoshibaokeng: this.kailiaoshibaokeng,
 			bianxingfangshi: this.bianxingfangshi,
 			bancaiwenlifangxiang: this.bancaiwenlifangxiang,
-			kailiaopaibanfangshi: this.kailiaopaibanfangshi
+			kailiaopaibanfangshi: this.kailiaopaibanfangshi,
+			morenkailiaobancai: this.morenkailiaobancai
 		};
 	}
 
-	extractExpressions() {
-		const exps: Expressions = {};
-		this.getAllEntities().line.forEach((e) => {
-			if (e.mingzi && e.gongshi) {
-				exps[e.mingzi] = e.gongshi;
-			}
-		});
-		return new ExpressionsParser(exps);
-	}
-
-	/**
-	 * 100: this.entities
-	 * 010: this.partners entities
-	 * 001: components.partners entities
-	 */
 	getAllEntities(mode = 0b111) {
 		const result = new CadEntities();
-		if (mode & 0b100) {
-			result.merge(this.entities);
-		}
-		if (mode & 0b010) {
-			this.partners.forEach((p) => {
-				result.merge(p.getAllEntities(mode));
-			});
-		}
-		if (mode & 0b001) {
-			this.components.data.forEach((c) => {
-				result.merge(c.getAllEntities(mode));
-			});
-		}
+		result.merge(this.entities);
+		this.partners.forEach((p) => {
+			result.merge(p.getAllEntities(mode));
+		});
+		this.components.data.forEach((c) => {
+			result.merge(c.getAllEntities(mode));
+		});
 		return result;
 	}
 
@@ -205,7 +186,7 @@ export class CadData {
 		if (resetIds) {
 			this.layers = this.layers.map((v) => {
 				const nv = new CadLayer(v.export());
-				nv.id = MathUtils.generateUUID();
+				nv.id = v4();
 				return nv;
 			});
 			data.entities = data.entities.clone(true);
@@ -248,31 +229,33 @@ export class CadData {
 		return this;
 	}
 
-	transform(trans: CadTransformation) {
-		this.entities.transform(trans);
-		this.partners.forEach((v) => v.transform(trans));
-		this.components.transform(trans);
-		const matrix = trans.matrix;
+	transform(matrix: MatrixAlias) {
+		this.entities.transform(matrix);
+		const m = new Matrix(matrix);
+		this.partners.forEach((v) => v.transform(matrix));
+		this.components.transform(matrix);
 		this.baseLines.forEach((v) => {
-			const point = new Vector2(v.valueX, v.valueY);
-			point.applyMatrix3(matrix);
+			const point = new Point(v.valueX, v.valueY);
+			point.transform(m);
 			v.valueX = point.x;
 			v.valueY = point.y;
 		});
 		this.jointPoints.forEach((v) => {
-			const point = new Vector2(v.valueX, v.valueY);
-			point.applyMatrix3(matrix);
+			const point = new Point(v.valueX, v.valueY);
+			point.transform(m);
 			v.valueX = point.x;
 			v.valueY = point.y;
 		});
+		const horizontal = m.a < 0;
+		const vertical = m.d < 0;
 		this.entities.dimension.forEach((e) => {
-			if (trans.flip.vertical && e.axis === "x") {
+			if (vertical && e.axis === "x") {
 				const [p1, p2] = this.getDimensionPoints(e);
 				if (p1 && p2) {
 					e.distance = -Math.abs(p1.y - p2.y) - e.distance;
 				}
 			}
-			if (trans.flip.horizontal && e.axis === "y") {
+			if (horizontal && e.axis === "y") {
 				const [p1, p2] = this.getDimensionPoints(e);
 				if (p1 && p2) {
 					e.distance = -Math.abs(p1.x - p2.x) - e.distance;
@@ -299,7 +282,7 @@ export class CadData {
 	}
 
 	addPartner(partner: CadData) {
-		let translate: Vector2;
+		let translate: Point;
 		for (const p1 of this.jointPoints) {
 			for (const p2 of partner.jointPoints) {
 				if (p1.name === p2.name) {
@@ -309,16 +292,16 @@ export class CadData {
 			}
 		}
 		if (!translate) {
-			const rect1 = this.getBounds();
+			const rect1 = this.getBoundingRect();
 			if (rect1.width && rect1.height) {
-				const rect2 = partner.getBounds();
+				const rect2 = partner.getBoundingRect();
 				translate = getVectorFromArray([rect1.x - rect2.x, rect1.y - rect2.y]);
 				translate.x += (rect1.width + rect2.width) / 2 + 15;
 			} else {
-				translate = new Vector2();
+				translate = new Point();
 			}
 		}
-		partner.transform(new CadTransformation({translate}));
+		partner.transform({translate});
 		const data = this.partners;
 		const prev = data.findIndex((v) => v.id === partner.id);
 		if (prev > -1) {
@@ -338,14 +321,14 @@ export class CadData {
 	}
 
 	addComponent(component: CadData) {
-		const rect1 = this.getBounds();
+		const rect1 = this.getBoundingRect();
 		if (rect1.width && rect1.height) {
-			const rect2 = component.getBounds();
-			const translate = new Vector2(rect1.x - rect2.x, rect1.y - rect2.y);
+			const rect2 = component.getBoundingRect();
+			const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
 			if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
 				translate.x += (rect1.width + rect2.width) / 2 + 15;
 				// offset1[1] += (rect1.height - rect2.height) / 2;
-				component.transform(new CadTransformation({translate}));
+				component.transform({translate});
 			}
 		}
 		const data = this.components.data;
@@ -386,7 +369,7 @@ export class CadData {
 		this.entities.dimension = uniqWith(this.entities.dimension, (a, b) => a.equals(b));
 		const tmp = this.entities.dimension;
 		this.entities.dimension = [];
-		const rect = this.getBounds();
+		const rect = this.getBoundingRect();
 		this.entities.dimension.forEach((e) => {
 			if (e.mingzi === "宽度标注") {
 				e.distance2 = rect.y + rect.height / 2 + 40;
@@ -442,7 +425,7 @@ export class CadData {
 			}
 			return result;
 		};
-		const translate = new Vector2();
+		const translate = new Point();
 		if (position === "absolute") {
 			const e1 = c1.findEntity(lines[0]);
 			const e2 = c2.findEntity(lines[1]);
@@ -520,7 +503,7 @@ export class CadData {
 			}
 			const tmpData = new CadData();
 			tmpData.entities = c2.entities;
-			const rect = tmpData.getBounds();
+			const rect = tmpData.getBoundingRect();
 			if (!isFinite(l1.slope)) {
 				const d = (l2.start.x - l1.start.x) * spParent;
 				translate.x = l1.start.x + d - l3.start.x;
@@ -584,13 +567,13 @@ export class CadData {
 
 	sortComponents() {
 		this.components.data.sort((a, b) => {
-			const rect1 = a.getBounds();
-			const rect2 = b.getBounds();
+			const rect1 = a.getBoundingRect();
+			const rect2 = b.getBoundingRect();
 			return rect1.x - rect2.x + rect2.y - rect1.y;
 		});
 	}
 
-	moveComponent(curr: CadData, translate: Vector2, prev?: CadData) {
+	moveComponent(curr: CadData, translate: Point, prev?: CadData) {
 		const map: object = {};
 		this.components.connections.forEach((conn) => {
 			if (conn.ids.includes(curr.id)) {
@@ -612,7 +595,7 @@ export class CadData {
 				});
 			}
 		});
-		curr.transform(new CadTransformation({translate}));
+		curr.transform({translate});
 		for (const id in map) {
 			const next = this.components.data.find((v) => v.id === id);
 			if (next) {
@@ -681,101 +664,12 @@ export class CadData {
 		});
 	}
 
-	getDimensionPoints({entity1, entity2, distance, axis, distance2}: CadDimension) {
-		const getPoint = ({id, location}: CadDimensionEntity) => {
-			const e = this.findEntity(id);
-			if (e instanceof CadLine) {
-				const {start, end, middle} = e.clone();
-				if (location === "start") {
-					return start;
-				} else if (location === "end") {
-					return end;
-				} else if (location === "center") {
-					return middle;
-				} else if (location === "min") {
-					if (axis === "x") {
-						return start.y < end.y ? start : end;
-					} else if (axis === "y") {
-						return start.x < end.x ? start : end;
-					}
-				} else if (location === "max") {
-					if (axis === "x") {
-						return start.y > end.y ? start : end;
-					} else if (axis === "y") {
-						return start.x > end.x ? start : end;
-					}
-				}
-			}
-			return null;
-		};
-		let p1 = getPoint(entity1);
-		let p2 = getPoint(entity2);
-		if (!p1 || !p2) {
-			return [];
-		}
-		let p3 = p1.clone();
-		let p4 = p2.clone();
-		if (axis === "x") {
-			const y = Math.max(p3.y, p4.y);
-			p3.y = y + distance;
-			p4.y = y + distance;
-			if (p3.x > p4.x) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
-		}
-		if (axis === "y") {
-			const x = Math.max(p3.x, p4.x);
-			p3.x = x + distance;
-			p4.x = x + distance;
-			if (p3.y < p4.y) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
-		}
-		if (distance2 !== undefined) {
-			[p3, p4].forEach((p) => (p.y = distance2));
-		}
-		return [p1, p2, p3, p4];
+	getDimensionPoints(dimension: CadDimension) {
+		return this.getAllEntities().getDimensionPoints(dimension);
 	}
 
-	getBoundingBox() {
-		const box = new Box2();
-		const entities = this.getAllEntities();
-		entities.forEach((e) => {
-			if (!e.visible) {
-				return;
-			}
-			if (e instanceof CadLine) {
-				box.expandByPoint(e.start);
-				box.expandByPoint(e.end);
-			}
-			if (e instanceof CadCircle) {
-				const curve = e.curve;
-				if (e instanceof CadArc) {
-					box.expandByPoint(curve.getPoint(0));
-					box.expandByPoint(curve.getPoint(0.5));
-					box.expandByPoint(curve.getPoint(1));
-				} else {
-					const {center, radius} = e;
-					box.expandByPoint(center.clone().addScalar(radius));
-					box.expandByPoint(center.clone().subScalar(radius));
-				}
-			}
-			if (e instanceof CadDimension) {
-				this.getDimensionPoints(e).forEach((p) => box.expandByPoint(p));
-			}
-		});
-		return box;
-	}
-
-	getBounds() {
-		const box = this.getBoundingBox();
-		const center = new Vector2();
-		const size = new Vector2();
-		box.getCenter(center);
-		box.getSize(size);
-		return {x: center.x, y: center.y, width: size.x, height: size.y};
+	getBoundingRect(entities?: CadEntities) {
+		return this.getAllEntities().getBoundingRect(entities);
 	}
 }
 
@@ -872,17 +766,18 @@ export class CadComponents {
 		}
 	}
 
-	transform(trans: CadTransformation) {
-		const {vertical, horizontal} = trans.flip;
+	transform(matrix: MatrixAlias) {
+		const m = new Matrix(matrix);
+		const {scaleX, scaleY} = m.decompose();
 		this.connections.forEach((v) => {
-			if ((vertical && v.axis === "y") || (horizontal && v.axis === "x")) {
+			if ((scaleX < 0 && v.axis === "x") || (scaleY && v.axis === "y")) {
 				const space = -Number(v.space);
 				if (!isNaN(space)) {
 					v.space = space.toString();
 				}
 			}
 		});
-		this.data.forEach((v) => v.transform(trans));
+		this.data.forEach((v) => v.transform(matrix));
 	}
 
 	export() {

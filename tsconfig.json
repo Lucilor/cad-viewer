@@ -9,6 +9,7 @@
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"declaration": true,
-		"lib": ["ES2019", "DOM"]
+		"lib": ["ES2019", "DOM"],
+		"esModuleInterop": true
 	}
 }
