@@ -1,313 +1,1085 @@
-import {Point, Rectangle} from "@lucilor/utils";
-import {MatrixAlias} from "@svgdotjs/svg.js";
-import {CadLine, CadCircle, CadArc, CadMtext, CadDimension, CadHatch, getCadEntity, CadEntity, CadDimensionEntity} from "./cad-entity";
+import {Angle, AnyObject, Arc, index2RGB, Line, Point, Rectangle, RGB2Index} from "@lucilor/utils";
+import {G, Matrix, MatrixExtract, MatrixTransformParam, Svg} from "@svgdotjs/svg.js";
+import Color from "color";
+import {cloneDeep, intersection} from "lodash";
+import {v4} from "uuid";
 import {CadLayer} from "./cad-layer";
 import {cadTypesKey, CadTypeKey, CadType, cadTypes} from "./cad-types";
-import {mergeArray, separateArray} from "./utils";
+import {getVectorFromArray, lineweight2linewidth, linewidth2lineweight, mergeArray, separateArray} from "./utils";
+
+export const DEFAULT_LENGTH_TEXT_SIZE = 24;
+
+export abstract class CadEntity {
+    id: string;
+    originalId: string;
+    type: CadType = "";
+    layer: string;
+    color: Color;
+    linewidth: number;
+    visible: boolean;
+    info: AnyObject;
+    _indexColor: number | null;
+    _lineweight: number;
+    parent?: CadEntity;
+    children: CadEntities;
+    el?: G | null;
+    needsUpdate = false;
+
+    get scale() {
+        if (this.el) {
+            for (const parent of this.el.parents()) {
+                if (parent instanceof Svg) {
+                    return (parent as any).zoom();
+                }
+            }
+        }
+        return NaN;
+    }
+    get selectable() {
+        return this.el?.hasClass("selectable");
+    }
+    set selectable(value) {
+        if (value) {
+            this.el?.addClass("selectable");
+        } else {
+            this.el?.removeClass("selectable");
+        }
+        this.children.forEach((c) => (c.selectable = value));
+    }
+    get selected() {
+        return this.el?.hasClass("selected") && this.selectable;
+    }
+    set selected(value) {
+        if (this.el) {
+            if (value && this.selectable) {
+                this.el.addClass("selected");
+                this.el.children().forEach((c, i) => {
+                    if (c.hasClass("stroke")) {
+                        if (this instanceof CadDimension) {
+                            if (this.renderStyle === 1) {
+                                c.css("stroke-dasharray", "20, 7");
+                            } else if (this.renderStyle === 2 && i === 2) {
+                                c.css("stroke-dasharray", "20, 7");
+                            }
+                        } else {
+                            c.css("stroke-dasharray", "20, 7");
+                        }
+                    }
+                    if (this instanceof CadDimension) {
+                        // pass
+                    } else {
+                        if (c.hasClass("fill")) {
+                            c.css("fill", "#ffca1c");
+                        }
+                    }
+                });
+            } else {
+                this.el.removeClass("selected").css("stroke-dasharray", "");
+                this.el.children().forEach((c) => {
+                    c.css("stroke-dasharray", "");
+                    c.css("fill", "");
+                });
+            }
+        }
+        this.children.forEach((c) => (c.selected = value));
+    }
+    get opacity() {
+        return Number(this.el?.css("opacity") ?? 1);
+    }
+    set opacity(value) {
+        this.el?.css("opacity", value);
+        this.children.forEach((c) => (c.opacity = value));
+    }
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        if (typeof data !== "object") {
+            throw new Error("Invalid data.");
+        }
+        if (cadTypes.includes(data.type)) {
+            this.type = data.type;
+        }
+        if (typeof data.id === "string" && !resetId) {
+            this.id = data.id;
+        } else {
+            this.id = v4();
+        }
+        this.originalId = data.originalId ?? this.id;
+        this.layer = data.layer ?? "0";
+        this.color = new Color();
+        if (typeof data.color === "number") {
+            this._indexColor = data.color;
+            if (data.color === 256) {
+                const layer = layers.find((layer) => layer.name === this.layer);
+                if (layer) {
+                    this.color = new Color(layer.color);
+                }
+            } else {
+                this.color = new Color(index2RGB(data.color, "number"));
+            }
+        } else {
+            if (data.color instanceof Color) {
+                this.color = new Color(data.color);
+            }
+            this._indexColor = RGB2Index(this.color.hex());
+        }
+        this.linewidth = data.linewidth ?? 1;
+        this._lineweight = -3;
+        if (typeof data.lineweight === "number") {
+            this._lineweight = data.lineweight;
+            if (data.lineweight >= 0) {
+                this.linewidth = lineweight2linewidth(data.lineweight);
+            } else if (data.lineweight === -1) {
+                const layer = layers.find((layer) => layer.name === this.layer);
+                if (layer) {
+                    this.linewidth = layer.linewidth;
+                }
+            }
+        }
+        if (typeof data.info === "object" && !Array.isArray(data.info)) {
+            this.info = cloneDeep(data.info);
+        } else {
+            this.info = {};
+        }
+        this.children = new CadEntities(data.children || {}, [], false);
+        this.children.forEach((c) => (c.parent = this));
+        this.selectable = data.selectable ?? true;
+        this.selected = data.selected ?? false;
+        if (data.parent instanceof CadEntity) {
+            this.parent = data.parent;
+        }
+        this.visible = data.visible ?? true;
+        this.opacity = data.opacity ?? 1;
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, _parent?: CadEntity) {
+        if (this.el) {
+            const oldMatrix = new Matrix(this.el.transform());
+            this.el.transform(oldMatrix.transform(matrix));
+        }
+        if (!alter) {
+            this.needsUpdate = true;
+        }
+        this.children.forEach((e) => e.transform(matrix, alter, this));
+        return this;
+    }
+
+    update() {
+        if (this.needsUpdate && this.el) {
+            this.transform(this.el.transform(), true);
+            this.needsUpdate = false;
+            this.el.transform({});
+        }
+    }
+
+    export(): AnyObject {
+        this._indexColor = RGB2Index(this.color.hex());
+        this.update();
+        return {
+            id: this.id,
+            originalId: this.originalId,
+            layer: this.layer,
+            type: this.type,
+            color: this._indexColor,
+            lineweight: linewidth2lineweight(this.linewidth),
+            children: this.children.export(),
+            info: this.info
+        };
+    }
+
+    addChild(...children: CadEntity[]) {
+        children.forEach((e) => {
+            if (e instanceof CadEntity) {
+                e.parent = this;
+                this.children.add(e);
+            }
+        });
+        return this;
+    }
+
+    removeChild(...children: CadEntity[]) {
+        children.forEach((e) => {
+            if (e instanceof CadEntity) {
+                this.children.remove(e);
+            }
+        });
+        return this;
+    }
+
+    remove() {
+        this.el?.remove();
+        this.el = null;
+        this.parent?.removeChild(this);
+        return this;
+    }
+
+    abstract clone(resetId?: boolean): CadEntity;
+
+    abstract equals(entity: CadEntity): boolean;
+
+    // abstract getBoundingRect(): Rectangle;
+}
+
+export class CadArc extends CadEntity {
+    center: Point;
+    radius: number;
+    start_angle: number;
+    end_angle: number;
+    clockwise: boolean;
+    mingzi = "";
+    gongshi = "";
+    hideLength: boolean;
+    lengthTextSize: number;
+
+    get start() {
+        return this.curve.getPoint(0);
+    }
+    get end() {
+        return this.curve.getPoint(1);
+    }
+    get middle() {
+        return this.curve.getPoint(0.5);
+    }
+    get curve() {
+        const {center, radius, start_angle, end_angle, clockwise} = this;
+        return new Arc(center, radius, new Angle(start_angle, "deg"), new Angle(end_angle, "deg"), clockwise);
+    }
+    get length() {
+        return this.curve.length;
+    }
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "ARC";
+        this.center = getVectorFromArray(data.center);
+        this.radius = data.radius ?? 0;
+        this.start_angle = data.start_angle ?? 0;
+        this.end_angle = data.end_angle ?? 0;
+        this.clockwise = data.clockwise ?? false;
+        this.hideLength = data.hideLength === true;
+        this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, false, parent);
+        if (alter) {
+            const curve = this.curve;
+            curve.transform(matrix);
+            this.center = curve.center;
+            this.radius = curve.radius;
+            this.start_angle = curve.startAngle.deg;
+            this.end_angle = curve.endAngle.deg;
+            const {scaleX, scaleY} = matrix;
+            if (scaleX && scaleY && scaleX * scaleY < 0) {
+                this.clockwise = !this.clockwise;
+            }
+        }
+        return this;
+    }
+
+    export(): AnyObject {
+        return {
+            ...super.export(),
+            center: this.center.toArray(),
+            radius: this.radius,
+            start_angle: this.start_angle,
+            end_angle: this.end_angle,
+            clockwise: this.clockwise,
+            hideLength: this.hideLength,
+            lengthTextSize: this.lengthTextSize
+        };
+    }
+
+    clone(resetId = false) {
+        return new CadArc(this, [], resetId);
+    }
+
+    equals(entity: CadArc) {
+        return this.curve.equals(entity.curve);
+    }
+}
+
+export class CadCircle extends CadEntity {
+    center: Point;
+    radius: number;
+
+    get curve() {
+        const {center, radius} = this;
+        return new Arc(center, radius, new Angle(0, "deg"), new Angle(360, "deg"), true);
+    }
+    get length() {
+        return this.curve.length;
+    }
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "CIRCLE";
+        this.center = getVectorFromArray(data.center);
+        this.radius = data.radius ?? 0;
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, alter, parent);
+        if (alter) {
+            this.center.transform(matrix);
+        }
+        return this;
+    }
+
+    export(): AnyObject {
+        return {
+            ...super.export(),
+            center: this.center.toArray(),
+            radius: this.radius
+        };
+    }
+
+    clone(resetId = false) {
+        return new CadCircle(this, [], resetId);
+    }
+
+    equals(entity: CadCircle) {
+        return this.radius === entity.radius && this.center.equals(entity.center);
+    }
+}
+
+export interface CadDimensionEntity {
+    id: string;
+    location: "start" | "end" | "center" | "min" | "max" | "minX" | "maxX" | "minY" | "maxY";
+    defPoint?: number[];
+}
+
+export class CadDimension extends CadEntity {
+    font_size: number;
+    dimstyle: string;
+    axis: "x" | "y";
+    entity1: CadDimensionEntity;
+    entity2: CadDimensionEntity;
+    distance: number;
+    distance2?: number;
+    cad1: string;
+    cad2: string;
+    mingzi: string;
+    qujian: string;
+    ref?: "entity1" | "entity2" | "minX" | "maxX" | "minY" | "maxY" | "minLength" | "maxLength";
+    quzhifanwei: string;
+
+    private _renderStyle: 1 | 2 = 1;
+    get renderStyle() {
+        return this._renderStyle;
+    }
+    set renderStyle(value) {
+        if (this._renderStyle !== value) {
+            this.el?.clear();
+        }
+        this._renderStyle = value;
+    }
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "DIMENSION";
+        this.font_size = data.font_size || 16;
+        if (this.font_size === 2.5) {
+            this.font_size = 36;
+        }
+        this.dimstyle = data.dimstyle || "";
+        this.entity1 = {id: "", location: "center"};
+        this.entity2 = {id: "", location: "center"};
+        (["entity1", "entity2"] as ("entity1" | "entity2")[]).forEach((field) => {
+            if (data[field]) {
+                if (typeof data[field].id === "string") {
+                    this[field].id = data[field].id;
+                }
+                this[field].location = data[field].location ?? "center";
+            }
+        });
+        this.axis = data.axis ?? "x";
+        this.distance = data.distance ?? 20;
+        this.cad1 = data.cad1 ?? "";
+        this.cad2 = data.cad2 ?? "";
+        this.mingzi = data.mingzi ?? "";
+        this.qujian = data.qujian ?? "";
+        this.ref = data.ref ?? "entity1";
+        this.renderStyle = data.renderStyle ?? 1;
+        this.quzhifanwei = data.quzhifanwei ?? "";
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, alter, parent);
+        return this;
+    }
+
+    export(): AnyObject {
+        return {
+            ...super.export(),
+            dimstyle: this.dimstyle,
+            font_size: this.font_size,
+            axis: this.axis,
+            entity1: {...this.entity1},
+            entity2: {...this.entity2},
+            distance: this.distance,
+            cad1: this.cad1,
+            cad2: this.cad2,
+            mingzi: this.mingzi,
+            qujian: this.qujian,
+            ref: this.ref,
+            renderStyle: this.renderStyle,
+            quzhifanwei: this.quzhifanwei
+        };
+    }
+
+    clone(resetId = false) {
+        return new CadDimension(this, [], resetId);
+    }
+
+    equals(dimension: CadDimension) {
+        const aIds = [this.entity1.id, this.entity2.id];
+        const bIds = [dimension.entity1.id, dimension.entity2.id];
+        return intersection(aIds, bIds).length === 2 || this.id === dimension.id || this.originalId === dimension.originalId;
+    }
+}
+
+export class CadHatch extends CadEntity {
+    bgcolor: number[];
+    paths: {
+        edges: {
+            start: Point;
+            end: Point;
+        }[];
+        vertices: Point[];
+    }[];
+
+    constructor(data: AnyObject = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "HATCH";
+        this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
+        this.paths = [];
+        if (Array.isArray(data.paths)) {
+            data.paths.forEach((path) => {
+                const edges: CadHatch["paths"][0]["edges"] = [];
+                const vertices: CadHatch["paths"][0]["vertices"] = [];
+                if (Array.isArray(path.edges)) {
+                    path.edges.forEach((edge: any) => {
+                        const start = getVectorFromArray(edge.start);
+                        const end = getVectorFromArray(edge.end);
+                        edges.push({start, end});
+                    });
+                }
+                if (Array.isArray(path.vertices)) {
+                    path.vertices.forEach((vertice: any) => {
+                        vertices.push(getVectorFromArray(vertice));
+                    });
+                }
+                this.paths.push({edges, vertices});
+            });
+        }
+    }
+
+    export(): AnyObject {
+        const paths: any[] = [];
+        this.paths.forEach((path) => {
+            const edges: any[] = [];
+            const vertices: any[] = [];
+            path.edges.forEach((edge) => edges.push({start: edge.start.toArray(), end: edge.end.toArray()}));
+            path.vertices.forEach((vertice) => vertices.push(vertice.toArray()));
+            paths.push({edges, vertices});
+        });
+        return {...super.export(), paths};
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, alter, parent);
+        if (alter) {
+            this.paths.forEach((path) => {
+                path.edges.forEach((edge) => {
+                    edge.start.transform(matrix);
+                    edge.end.transform(matrix);
+                });
+                path.vertices.forEach((vertice) => vertice.transform(matrix));
+            });
+        }
+        return this;
+    }
+
+    clone(resetId = false) {
+        return new CadHatch(this, [], resetId);
+    }
+
+    equals(entity: CadHatch) {
+        // TODO: not yet implemented
+        return false;
+    }
+}
+
+export class CadLine extends CadEntity {
+    start: Point;
+    end: Point;
+    mingzi: string;
+    qujian: string;
+    gongshi: string;
+    guanlianbianhuagongshi: string;
+    kongwei: string;
+    nextZhewan: "自动" | "无" | "1mm" | "6mm";
+    zidingzhankaichang: number;
+    tiaojianquzhi: {
+        key: string;
+        level: number;
+        type: "选择" | "数值";
+        data: {
+            name: string;
+            value: number;
+            input: boolean;
+        }[];
+    }[];
+    zhewanOffset: number;
+    hideLength: boolean;
+    lengthTextSize: number;
+
+    get curve() {
+        return new Line(this.start, this.end);
+    }
+    get length() {
+        return this.curve.length;
+    }
+    get slope() {
+        return this.curve.slope;
+    }
+    get theta() {
+        return this.curve.theta;
+    }
+    get middle() {
+        return this.curve.middle;
+    }
+    get maxX() {
+        return Math.max(this.start.x, this.end.x);
+    }
+    get maxY() {
+        return Math.max(this.start.y, this.end.y);
+    }
+    get minX() {
+        return Math.min(this.start.x, this.end.x);
+    }
+    get minY() {
+        return Math.min(this.start.y, this.end.y);
+    }
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "LINE";
+        this.start = getVectorFromArray(data.start);
+        this.end = getVectorFromArray(data.end);
+        this.mingzi = data.mingzi ?? "";
+        this.qujian = data.qujian ?? "";
+        this.gongshi = data.gongshi ?? "";
+        this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
+        this.kongwei = data.kongwei ?? "";
+        this.nextZhewan = data.nextZhewan ?? "自动";
+        this.zidingzhankaichang = data.zidingzhankaichang ?? -1;
+        this.tiaojianquzhi = data.tiaojianquzhi ?? [];
+        this.zhewanOffset = data.zhewanOffset ?? 0;
+        this.tiaojianquzhi.forEach((v) => {
+            if ((v.type as any) === "选项") {
+                v.type = "选择";
+            }
+        });
+        this.hideLength = data.hideLength === true;
+        this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, alter, parent);
+        if (alter) {
+            this.start.transform(matrix);
+            this.end.transform(matrix);
+        }
+        return this;
+    }
+
+    export(): AnyObject {
+        return {
+            ...super.export(),
+            start: this.start.toArray(),
+            end: this.end.toArray(),
+            mingzi: this.mingzi,
+            qujian: this.qujian,
+            gongshi: this.gongshi,
+            guanlianbianhuagongshi: this.guanlianbianhuagongshi,
+            kongwei: this.kongwei,
+            nextZhewan: this.nextZhewan,
+            zidingzhankaichang: this.zidingzhankaichang,
+            tiaojianquzhi: this.tiaojianquzhi,
+            zhewanOffset: this.zhewanOffset,
+            hideLength: this.hideLength,
+            lengthTextSize: this.lengthTextSize
+        };
+    }
+
+    clone(resetId = false) {
+        return new CadLine(this, [], resetId);
+    }
+
+    equals(entity: CadLine) {
+        return this.curve.equals(entity.curve);
+    }
+
+    isVertical(accuracy = 0) {
+        return Math.abs(this.start.x - this.end.x) <= accuracy;
+    }
+
+    isHorizontal(accuracy = 0) {
+        return Math.abs(this.start.y - this.end.y) <= accuracy;
+    }
+}
+
+export class CadMtext extends CadEntity {
+    insert: Point;
+    font_size: number;
+    text: string;
+    anchor: Point;
+    fontFamily: string;
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        this.type = "MTEXT";
+        this.insert = getVectorFromArray(data.insert);
+        this.text = data.text ?? "";
+        this.anchor = getVectorFromArray(data.anchor);
+        this.fontFamily = data.fontFamily ?? "";
+        if (this.text.includes("     ")) {
+            this.font_size = 36;
+            this.insert.y += 11;
+            this.insert.x -= 4;
+            this.text = this.text.replace("     ", "");
+            this.fontFamily = "仿宋";
+        } else {
+            this.font_size = data.font_size ?? DEFAULT_LENGTH_TEXT_SIZE;
+        }
+    }
+
+    export(): AnyObject {
+        const anchor = this.anchor.toArray();
+        return {
+            ...super.export(),
+            insert: this.insert.toArray(),
+            font_size: this.font_size,
+            text: this.text,
+            anchor,
+            fontFamily: this.fontFamily
+        };
+    }
+
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+        super.transform(matrix, alter, parent);
+        if (alter) {
+            this.insert.transform(matrix);
+            const m = new Matrix(matrix);
+            if (this.info.isLengthText || this.info.isGongshiText) {
+                if (!Array.isArray(this.info.offset)) {
+                    this.info.offset = [0, 0];
+                }
+                if (!parent) {
+                    this.info.offset[0] += m.e;
+                    this.info.offset[1] += m.f;
+                }
+            }
+        }
+        return this;
+    }
+
+    clone(resetId = false) {
+        return new CadMtext(this, [], resetId);
+    }
+
+    equals(entity: CadMtext) {
+        return (
+            this.insert.equals(entity.insert) &&
+            this.font_size === entity.font_size &&
+            this.text === entity.text &&
+            this.anchor.equals(entity.anchor)
+        );
+    }
+}
+
+export function getCadEntity<T extends CadEntity>(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+    let entity: CadEntity | undefined;
+    const type = data.type as CadType;
+    if (type === "ARC") {
+        entity = new CadArc(data, layers, resetId);
+    } else if (type === "CIRCLE") {
+        entity = new CadCircle(data, layers, resetId);
+    } else if (type === "DIMENSION") {
+        entity = new CadDimension(data, layers, resetId);
+    } else if (type === "HATCH") {
+        entity = new CadHatch(data, layers, resetId);
+    } else if (type === "LINE") {
+        entity = new CadLine(data, layers, resetId);
+    } else if (type === "MTEXT") {
+        entity = new CadMtext(data, layers, resetId);
+    }
+    return entity as T;
+}
 
 export class CadEntities {
-	line: CadLine[] = [];
-	circle: CadCircle[] = [];
-	arc: CadArc[] = [];
-	mtext: CadMtext[] = [];
-	dimension: CadDimension[] = [];
-	hatch: CadHatch[] = [];
+    line: CadLine[] = [];
+    circle: CadCircle[] = [];
+    arc: CadArc[] = [];
+    mtext: CadMtext[] = [];
+    dimension: CadDimension[] = [];
+    hatch: CadHatch[] = [];
 
-	get length() {
-		let result = 0;
-		this.forEachType((array) => (result += array.length));
-		return result;
-	}
+    get length() {
+        let result = 0;
+        this.forEachType((array) => (result += array.length));
+        return result;
+    }
 
-	constructor(data: any = {}, layers: CadLayer[] = [], resetIds = false) {
-		if (typeof data !== "object") {
-			throw new Error("Invalid data.");
-		}
-		cadTypesKey.forEach((key) => {
-			const group = data[key];
-			if (Array.isArray(group)) {
-				group.forEach((v) => this[key].push(v.clone(resetIds)));
-			} else if (typeof group === "object") {
-				Object.values(group).forEach((v) => this[key].push(getCadEntity(v, layers, resetIds)));
-			}
-		});
-	}
+    constructor(data: any = {}, layers: CadLayer[] = [], resetIds = false) {
+        if (typeof data !== "object") {
+            throw new Error("Invalid data.");
+        }
+        cadTypesKey.forEach((key) => {
+            const group = data[key];
+            if (Array.isArray(group)) {
+                group.forEach((v) => this[key].push(v.clone(resetIds)));
+            } else if (typeof group === "object") {
+                Object.values(group).forEach((v) => this[key].push(getCadEntity(v, layers, resetIds)));
+            }
+        });
+    }
 
-	merge(entities: CadEntities) {
-		cadTypesKey.forEach((key: string) => {
-			this[key] = mergeArray(this[key], entities[key], "id");
-		});
-		return this;
-	}
+    merge(entities: CadEntities) {
+        cadTypesKey.forEach((key) => {
+            this[key] = mergeArray<any>(this[key] as any, entities[key] as any, "id");
+        });
+        return this;
+    }
 
-	separate(entities: CadEntities) {
-		cadTypesKey.forEach((key: string) => {
-			this[key] = separateArray(this[key], entities[key], "id");
-		});
-		return this;
-	}
+    separate(entities: CadEntities) {
+        cadTypesKey.forEach((key) => {
+            this[key] = separateArray<any>(this[key] as any, entities[key] as any, "id");
+        });
+        return this;
+    }
 
-	find(callback: string | ((value: CadEntity, index: number, array: CadEntity[]) => boolean)) {
-		for (const key of cadTypesKey) {
-			for (let i = 0; i < this[key].length; i++) {
-				const e = this[key][i];
-				if (typeof callback === "string") {
-					if (e.id === callback || e.originalId === callback) {
-						return e;
-					}
-				} else {
-					if (callback(e, i, this[key])) {
-						return e;
-					}
-				}
-				const found = e.children.find(callback);
-				if (found) {
-					return found;
-				}
-			}
-		}
-		return null;
-	}
+    find(callback?: string | ((value: CadEntity, index: number, array: CadEntity[]) => boolean)): CadEntity | null {
+        if (!callback) {
+            return null;
+        }
+        for (const key of cadTypesKey) {
+            for (let i = 0; i < this[key].length; i++) {
+                const e = this[key][i];
+                if (typeof callback === "string") {
+                    if (e.id === callback || e.originalId === callback) {
+                        return e;
+                    }
+                } else {
+                    if (callback(e, i, this[key])) {
+                        return e;
+                    }
+                }
+                const found = e.children.find(callback);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
 
-	export() {
-		const result = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
-		for (const key of cadTypesKey) {
-			this[key].forEach((e: CadEntity) => {
-				if (e instanceof CadDimension) {
-					if (e.entity1.id && e.entity2.id) {
-						result[key][e.id] = e.export();
-					}
-				} else {
-					result[key][e.id] = e.export();
-				}
-			});
-		}
-		return result;
-	}
+    export() {
+        const result: AnyObject = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
+        for (const key of cadTypesKey) {
+            this[key].forEach((e: CadEntity) => {
+                if (e instanceof CadDimension) {
+                    if (e.entity1.id && e.entity2.id) {
+                        result[key][e.id] = e.export();
+                    }
+                } else {
+                    result[key][e.id] = e.export();
+                }
+            });
+        }
+        return result;
+    }
 
-	clone(resetIds = false) {
-		return new CadEntities(this, [], resetIds);
-	}
+    clone(resetIds = false) {
+        return new CadEntities(this, [], resetIds);
+    }
 
-	transform(matrix: MatrixAlias) {
-		this.forEach((e) => e.transform(matrix));
-	}
+    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false) {
+        this.forEach((e) => e.transform(matrix, alter));
+    }
 
-	forEachType(callback: (array: CadEntity[], type: CadTypeKey, TYPE: CadType) => void, recursive = false) {
-		for (let i = 0; i < cadTypes.length; i++) {
-			const arr = this[cadTypesKey[i]];
-			callback(arr, cadTypesKey[i], cadTypes[i]);
-		}
-	}
+    forEachType(callback: (array: CadEntity[], type: CadTypeKey, TYPE: CadType) => void) {
+        for (let i = 0; i < cadTypes.length; i++) {
+            const arr = this[cadTypesKey[i]];
+            callback(arr, cadTypesKey[i], cadTypes[i]);
+        }
+    }
 
-	forEach(callback: (value: CadEntity, index: number, array: CadEntity[]) => void, recursive = false) {
-		this.forEachType((array) => {
-			array.forEach((v, i, a) => {
-				callback(v, i, a);
-				if (recursive) {
-					v.children.forEach(callback);
-				}
-			});
-		});
-	}
+    forEach(callback: (value: CadEntity, index: number, array: CadEntity[]) => void, recursive = false) {
+        this.forEachType((array) => {
+            array.forEach((v, i, a) => {
+                callback(v, i, a);
+                if (recursive) {
+                    v.children.forEach(callback);
+                }
+            });
+        });
+    }
 
-	filter(callback: (value: CadEntity, index: number, array: CadEntity[]) => boolean, recursive = false) {
-		const result = new CadEntities();
-		this.forEachType((array) => {
-			array.forEach((v, i, a) => {
-				if (callback(v, i, a)) {
-					result.add(v);
-				} else if (recursive) {
-					v.children.forEach((vv, ii, aa) => {
-						if (callback(vv, ii, aa)) {
-							result.add(vv);
-						}
-					});
-				}
-			});
-		});
-		return result;
-	}
+    filter(callback: (value: CadEntity, index: number, array: CadEntity[]) => boolean, recursive = false) {
+        const result = new CadEntities();
+        this.forEachType((array) => {
+            array.forEach((v, i, a) => {
+                if (callback(v, i, a)) {
+                    result.add(v);
+                } else if (recursive) {
+                    v.children.forEach((vv, ii, aa) => {
+                        if (callback(vv, ii, aa)) {
+                            result.add(vv);
+                        }
+                    });
+                }
+            });
+        });
+        return result;
+    }
 
-	fromArray(array: CadEntity[]) {
-		this.forEachType((array) => (array.length = 0));
-		array.forEach((e) => this.add(e));
-		return this;
-	}
+    fromArray(array: CadEntity[]) {
+        this.forEachType((array) => (array.length = 0));
+        array.forEach((e) => this.add(e));
+        return this;
+    }
 
-	toArray() {
-		const result: CadEntity[] = [];
-		this.forEach((e) => result.push(e));
-		return result;
-	}
+    toArray() {
+        const result: CadEntity[] = [];
+        this.forEach((e) => result.push(e));
+        return result;
+    }
 
-	add(...entities: CadEntity[]) {
-		entities.forEach((entity) => {
-			if (entity instanceof CadEntity) {
-				this.forEachType((array, type, TYPE) => {
-					if (TYPE === entity.type) {
-						array.push(entity);
-					}
-				});
-			}
-		});
-		return this;
-	}
+    add(...entities: CadEntity[]) {
+        entities.forEach((entity) => {
+            if (entity instanceof CadEntity) {
+                this.forEachType((array, type, TYPE) => {
+                    if (TYPE === entity.type) {
+                        array.push(entity);
+                    }
+                });
+            }
+        });
+        return this;
+    }
 
-	remove(...entities: CadEntity[]) {
-		entities.forEach((entity) => {
-			if (entity instanceof CadEntity) {
-				const id = entity.id;
-				this.forEachType((array) => {
-					const index = array.findIndex((e) => e.id === id);
-					if (index > -1) {
-						array.splice(index, 1);
-					}
-				});
-			}
-		});
+    remove(...entities: CadEntity[]) {
+        entities.forEach((entity) => {
+            if (entity instanceof CadEntity) {
+                const id = entity.id;
+                this.forEachType((array) => {
+                    const index = array.findIndex((e) => e.id === id);
+                    if (index > -1) {
+                        array.splice(index, 1);
+                    }
+                });
+            }
+        });
 
-		return this;
-	}
+        return this;
+    }
 
-	getDimensionPoints(dimension: CadDimension) {
-		const {entity1, entity2, distance, axis, distance2, ref} = dimension;
-		let entity: CadDimensionEntity;
-		const line1 = this.find(entity1.id) as CadLine;
-		const line2 = this.find(entity2.id) as CadLine;
-		if (!(line1 instanceof CadLine) || !(line2 instanceof CadLine)) {
-			return [];
-		}
-		switch (ref) {
-			case "entity1":
-				entity = entity1;
-				break;
-			case "entity2":
-				entity = entity2;
-				break;
-			case "maxLength":
-				entity = line2.length > line1.length ? entity2 : entity1;
-				break;
-			case "minLength":
-				entity = line2.length > line1.length ? entity1 : entity2;
-				break;
-			case "maxX":
-				entity = line2.maxX > line1.maxX ? entity2 : entity1;
-				break;
-			case "maxY":
-				entity = line2.maxY > line1.maxY ? entity2 : entity1;
-				break;
-			case "minX":
-				entity = line2.minX < line1.minX ? entity2 : entity1;
-				break;
-			case "minY":
-				entity = line2.minY < line1.minY ? entity2 : entity1;
-				break;
-			default:
-				break;
-		}
-		const getPoint = (e: CadLine, location: CadDimensionEntity["location"]) => {
-			const {start, end, middle} = e.clone();
-			if (location === "start") {
-				return start;
-			} else if (location === "end") {
-				return end;
-			} else if (location === "center") {
-				return middle;
-			} else if (location === "min") {
-				if (axis === "x") {
-					return start.y < end.y ? start : end;
-				} else if (axis === "y") {
-					return start.x < end.x ? start : end;
-				}
-			} else if (location === "max") {
-				if (axis === "x") {
-					return start.y > end.y ? start : end;
-				} else if (axis === "y") {
-					return start.x > end.x ? start : end;
-				}
-			}
-		};
-		let p1 = getPoint(line1, entity1.location);
-		let p2 = getPoint(line2, entity2.location);
-		if (!p1 || !p2) {
-			return [];
-		}
-		let p3 = p1.clone();
-		let p4 = p2.clone();
-		let p: Point;
-		if (entity.id === entity1.id) {
-			p = getPoint(line1, entity1.location);
-		} else {
-			p = getPoint(line2, entity2.location);
-		}
-		if (axis === "x") {
-			p3.y = p.y + distance;
-			p4.y = p.y + distance;
-			if (p3.x > p4.x) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
-		}
-		if (axis === "y") {
-			p3.x = p.x + distance;
-			p4.x = p.x + distance;
-			if (p3.y < p4.y) {
-				[p3, p4] = [p4, p3];
-				[p1, p2] = [p2, p1];
-			}
-		}
-		if (distance2 !== undefined) {
-			[p3, p4].forEach((p) => (p.y = distance2));
-		}
+    getDimensionPoints(dimension: CadDimension) {
+        const {entity1, entity2, distance, axis, distance2, ref} = dimension;
+        let entity: CadDimensionEntity | undefined;
+        const line1 = this.find(entity1.id) as CadLine;
+        const line2 = this.find(entity2.id) as CadLine;
+        if (!(line1 instanceof CadLine) || !(line2 instanceof CadLine)) {
+            return [];
+        }
+        switch (ref) {
+            case "entity1":
+                entity = entity1;
+                break;
+            case "entity2":
+                entity = entity2;
+                break;
+            case "maxLength":
+                entity = line2.length > line1.length ? entity2 : entity1;
+                break;
+            case "minLength":
+                entity = line2.length > line1.length ? entity1 : entity2;
+                break;
+            case "maxX":
+                entity = line2.maxX > line1.maxX ? entity2 : entity1;
+                break;
+            case "maxY":
+                entity = line2.maxY > line1.maxY ? entity2 : entity1;
+                break;
+            case "minX":
+                entity = line2.minX < line1.minX ? entity2 : entity1;
+                break;
+            case "minY":
+                entity = line2.minY < line1.minY ? entity2 : entity1;
+                break;
+            default:
+                throw new Error("Invalid ref: " + ref);
+        }
+        const getPoint = (e: CadLine, location: CadDimensionEntity["location"]) => {
+            const {start, end, middle} = e.clone();
+            if (location === "start") {
+                return start;
+            } else if (location === "end") {
+                return end;
+            } else if (location === "center") {
+                return middle;
+            } else if (location === "min") {
+                if (axis === "x") {
+                    return start.y < end.y ? start : end;
+                } else if (axis === "y") {
+                    return start.x < end.x ? start : end;
+                } else {
+                    return middle;
+                }
+            } else if (location === "max") {
+                if (axis === "x") {
+                    return start.y > end.y ? start : end;
+                } else if (axis === "y") {
+                    return start.x > end.x ? start : end;
+                } else {
+                    return middle;
+                }
+            } else if (location === "minX") {
+                return start.x < end.x ? start : end;
+            } else if (location === "maxX") {
+                return start.x > end.x ? start : end;
+            } else if (location === "minY") {
+                return start.y < end.y ? start : end;
+            } else if (location === "maxY") {
+                return start.y > end.y ? start : end;
+            } else {
+                return middle;
+            }
+        };
+        let p1 = getPoint(line1, entity1.location);
+        let p2 = getPoint(line2, entity2.location);
+        if (!p1 || !p2) {
+            return [];
+        }
+        let p3 = p1.clone();
+        let p4 = p2.clone();
+        let p: Point;
+        if (entity.id === entity1.id) {
+            p = getPoint(line1, entity1.location);
+        } else {
+            p = getPoint(line2, entity2.location);
+        }
+        if (axis === "x") {
+            p3.y = p.y + distance;
+            p4.y = p.y + distance;
+            if (p3.x > p4.x) {
+                [p3, p4] = [p4, p3];
+                [p1, p2] = [p2, p1];
+            }
+        }
+        if (axis === "y") {
+            p3.x = p.x + distance;
+            p4.x = p.x + distance;
+            if (p3.y < p4.y) {
+                [p3, p4] = [p4, p3];
+                [p1, p2] = [p2, p1];
+            }
+        }
+        if (distance2 !== undefined) {
+            [p3, p4].forEach((p) => (p.y = distance2));
+        }
 
-		const p5 = p3.clone();
-		const p6 = p3.clone();
-		const p7 = p4.clone();
-		const p8 = p4.clone();
-		const arrowSize = Math.max(1, Math.min(8, p3.distanceTo(p4) / 20));
-		const arrowLength = arrowSize * Math.sqrt(3);
-		if (axis === "x") {
-			p5.add(new Point(arrowLength, -arrowSize));
-			p6.add(new Point(arrowLength, arrowSize));
-			p7.add(new Point(-arrowLength, -arrowSize));
-			p8.add(new Point(-arrowLength, arrowSize));
-		}
-		if (axis === "y") {
-			p5.add(new Point(-arrowSize, -arrowLength));
-			p6.add(new Point(arrowSize, -arrowLength));
-			p7.add(new Point(-arrowSize, arrowLength));
-			p8.add(new Point(arrowSize, arrowLength));
-		}
+        const p5 = p3.clone();
+        const p6 = p3.clone();
+        const p7 = p4.clone();
+        const p8 = p4.clone();
+        const arrowSize = Math.max(1, Math.min(8, p3.distanceTo(p4) / 20));
+        const arrowLength = arrowSize * Math.sqrt(3);
+        if (axis === "x") {
+            p5.add(new Point(arrowLength, -arrowSize));
+            p6.add(new Point(arrowLength, arrowSize));
+            p7.add(new Point(-arrowLength, -arrowSize));
+            p8.add(new Point(-arrowLength, arrowSize));
+        }
+        if (axis === "y") {
+            p5.add(new Point(-arrowSize, -arrowLength));
+            p6.add(new Point(arrowSize, -arrowLength));
+            p7.add(new Point(-arrowSize, arrowLength));
+            p8.add(new Point(arrowSize, arrowLength));
+        }
 
-		return [p1, p2, p3, p4, p5, p6, p7, p8];
-	}
+        return [p1, p2, p3, p4, p5, p6, p7, p8];
+    }
 
-	getBoundingRect(entities = this) {
-		const rect = new Rectangle(new Point(Infinity, Infinity), new Point(-Infinity, -Infinity));
-		entities.forEach((e) => {
-			if (!e.visible) {
-				return;
-			}
-			if (e instanceof CadCircle) {
-				const {center, radius} = e;
-				rect.expand(center.clone().add(radius));
-				rect.expand(center.clone().sub(radius));
-			} else if (e instanceof CadArc) {
-				const curve = e.curve;
-				rect.expand(curve.getPoint(0));
-				rect.expand(curve.getPoint(0.5));
-				rect.expand(curve.getPoint(1));
-			} else if (e instanceof CadDimension) {
-				this.getDimensionPoints(e).forEach((p) => rect.expand(p));
-			} else if (e instanceof CadLine) {
-				rect.expand(e.start);
-				rect.expand(e.end);
-			}
-		});
-		if (!isFinite(rect.width) || !isFinite(rect.height)) {
-			return new Rectangle();
-		}
-		return rect;
-	}
+    getBoundingRect() {
+        const rect = new Rectangle(new Point(Infinity, Infinity), new Point(-Infinity, -Infinity));
+        this.forEach((e) => {
+            if (!e.visible) {
+                return;
+            }
+            if (e instanceof CadCircle) {
+                const {center, radius} = e;
+                rect.expand(center.clone().add(radius));
+                rect.expand(center.clone().sub(radius));
+            } else if (e instanceof CadArc) {
+                const curve = e.curve;
+                if (curve.radius) {
+                    rect.expand(curve.getPoint(0));
+                    rect.expand(curve.getPoint(0.5));
+                    rect.expand(curve.getPoint(1));
+                }
+            } else if (e instanceof CadDimension) {
+                this.getDimensionPoints(e).forEach((p) => rect.expand(p));
+            } else if (e instanceof CadLine) {
+                rect.expand(e.start);
+                rect.expand(e.end);
+            } else if (e instanceof CadMtext) {
+                const elRect = e.el?.node?.getBoundingClientRect();
+                const {insert, anchor, scale} = e;
+                if (elRect && !isNaN(scale)) {
+                    const width = elRect.width / scale;
+                    const height = elRect.height / scale;
+                    const x = insert.x - anchor.x * width;
+                    const y = insert.y - (1 - anchor.y) * height;
+                    rect.expand(new Point(x, y));
+                    rect.expand(new Point(x + width, y + height));
+                }
+            }
+        }, true);
+        if (!isFinite(rect.width) || !isFinite(rect.height)) {
+            return new Rectangle();
+        }
+        return rect;
+    }
+
+    // * 实体的偏移, 目前只实现的直线和弧线
+    offset(direction: number, distance: number) {
+        if (!(direction > 0) && !(direction < 0)) {
+            throw new Error("ERROR: direction must be a number that greater than 0 or less than 0.");
+        }
+        this.forEach((e) => {
+            if (e instanceof CadArc) {
+                if (direction < 0 === e.clockwise) {
+                    e.radius -= distance;
+                } else {
+                    e.radius += distance;
+                }
+            } else if (e instanceof CadLine) {
+                let dx = 0;
+                let dy = 0;
+                const theta = e.theta.rad;
+                if (direction < 0) {
+                    dx = distance * Math.sin(theta);
+                    dy = -distance * Math.cos(theta);
+                } else {
+                    dx = -distance * Math.sin(theta);
+                    dy = distance * Math.cos(theta);
+                }
+                e.start.add(dx, dy);
+                e.end.add(dx, dy);
+            }
+        });
+    }
 }

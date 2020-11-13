@@ -1,6 +1,6 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "3.0.1",
+	"version": "3.1.0",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
@@ -40,7 +40,7 @@
 		"webpack-node-externals": "^2.5.2"
 	},
 	"dependencies": {
-		"@lucilor/utils": "^1.2.0",
+		"@lucilor/utils": "^1.2.1",
 		"@svgdotjs/svg.js": "^3.0.16",
 		"lodash": "^4.17.20",
 		"uuid": "^8.3.1"

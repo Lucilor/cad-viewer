@@ -1,4 +1,4 @@
-export type CadType = "LINE" | "MTEXT" | "DIMENSION" | "ARC" | "CIRCLE" | "HATCH";
+export type CadType = "LINE" | "MTEXT" | "DIMENSION" | "ARC" | "CIRCLE" | "HATCH" | "";
 
 export const cadTypes: CadType[] = ["LINE", "MTEXT", "DIMENSION", "ARC", "CIRCLE", "HATCH"];
 
