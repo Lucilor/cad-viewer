@@ -36,6 +36,7 @@ export class CadData {
     info: AnyObject;
     attributes: AnyObject;
     bancaihoudufangxiang: "none" | "gt0" | "lt0";
+    zhankai: (number | string)[][];
 
     constructor(data: AnyObject = {}) {
         if (typeof data !== "object") {
@@ -97,10 +98,41 @@ export class CadData {
         this.morenkailiaobancai = data.morenkailiaobancai ?? "";
         this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
         this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
-        this.info = data.info ?? {};
+        if (typeof data.info === "object" && !Array.isArray(data.info)) {
+            this.info = cloneDeep(data.info);
+        } else {
+            this.info = {};
+        }
         this.attributes = data.attributes ?? {};
         this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "none";
+        this.zhankai = Array.isArray(data.zhankai) ? data.zhankai : [];
         this.updateDimensions();
+    }
+
+    copy(data: CadData) {
+        this.name = data.name;
+        this.type = data.type;
+        this.separate(this).merge(data);
+        this.parent = data.parent;
+        this.zhankaikuan = data.zhankaikuan;
+        this.zhankaigao = data.zhankaigao;
+        this.shuliang = data.shuliang;
+        this.shuliangbeishu = data.shuliangbeishu;
+        this.huajian = data.huajian;
+        this.mubanfangda = data.mubanfangda;
+        this.kailiaomuban = data.kailiaomuban;
+        this.kailiaoshibaokeng = data.kailiaoshibaokeng;
+        this.bianxingfangshi = data.bianxingfangshi;
+        this.bancaiwenlifangxiang = data.bancaiwenlifangxiang;
+        this.kailiaopaibanfangshi = data.kailiaopaibanfangshi;
+        this.morenkailiaobancai = data.morenkailiaobancai;
+        this.suanliaochuli = data.suanliaochuli;
+        this.showKuandubiaozhu = data.showKuandubiaozhu;
+        this.info = cloneDeep(data.info);
+        this.attributes = cloneDeep(data.attributes);
+        this.bancaihoudufangxiang = data.bancaihoudufangxiang;
+        this.zhankai = cloneDeep(data.zhankai);
+        this.updatePartners().updateDimensions();
     }
 
     export(): AnyObject {
@@ -143,7 +175,8 @@ export class CadData {
             suanliaochuli: this.suanliaochuli,
             showKuandubiaozhu: this.showKuandubiaozhu,
             info: this.info,
-            bancaihoudufangxiang: this.bancaihoudufangxiang
+            bancaihoudufangxiang: this.bancaihoudufangxiang,
+            zhankai: cloneDeep(this.zhankai)
         };
     }
 
@@ -202,10 +235,6 @@ export class CadData {
             data.components.data = data.components.data.map((v) => v.clone(true));
         }
         return data;
-    }
-
-    copy(data: CadData) {
-        this.separate(this).merge(data.clone());
     }
 
     merge(data: CadData) {
@@ -351,6 +380,21 @@ export class CadData {
     updateComponents() {
         const data = this.components.data.slice();
         const connections = this.components.connections.slice();
+        connections.forEach((v) => {
+            const [id1, id2] = v.ids;
+            const child1 = this.findChild(id1);
+            const child2 = this.findChild(id2);
+            if (this.id === id1) {
+                v.names[0] = this.name;
+            } else if (child1) {
+                v.names[0] = child1.name;
+            }
+            if (this.id === id2) {
+                v.names[1] = this.name;
+            } else if (child2) {
+                v.names[1] = child2.name;
+            }
+        });
         this.components.data.length = 0;
         this.components.connections.length = 0;
         data.forEach((v) => this.addComponent(v));
@@ -382,6 +426,35 @@ export class CadData {
             }
         });
         this.entities.dimension = tmp;
+
+        const children = [...this.partners, ...this.components.data];
+        this.entities.dimension.forEach((e) => {
+            let cad1Changed = false;
+            let cad2Changed = false;
+            if (this.entities.find(e.entity1.id)) {
+                e.cad1 = this.name;
+                cad1Changed = true;
+            }
+            if (this.entities.find(e.entity2.id)) {
+                e.cad2 = this.name;
+                cad2Changed = true;
+            }
+            if (!(cad1Changed && cad2Changed)) {
+                for (const child of children) {
+                    if (!cad1Changed && child.findEntity(e.entity1.id)) {
+                        e.cad1 = child.name;
+                        cad1Changed = true;
+                        break;
+                    }
+                    if (!cad2Changed && child.findEntity(e.entity2.id)) {
+                        e.cad2 = child.name;
+                        cad2Changed = true;
+                        break;
+                    }
+                }
+            }
+        });
+
         this.partners.forEach((v) => v.updateDimensions(this.entities.dimension));
         this.components.data.forEach((v) => v.updateDimensions(this.entities.dimension));
         return this;
@@ -451,15 +524,16 @@ export class CadData {
                 if (!l2 && l1) {
                     l2 = getLine(e2 as CadCircle, l1);
                 }
-            } else {
             }
             if (!l1 || !l2) {
                 if (typeof value === "number") {
+                    const rect1 = c1.getBoundingRect();
+                    const rect2 = c2.getBoundingRect();
                     axis = connection.axis;
                     if (axis === "x") {
-                        translate.x = value + spaceNum;
+                        translate.x = rect1.left - value - rect2.left;
                     } else if (axis === "y") {
-                        translate.y = value + spaceNum;
+                        translate.y = rect1.top - value - rect2.top;
                     }
                 } else {
                     throw new Error("未找到对应直线");
@@ -586,7 +660,7 @@ export class CadData {
             }
         }
         components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
-        this.moveComponent(c2, translate, c1);
+        this.moveComponent(c2, translate, c1, true);
         components.connections.push(cloneDeep(connection));
 
         return this;
@@ -600,7 +674,7 @@ export class CadData {
         });
     }
 
-    moveComponent(curr: CadData, translate: Point, prev?: CadData) {
+    moveComponent(curr: CadData, translate: Point, prev?: CadData, alter = false) {
         const map: AnyObject = {};
         this.components.connections.forEach((conn) => {
             if (conn.ids.includes(curr.id)) {
@@ -622,7 +696,7 @@ export class CadData {
                 });
             }
         });
-        curr.transform({translate}, true);
+        curr.transform({translate}, alter);
         for (const id in map) {
             const next = this.components.data.find((v) => v.id === id);
             if (next) {
@@ -633,7 +707,7 @@ export class CadData {
                 if (map[id].y === undefined) {
                     newTranslate.y = 0;
                 }
-                this.moveComponent(next, newTranslate, curr);
+                this.moveComponent(next, newTranslate, curr, alter);
             }
         }
     }
@@ -649,11 +723,9 @@ export class CadData {
             const p2 = [rect2.left, rect2.top];
             if (axis === "x") {
                 conn.value = p1[0] - p2[0];
-                conn.space = (-conn.value).toString();
             }
             if (axis === "y") {
                 conn.value = p1[1] - p2[1];
-                conn.space = (-conn.value).toString();
             }
             this.assembleComponents(conn, accuracy);
         });
@@ -705,6 +777,7 @@ export class CadJointPoint {
 export class CadOption {
     name: string;
     value: string;
+
     constructor(name: string | CadOption = "", value = "") {
         if (name instanceof CadOption) {
             this.name = name.name;
@@ -713,6 +786,10 @@ export class CadOption {
             this.name = name;
             this.value = value;
         }
+    }
+
+    equals(option: CadOption) {
+        return this.name === option.name && this.value === option.value;
     }
 }
 

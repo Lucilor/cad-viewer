@@ -1,5 +1,6 @@
 import {Point, Rectangle} from "@lucilor/utils";
-import {CadEntities, CadDimension, CadEntity, CadViewer} from ".";
+import {CadDimension, CadEntities, CadEntity} from "./cad-data/cad-entities";
+import {CadViewer} from "./cad-viewer";
 
 let pointer: {from: Point; to: Point} | null = null;
 let button: number | null = null;

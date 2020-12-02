@@ -3,17 +3,18 @@ import {CadData} from "./cad-data";
 import {CadViewer} from "../cad-viewer";
 import {getVectorFromArray, isBetween} from "./utils";
 import {DEFAULT_TOLERANCE, Point} from "@lucilor/utils";
-import Color from "color";
 
 export type CadLineLike = CadLine | CadArc;
 
 export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00"];
 
 export type PointsMap = {
-	point: Point;
-	lines: CadLineLike[];
-	selected: boolean;
+    point: Point;
+    lines: CadLineLike[];
+    selected: boolean;
 }[];
+
+export const LINE_LIMIT = [0.01, 0.7];
 
 export function generatePointsMap(entities?: CadEntities, tolerance = DEFAULT_TOLERANCE) {
     const map: PointsMap = [];
@@ -112,7 +113,7 @@ export function swapStartEnd(entity: CadLineLike) {
 }
 
 export function sortLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
-    const entities = data.getAllEntities();
+    const entities = data.entities;
     const result: CadLineLike[][] = [];
     if (entities.length === 0) {
         return result;
@@ -177,31 +178,35 @@ export function getLinesDistance(l1: CadLineLike, l2: CadLineLike) {
     return Math.min(d1, d2, d3, d4);
 }
 
+export interface ValidateResult {
+    valid: boolean;
+    errMsg: string[];
+    lines: CadLineLike[][];
+}
+
 export function validateLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
     const lines = sortLines(data, tolerance);
-    const result = {valid: true, errMsg: "", lines};
-    const validColorsNum = validColors.map((v) => new Color(v).rgbNumber());
+    const result: ValidateResult = {valid: true, errMsg: [], lines};
+    const [min, max] = LINE_LIMIT;
     lines.forEach((v) =>
         v.forEach((vv) => {
-            const {start, end, color} = vv;
+            const {start, end} = vv;
             const dx = Math.abs(start.x - end.x);
             const dy = Math.abs(start.y - end.y);
-            if (isBetween(dx) || isBetween(dy)) {
+            if (isBetween(dx, min, max) || isBetween(dy, min, max)) {
                 vv.info.errors = ["斜率不符合要求"];
+                result.errMsg.push(`线${vv.id}斜率不符合要求`);
             } else {
                 vv.info.errors = [];
-            }
-            if (!validColorsNum.includes(color.rgbNumber())) {
-                vv.info.errors.push("颜色不符合要求");
             }
         })
     );
     if (lines.length < 1) {
         result.valid = false;
-        result.errMsg = "没有线";
+        result.errMsg.push("没有线");
     } else if (lines.length > 1) {
         result.valid = false;
-        result.errMsg = "线分成了多段";
+        result.errMsg.push("CAD分成了多段");
         for (let i = 0; i < lines.length - 1; i++) {
             const currGroup = lines[i];
             const nextGroup = lines[i + 1];
@@ -224,7 +229,9 @@ export function validateLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
                 }
             });
             errLines.forEach((l) => {
-                l.info.errors.push(result.errMsg);
+                if (!l.info.errors.includes("CAD分成了多段的断裂处")) {
+                    l.info.errors.push("CAD分成了多段的断裂处");
+                }
             });
         }
     }
@@ -318,6 +325,16 @@ export function generateLineTexts(data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 gongshiText.insert.copy(inner);
             }
             gongshiText.anchor.set(1 - anchor.x, 1 - anchor.y);
+
+            let bianhuazhiText = line.children.find((c) => c.info.isBianhuazhiText) as CadMtext;
+            if (!(bianhuazhiText instanceof CadMtext)) {
+                bianhuazhiText = new CadMtext();
+                bianhuazhiText.info.isBianhuazhiText = true;
+                bianhuazhiText.info.offset = [0, 0];
+                line.addChild(bianhuazhiText);
+                bianhuazhiText.insert.copy(outer);
+            }
+            bianhuazhiText.anchor.copy(anchor);
         });
     });
 }
@@ -326,11 +343,12 @@ export function autoFixLine(cad: CadViewer, line: CadLine, tolerance = DEFAULT_T
     const {start, end} = line;
     const dx = start.x - end.x;
     const dy = start.y - end.y;
+    const [min, max] = LINE_LIMIT;
     const translate = new Point();
-    if (isBetween(Math.abs(dx))) {
+    if (isBetween(Math.abs(dx), min, max)) {
         translate.x = dx;
     }
-    if (isBetween(Math.abs(dy))) {
+    if (isBetween(Math.abs(dy), min, max)) {
         translate.y = dy;
     }
     const map = generatePointsMap(cad.data.getAllEntities(), tolerance);

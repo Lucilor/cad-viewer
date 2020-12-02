@@ -53,49 +53,49 @@ export function separateArray<T>(arr1: T[], arr2: T[], field?: string) {
     return arr1;
 }
 
-export const isBetween = (n: number, min = 0.01, max = 1) => n > min && n < max;
+export const isBetween = (n: number, min: number, max: number) => n > min && n < max;
 
 export type Expressions = {[key: string]: string};
 
 export class ExpressionsParser {
-	expressions: Expressions;
-	builtinFns = {
-	    round: "Math.round"
-	};
-	operators = ["+", "-", "*", "×", "÷", "/"];
-	get regOperators() {
-	    return this.operators.map((o) => {
-	        if (["+", "/", "*"].includes(o)) {
-	            return "\\" + o;
-	        }
-	        return o;
-	    });
-	}
+    expressions: Expressions;
+    builtinFns = {
+        round: "Math.round"
+    };
+    operators = ["+", "-", "*", "×", "÷", "/"];
+    get regOperators() {
+        return this.operators.map((o) => {
+            if (["+", "/", "*"].includes(o)) {
+                return "\\" + o;
+            }
+            return o;
+        });
+    }
 
-	constructor(exps?: Expressions) {
-	    this.expressions = exps || {};
-	}
+    constructor(exps?: Expressions) {
+        this.expressions = exps || {};
+    }
 
-	getVariables(rightSideOnly = false) {
-	    const vars = new Set<string>();
-	    const {expressions: exps, builtinFns, regOperators} = this;
-	    const opReg = new RegExp(regOperators.join("|"), "g");
-	    for (const key in exps) {
-	        if (!rightSideOnly && isNaN(Number(key))) {
-	            vars.add(key);
-	        }
-	        exps[key].split(opReg).forEach((name) => {
-	            Object.keys(builtinFns).forEach((fn) => {
-	                const fnReg = new RegExp(`${fn}|\\(|\\)`, "g");
-	                name = name.replace(fnReg, "");
-	            });
-	            if (isNaN(Number(name))) {
-	                vars.add(name);
-	            }
-	        });
-	    }
-	    return Array.from(vars);
-	}
+    getVariables(rightSideOnly = false) {
+        const vars = new Set<string>();
+        const {expressions: exps, builtinFns, regOperators} = this;
+        const opReg = new RegExp(regOperators.join("|"), "g");
+        for (const key in exps) {
+            if (!rightSideOnly && isNaN(Number(key))) {
+                vars.add(key);
+            }
+            exps[key].split(opReg).forEach((name) => {
+                Object.keys(builtinFns).forEach((fn) => {
+                    const fnReg = new RegExp(`${fn}|\\(|\\)`, "g");
+                    name = name.replace(fnReg, "");
+                });
+                if (isNaN(Number(name))) {
+                    vars.add(name);
+                }
+            });
+        }
+        return Array.from(vars);
+    }
 }
 
 export function lineweight2linewidth(value: number) {

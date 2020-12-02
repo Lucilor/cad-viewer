@@ -1,6 +1,12 @@
 import {Circle, Container, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {Angle, Arc, Point} from "@lucilor/utils";
 
+export interface FontStyle {
+    size: number;
+    family: string;
+    weight: string;
+}
+
 export function drawLine(draw: Container, start: Point, end: Point, i = 0) {
     let el = draw.children()[i] as Line;
     if (el instanceof Line) {
@@ -16,7 +22,8 @@ export function drawCircle(draw: Container, center: Point, radius: number, i = 0
     if (el instanceof Circle) {
         el.size(radius * 2).center(center.x, center.y);
     } else {
-        el = draw.circle(radius * 2).center(center.x, center.y).addClass("stroke").fill("none");
+        el = draw.circle(radius * 2).center(center.x, center.y);
+        el.addClass("stroke").fill("none");
     }
     return [el];
 }
@@ -40,16 +47,8 @@ export function drawArc(draw: Container, center: Point, radius: number, startAng
     return [el];
 }
 
-export function drawText(
-    draw: Container,
-    text: string,
-    size: number,
-    position: Point,
-    anchor: Point,
-    fontFamily?: string,
-    vertical = false,
-    i = 0
-) {
+export function drawText(draw: Container, text: string, style: FontStyle, position: Point, anchor: Point, vertical = false, i = 0) {
+    const {size, family, weight} = style;
     if (!text || !(size > 0)) {
         draw.remove();
         return [];
@@ -70,7 +69,8 @@ export function drawText(
         el.css("writing-mode", "");
         el.css("transform", `translate(${-anchor.x * 100}%, ${anchor.y * 100}%) scale(1, -1)`);
     }
-    el.css("font-family", fontFamily);
+    el.css("font-family", family);
+    el.css("font-weight", weight);
     el.move(position.x, position.y);
     return [el];
 }
@@ -97,15 +97,14 @@ export function drawShape(draw: Container, points: Point[], type: "fill" | "stro
 
 export function drawDimension(
     draw: Container,
-    style: 1 | 2 = 1,
+    renderStyle: 1 | 2 = 1,
     points: Point[],
     text: string,
+    fontStyle: FontStyle,
     axis: "x" | "y",
-    fontSize?: number,
-    fontFamily?: string,
     i = 0
 ) {
-    if (points.length < 8 || !fontSize || fontSize < 0) {
+    if (points.length < 8 || !(fontStyle.size > 0)) {
         draw.remove();
         return [];
     }
@@ -113,7 +112,7 @@ export function drawDimension(
     let l1: Line | null = null;
     let l2: Line | null = null;
     let l3: Line | null = null;
-    if (style === 1) {
+    if (renderStyle === 1) {
         l1 = drawLine(draw, p1, p3, i)?.[0];
         l2 = drawLine(draw, p3, p4, i + 1)?.[0];
         l3 = drawLine(draw, p4, p2, i + 2)?.[0];
@@ -134,9 +133,9 @@ export function drawDimension(
     const middle = p3.clone().add(p4).divide(2);
     let textEl: Text | null = null;
     if (axis === "x") {
-        textEl = drawText(draw, text, fontSize, middle, new Point(0.5, 1), fontFamily, false, i + 5)[0];
+        textEl = drawText(draw, text, fontStyle, middle, new Point(0.5, 1), false, i + 5)[0];
     } else if (axis === "y") {
-        textEl = drawText(draw, text, fontSize, middle, new Point(1, 0.5), fontFamily, true, i + 5)[0];
+        textEl = drawText(draw, text, fontStyle, middle, new Point(1, 0.5), true, i + 5)[0];
     }
     if (!l1 || !l2 || !l3 || !textEl) {
         return [];

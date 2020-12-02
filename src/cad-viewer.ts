@@ -1,12 +1,16 @@
-import {SVG, Svg, CoordinateXY, Element, G} from "@svgdotjs/svg.js";
+import {Svg, SVG, CoordinateXY, Element, G} from "@svgdotjs/svg.js";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {Point, timeout} from "@lucilor/utils";
+import {CadData} from "./cad-data/cad-data";
+import {CadArc, CadCircle, CadDimension, CadEntities, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entities";
+import {CadType} from "./cad-data/cad-types";
 import {getVectorFromArray, isBetween} from "./cad-data/utils";
-import {drawArc, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
-import {CadData, CadType, CadEntity, CadArc, CadCircle, CadDimension, CadHatch, CadLine, CadMtext, CadEntities} from ".";
-import {CadStylizer, CadStyle} from "./cad-stylizer";
-import {controls, CadEvents, CadEventCallBack} from "./cad-viewer-controls";
+import {CadStyle, CadStylizer} from "./cad-stylizer";
+import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
+import {drawArc, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
+
+const typesOrder: CadType[] = ["DIMENSION", "HATCH", "MTEXT", "CIRCLE", "ARC", "LINE"];
 
 export interface CadViewerConfig {
     width: number; // 宽
@@ -24,6 +28,7 @@ export interface CadViewerConfig {
     hideLineGongshi: boolean; // 是否隐藏线公式(即使lineGongshi>0)
     minLinewidth: number; // 所有线的最小宽度(调大以便选中)
     fontFamily: string; // 设置字体
+    fontWeight: string; // 设置字体粗细
     enableZoom: boolean; // 是否启用缩放
     renderStep: number; // 渲染时每次渲染的实体个数
 }
@@ -45,6 +50,7 @@ function getConfigProxy(config: Partial<CadViewerConfig> = {}) {
         hideLineGongshi: false,
         minLinewidth: 1,
         fontFamily: "微软雅黑",
+        fontWeight: "normal",
         enableZoom: true,
         renderStep: 10
     };
@@ -59,8 +65,6 @@ function getConfigProxy(config: Partial<CadViewerConfig> = {}) {
                 if (typeof value === "number") {
                     value = [value, value, value, value];
                 } else if (!Array.isArray(value) || value.length === 0) {
-                    value = [0, 0, 0, 0];
-                } else if (value.length === 0) {
                     value = [0, 0, 0, 0];
                 } else if (value.length === 1) {
                     value = [value[0], value[0], value[0], value[0]];
@@ -112,10 +116,7 @@ export class CadViewer extends EventEmitter {
         dom.focus();
 
         this._config = getConfigProxy();
-        const types: CadType[] = ["DIMENSION", "HATCH", "MTEXT", "CIRCLE", "ARC", "LINE"];
-        types.forEach((t) => {
-            this.draw.group().attr("type", t);
-        });
+        typesOrder.forEach((t) => this.draw.group().attr("group", t));
         this.config({...this._config, ...config}).center();
     }
 
@@ -276,7 +277,8 @@ export class CadViewer extends EventEmitter {
 
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
-        const {color, linewidth, fontSize, fontFamily} = stylizer.get(entity, style);
+        const {color, linewidth, fontSize, fontFamily, fontWeight} = stylizer.get(entity, style);
+        const fontStyle: FontStyle = {size: fontSize, family: fontFamily, weight: fontWeight};
         if (!entity.visible) {
             entity.el?.remove();
             entity.el = null;
@@ -284,9 +286,9 @@ export class CadViewer extends EventEmitter {
         }
         let el = entity.el;
         if (!el) {
-            let typeLayer = draw.find(`[type="${entity.type}"]`)[0] as G;
+            let typeLayer = draw.find(`[group="${entity.type}"]`)[0] as G;
             if (!typeLayer) {
-                typeLayer = draw.group().attr("type", entity.type);
+                typeLayer = draw.group().attr("group", entity.type);
             }
             el = typeLayer.group().addClass("selectable");
             entity.el = el;
@@ -324,7 +326,7 @@ export class CadViewer extends EventEmitter {
             if (text === "") {
                 text = "<>";
             }
-            drawResult = drawDimension(el, renderStyle, points, text, axis, fontSize, fontFamily);
+            drawResult = drawDimension(el, renderStyle, points, text, fontStyle, axis);
         } else if (entity instanceof CadHatch) {
             const {paths} = entity;
             drawResult = [];
@@ -346,7 +348,10 @@ export class CadViewer extends EventEmitter {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let offset: Point | undefined;
                 if (entity.info.isLengthText) {
-                    entity.text = Math.round(parent.length).toString();
+                    entity.text = parent.length.toFixed(1);
+                    if (entity.text.endsWith(".0")) {
+                        entity.text = entity.text.slice(0, -2);
+                    }
                     entity.font_size = parent.lengthTextSize;
                     if (hideLineLength || parent.hideLength) {
                         el.remove();
@@ -360,6 +365,14 @@ export class CadViewer extends EventEmitter {
                         entity.text = parent.mingzi;
                     }
                     entity.font_size = lineGongshi;
+                    offset = getVectorFromArray(entity.info.offset);
+                } else if (entity.info.isBianhuazhiText) {
+                    if (parent instanceof CadLine && parent.guanlianbianhuagongshi) {
+                        entity.text = `变化值=${parent.guanlianbianhuagongshi}`;
+                    } else {
+                        entity.text = "";
+                    }
+                    entity.font_size = lineGongshi - 3;
                     offset = getVectorFromArray(entity.info.offset);
                     if (hideLineGongshi) {
                         el.remove();
@@ -444,7 +457,7 @@ export class CadViewer extends EventEmitter {
                     const tmpEl = new G();
                     while (end < originalText.length) {
                         const tmpText = originalText.slice(start, end);
-                        drawText(tmpEl, tmpText, fontSize, insert.clone().add(offset), anchor, fontFamily);
+                        drawText(tmpEl, tmpText, fontStyle, insert.clone().add(offset), anchor);
                         if (tmpEl.width() < dMin) {
                             end++;
                         } else {
@@ -458,7 +471,7 @@ export class CadViewer extends EventEmitter {
                 }
             }
 
-            drawResult = drawText(el, text, fontSize, insert.clone().add(offset), anchor, fontFamily);
+            drawResult = drawText(el, text, fontStyle, insert.clone().add(offset), anchor);
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
@@ -698,6 +711,7 @@ export class CadViewer extends EventEmitter {
 
     reset(data?: CadData) {
         this.draw.clear();
+        typesOrder.forEach((t) => this.draw.group().attr("group", t));
         if (data instanceof CadData) {
             this.data = data;
         }
