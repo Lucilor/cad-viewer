@@ -262,7 +262,15 @@ export class CadViewer extends EventEmitter {
         draw.attr({width, height});
         this.dom.style.width = width + "px";
         this.dom.style.height = height + "px";
-
+        const viewbox = this.draw.viewbox();
+        const r1 = width / height;
+        const r2 = viewbox.w / viewbox.h;
+        if (r1 > r2) {
+            viewbox.w = viewbox.width = viewbox.h * r1;
+        } else {
+            viewbox.h = viewbox.height = viewbox.w / r1;
+        }
+        this.draw.viewbox(viewbox);
         return this;
     }
 

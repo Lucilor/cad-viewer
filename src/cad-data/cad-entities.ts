@@ -15,7 +15,6 @@ export abstract class CadEntity {
     layer: string;
     color: Color;
     linewidth: number;
-    visible: boolean;
     info: AnyObject;
     _indexColor: number | null;
     _lineweight: number;
@@ -118,6 +117,23 @@ export abstract class CadEntity {
         this.children.forEach((c) => (c.opacity = value));
     }
 
+    private _visible?: boolean;
+    get visible() {
+        if (this.el) {
+            return this.el.css("display") !== "none";
+        } else {
+            return typeof this._visible === "boolean" ? this._visible : true;
+        }
+    }
+    set visible(value) {
+        if (this.el) {
+            this.el.css("display", value ? "" : "none");
+        } else {
+            this._visible = value;
+        }
+        this.children.forEach((c) => (c.visible = value));
+    }
+
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
@@ -178,11 +194,11 @@ export abstract class CadEntity {
     }
 
     transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, _parent?: CadEntity) {
-        if (this.el) {
-            const oldMatrix = new Matrix(this.el.transform());
-            this.el.transform(oldMatrix.transform(matrix));
-        }
         if (!alter) {
+            if (this.el) {
+                const oldMatrix = new Matrix(this.el.transform());
+                this.el.transform(oldMatrix.transform(matrix));
+            }
             this.needsUpdate = true;
         }
         this.children.forEach((e) => e.transform(matrix, alter, this));
@@ -202,6 +218,10 @@ export abstract class CadEntity {
             if (typeof this._opacity === "number") {
                 this.opacity = this._opacity;
                 delete this._opacity;
+            }
+            if (typeof this._visible === "boolean") {
+                this.visible = this._visible;
+                delete this._visible;
             }
             if (this.needsUpdate) {
                 this.transform(this.el.transform(), true);
@@ -544,8 +564,7 @@ export class CadHatch extends CadEntity {
     }
 
     equals(entity: CadHatch) {
-        // TODO: not yet implemented
-        return false;
+        return JSON.stringify(this.export()) === JSON.stringify(entity.export());
     }
 }
 

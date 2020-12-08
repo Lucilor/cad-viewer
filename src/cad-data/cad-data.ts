@@ -460,8 +460,6 @@ export class CadData {
         return this;
     }
 
-    // It is likely to throw an error.
-    // TODO: avoid it.
     assembleComponents(connection: CadConnection, accuracy = 1) {
         const {ids, lines, space, position, value} = connection;
         const components = this.components;
@@ -662,7 +660,6 @@ export class CadData {
         components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
         this.moveComponent(c2, translate, c1, true);
         components.connections.push(cloneDeep(connection));
-
         return this;
     }
 
