@@ -1,10 +1,9 @@
-import {AnyObject, Point} from "@lucilor/utils";
-import {Matrix, MatrixExtract, MatrixTransformParam} from "@svgdotjs/svg.js";
+import {Matrix, MatrixLike, ObjectOf, Point} from "@lucilor/utils";
 import {uniqWith, intersection, cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {CadCircle, CadDimension, CadEntities, CadLine} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
-import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "./utils";
+import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "../utils";
 
 export class CadData {
     entities: CadEntities;
@@ -33,12 +32,12 @@ export class CadData {
     morenkailiaobancai: string;
     suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料";
     showKuandubiaozhu: boolean;
-    info: AnyObject;
-    attributes: AnyObject;
+    info: ObjectOf<any>;
+    attributes: ObjectOf<any>;
     bancaihoudufangxiang: "none" | "gt0" | "lt0";
     zhankai: (number | string)[][];
 
-    constructor(data: AnyObject = {}) {
+    constructor(data: ObjectOf<any> = {}) {
         if (typeof data !== "object") {
             data = {};
         }
@@ -135,13 +134,13 @@ export class CadData {
         this.updatePartners().updateDimensions();
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         this.updateBaseLines();
-        const exLayers: AnyObject = {};
+        const exLayers: ObjectOf<any> = {};
         this.layers.forEach((v) => {
             exLayers[v.id] = v.export();
         });
-        const exOptions: AnyObject = {};
+        const exOptions: ObjectOf<any> = {};
         this.options.forEach((v) => {
             if (v.name) {
                 exOptions[v.name] = v.value;
@@ -266,7 +265,7 @@ export class CadData {
         return this;
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false) {
+    transform(matrix: MatrixLike, alter = false) {
         this.entities.transform(matrix, alter);
         this.partners.forEach((v) => v.transform(matrix, alter));
         this.components.transform(matrix, alter);
@@ -299,6 +298,7 @@ export class CadData {
                 }
             }
         });
+        return this;
     }
 
     updateBaseLines() {
@@ -412,9 +412,7 @@ export class CadData {
 
     updateDimensions(parentDimensions?: CadDimension[]) {
         if (Array.isArray(parentDimensions)) {
-            this.entities.dimension = this.entities.dimension.filter((v) => {
-                return parentDimensions.every((vv) => !v.equals(vv));
-            });
+            this.entities.dimension = this.entities.dimension.filter((v) => parentDimensions.every((vv) => !v.equals(vv)));
         }
         this.entities.dimension = uniqWith(this.entities.dimension, (a, b) => a.equals(b));
         const tmp = this.entities.dimension;
@@ -672,7 +670,7 @@ export class CadData {
     }
 
     moveComponent(curr: CadData, translate: Point, prev?: CadData, alter = false) {
-        const map: AnyObject = {};
+        const map: ObjectOf<any> = {};
         this.components.connections.forEach((conn) => {
             if (conn.ids.includes(curr.id)) {
                 conn.ids.forEach((id) => {
@@ -809,7 +807,7 @@ export class CadConnection {
         this.value = data.value ?? 0;
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         return {
             ids: this.ids,
             names: this.names,
@@ -824,7 +822,7 @@ export class CadConnection {
 export class CadComponents {
     data: CadData[];
     connections: CadConnection[];
-    constructor(data: AnyObject = {}) {
+    constructor(data: ObjectOf<any> = {}) {
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
         }
@@ -838,9 +836,9 @@ export class CadComponents {
         }
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false) {
+    transform(matrix: MatrixLike, alter = false) {
         const m = new Matrix(matrix);
-        const {scaleX, scaleY} = m.decompose();
+        const [scaleX, scaleY] = m.scale();
         if (scaleX === undefined || scaleY === undefined) {
             return;
         }
@@ -855,7 +853,7 @@ export class CadComponents {
         this.data.forEach((v) => v.transform(matrix, alter));
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         const data: any[] = [];
         const connections: any[] = [];
         this.data.forEach((v) => data.push(v.export()));

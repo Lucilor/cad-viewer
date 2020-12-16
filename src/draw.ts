@@ -1,5 +1,6 @@
 import {Circle, Container, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {Angle, Arc, Point} from "@lucilor/utils";
+import {toFixedTrim} from "./utils";
 
 export interface FontStyle {
     size: number;
@@ -7,7 +8,7 @@ export interface FontStyle {
     weight: string;
 }
 
-export function drawLine(draw: Container, start: Point, end: Point, i = 0) {
+export const drawLine = (draw: Container, start: Point, end: Point, i = 0) => {
     let el = draw.children()[i] as Line;
     if (el instanceof Line) {
         el.plot(start.x, start.y, end.x, end.y);
@@ -15,9 +16,9 @@ export function drawLine(draw: Container, start: Point, end: Point, i = 0) {
         el = draw.line(start.x, start.y, end.x, end.y).addClass("stroke").fill("none");
     }
     return [el];
-}
+};
 
-export function drawCircle(draw: Container, center: Point, radius: number, i = 0) {
+export const drawCircle = (draw: Container, center: Point, radius: number, i = 0) => {
     let el = draw.children()[i] as Circle;
     if (el instanceof Circle) {
         el.size(radius * 2).center(center.x, center.y);
@@ -26,9 +27,17 @@ export function drawCircle(draw: Container, center: Point, radius: number, i = 0
         el.addClass("stroke").fill("none");
     }
     return [el];
-}
+};
 
-export function drawArc(draw: Container, center: Point, radius: number, startAngle: number, endAngle: number, clockwise: boolean, i = 0) {
+export const drawArc = (
+    draw: Container,
+    center: Point,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    clockwise: boolean,
+    i = 0
+) => {
     const l0 = Math.PI * 2 * radius;
     const arc = new Arc(new Point(center.x, center.y), radius, new Angle(startAngle, "deg"), new Angle(endAngle, "deg"), clockwise);
     const isLargeArc = arc.length / l0 > 0.5 ? 1 : 0;
@@ -45,9 +54,9 @@ export function drawArc(draw: Container, center: Point, radius: number, startAng
         el = draw.path(path).addClass("stroke").fill("none");
     }
     return [el];
-}
+};
 
-export function drawText(draw: Container, text: string, style: FontStyle, position: Point, anchor: Point, vertical = false, i = 0) {
+export const drawText = (draw: Container, text: string, style: FontStyle, position: Point, anchor: Point, vertical = false, i = 0) => {
     const {size, family, weight} = style;
     if (!text || !(size > 0)) {
         draw.remove();
@@ -73,14 +82,14 @@ export function drawText(draw: Container, text: string, style: FontStyle, positi
     el.css("font-weight", weight);
     el.move(position.x, position.y);
     return [el];
-}
+};
 
-export function drawShape(draw: Container, points: Point[], type: "fill" | "stroke", i = 0) {
+export const drawShape = (draw: Container, points: Point[], type: "fill" | "stroke", i = 0) => {
     let el = draw.children()[i] as Path;
     const path = points
-        .map((p, i) => {
+        .map((p, j) => {
             const {x, y} = p;
-            if (i === 0) {
+            if (j === 0) {
                 return `M${x} ${y}`;
             } else {
                 return `L${x} ${y}`;
@@ -93,9 +102,9 @@ export function drawShape(draw: Container, points: Point[], type: "fill" | "stro
         el = draw.path(path).addClass("fill stroke");
     }
     return [el];
-}
+};
 
-export function drawDimension(
+export const drawDimension = (
     draw: Container,
     renderStyle: 1 | 2 = 1,
     points: Point[],
@@ -103,7 +112,7 @@ export function drawDimension(
     fontStyle: FontStyle,
     axis: "x" | "y",
     i = 0
-) {
+) => {
     if (points.length < 8 || !(fontStyle.size > 0)) {
         draw.remove();
         return [];
@@ -129,7 +138,7 @@ export function drawDimension(
     }
     const tri1 = drawShape(draw, [p3, p5, p6], "fill", i + 3)[0];
     const tri2 = drawShape(draw, [p4, p7, p8], "fill", i + 4)[0];
-    text = text.replace("<>", p3.distanceTo(p4).toFixed(2));
+    text = text.replace("<>", toFixedTrim(p3.distanceTo(p4)));
     const middle = p3.clone().add(p4).divide(2);
     let textEl: Text | null = null;
     if (axis === "x") {
@@ -141,4 +150,4 @@ export function drawDimension(
         return [];
     }
     return [l1, l2, l3, tri1, tri2, textEl];
-}
+};

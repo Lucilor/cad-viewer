@@ -1,7 +1,7 @@
 import {CadArc, CadEntities, CadLine, CadMtext} from "./cad-entities";
 import {CadData} from "./cad-data";
 import {CadViewer} from "../cad-viewer";
-import {getVectorFromArray, isBetween} from "./utils";
+import {getVectorFromArray, isBetween} from "../utils";
 import {DEFAULT_TOLERANCE, Point} from "@lucilor/utils";
 
 export type CadLineLike = CadLine | CadArc;
@@ -16,7 +16,7 @@ export type PointsMap = {
 
 export const LINE_LIMIT = [0.01, 0.7];
 
-export function generatePointsMap(entities?: CadEntities, tolerance = DEFAULT_TOLERANCE) {
+export const generatePointsMap = (entities?: CadEntities, tolerance = DEFAULT_TOLERANCE) => {
     const map: PointsMap = [];
     if (!entities) {
         return map;
@@ -44,9 +44,9 @@ export function generatePointsMap(entities?: CadEntities, tolerance = DEFAULT_TO
         }
     });
     return map;
-}
+};
 
-export function findAdjacentLines(map: PointsMap, entity: CadLineLike, point: Point, tolerance = DEFAULT_TOLERANCE): CadLineLike[] {
+export const findAdjacentLines = (map: PointsMap, entity: CadLineLike, point: Point, tolerance = DEFAULT_TOLERANCE): CadLineLike[] => {
     if (!point && entity instanceof CadLine) {
         const adjStart = findAdjacentLines(map, entity, entity.start);
         const adjEnd = findAdjacentLines(map, entity, entity.end);
@@ -58,9 +58,15 @@ export function findAdjacentLines(map: PointsMap, entity: CadLineLike, point: Po
         return lines;
     }
     return [];
-}
+};
 
-export function findAllAdjacentLines(map: PointsMap, entity: CadLineLike, point: Point, tolerance = DEFAULT_TOLERANCE, ids: string[] = []) {
+export const findAllAdjacentLines = (
+    map: PointsMap,
+    entity: CadLineLike,
+    point: Point,
+    tolerance = DEFAULT_TOLERANCE,
+    ids: string[] = []
+) => {
     const entities: CadLineLike[] = [];
     let closed = false;
     ids.push(entity.id);
@@ -86,9 +92,9 @@ export function findAllAdjacentLines(map: PointsMap, entity: CadLineLike, point:
         entities.push(...result.entities);
     }
     return {entities, closed};
-}
+};
 
-export function setLinesLength(data: CadData, lines: CadLine[], length: number) {
+export const setLinesLength = (data: CadData, lines: CadLine[], length: number) => {
     const pointsMap = generatePointsMap(data.getAllEntities());
     lines.forEach((line) => {
         if (line instanceof CadLine) {
@@ -100,9 +106,9 @@ export function setLinesLength(data: CadData, lines: CadLine[], length: number) 
             entities.forEach((e) => e.transform({translate}));
         }
     });
-}
+};
 
-export function swapStartEnd(entity: CadLineLike) {
+export const swapStartEnd = (entity: CadLineLike) => {
     if (entity instanceof CadLine) {
         [entity.start, entity.end] = [entity.end, entity.start];
     }
@@ -110,9 +116,9 @@ export function swapStartEnd(entity: CadLineLike) {
         [entity.start_angle, entity.end_angle] = [entity.end_angle, entity.start_angle];
         entity.clockwise = !entity.clockwise;
     }
-}
+};
 
-export function sortLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
+export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     const entities = data.entities;
     const result: CadLineLike[][] = [];
     if (entities.length === 0) {
@@ -166,9 +172,9 @@ export function sortLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
         result.push(lines);
     }
     return result;
-}
+};
 
-export function getLinesDistance(l1: CadLineLike, l2: CadLineLike) {
+export const getLinesDistance = (l1: CadLineLike, l2: CadLineLike) => {
     const {start: p1, end: p2} = l1;
     const {start: p3, end: p4} = l2;
     const d1 = p1.distanceTo(p3);
@@ -176,7 +182,7 @@ export function getLinesDistance(l1: CadLineLike, l2: CadLineLike) {
     const d3 = p2.distanceTo(p3);
     const d4 = p2.distanceTo(p4);
     return Math.min(d1, d2, d3, d4);
-}
+};
 
 export interface ValidateResult {
     valid: boolean;
@@ -184,7 +190,7 @@ export interface ValidateResult {
     lines: CadLineLike[][];
 }
 
-export function validateLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
+export const validateLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     const lines = sortLines(data, tolerance);
     const result: ValidateResult = {valid: true, errMsg: [], lines};
     const [min, max] = LINE_LIMIT;
@@ -221,11 +227,11 @@ export function validateLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
                 [l1, l4],
                 [l2, l3],
                 [l2, l4]
-            ].forEach((lines) => {
-                const d = getLinesDistance(lines[0], lines[1]);
+            ].forEach((group) => {
+                const d = getLinesDistance(group[0], group[1]);
                 if (d < minD) {
                     minD = d;
-                    errLines = lines;
+                    errLines = group;
                 }
             });
             errLines.forEach((l) => {
@@ -236,9 +242,9 @@ export function validateLines(data: CadData, tolerance = DEFAULT_TOLERANCE) {
         }
     }
     return result;
-}
+};
 
-export function generateLineTexts(data: CadData, tolerance = DEFAULT_TOLERANCE) {
+export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     const lines = sortLines(data, tolerance);
     lines.forEach((group) => {
         let cp = 0;
@@ -337,9 +343,9 @@ export function generateLineTexts(data: CadData, tolerance = DEFAULT_TOLERANCE) 
             bianhuazhiText.anchor.copy(anchor);
         });
     });
-}
+};
 
-export function autoFixLine(cad: CadViewer, line: CadLine, tolerance = DEFAULT_TOLERANCE) {
+export const autoFixLine = (cad: CadViewer, line: CadLine, tolerance = DEFAULT_TOLERANCE) => {
     const {start, end} = line;
     const dx = start.x - end.x;
     const dy = start.y - end.y;
@@ -355,4 +361,4 @@ export function autoFixLine(cad: CadViewer, line: CadLine, tolerance = DEFAULT_T
     const {entities} = findAllAdjacentLines(map, line, line.end, tolerance);
     entities.forEach((e) => e.transform({translate}));
     line.end.add(translate);
-}
+};

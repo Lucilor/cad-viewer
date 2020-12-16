@@ -1,9 +1,9 @@
-import {AnyObject, Line, Point, Rectangle} from "@lucilor/utils";
+import {Line, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {CadData, CadOption} from "./cad-data";
 import {sortLines} from "./cad-lines";
 import {CadLine, CadMtext, CadArc, CadCircle} from "./cad-entities";
 
-export function splitCad(data: CadData) {
+export const splitCad = (data: CadData) => {
     const lines = data.entities.line.filter((v) => v.color.rgbNumber() === 0x00ff00);
     const lineIds = lines.map((v) => v.id);
     const dumpData = new CadData();
@@ -11,10 +11,10 @@ export function splitCad(data: CadData) {
     dumpData.entities.line = lines;
     const rects: Rectangle[] = [];
     const sorted = sortLines(dumpData);
-    sorted.forEach((lines) => {
+    sorted.forEach((group) => {
         const min = new Point(Infinity, Infinity);
         const max = new Point(-Infinity, -Infinity);
-        lines.forEach(({start, end}) => {
+        group.forEach(({start, end}) => {
             min.x = Math.min(min.x, start.x, end.x);
             min.y = Math.min(min.y, start.y, end.y);
             max.x = Math.max(max.x, start.x, end.x);
@@ -46,7 +46,7 @@ export function splitCad(data: CadData) {
         });
     });
 
-    const fields: {[key: string]: keyof CadData} = {
+    const fields: ObjectOf<keyof CadData> = {
         名字: "name",
         分类: "type",
         条件: "conditions",
@@ -69,7 +69,7 @@ export function splitCad(data: CadData) {
             if (e.text.startsWith("CAD信息")) {
                 toRemove = i;
                 const arr = e.text.split("\n").slice(1);
-                const obj: AnyObject = {};
+                const obj: ObjectOf<any> = {};
                 arr.forEach((str) => {
                     const [key, value] = str.split(/:|：/);
                     obj[key] = value;
@@ -95,9 +95,9 @@ export function splitCad(data: CadData) {
         }
     });
     return result;
-}
+};
 
-export function joinCad(_cads: CadData[]) {
+export const joinCad = (_cads: CadData[]) => {
     const result = new CadData();
     return result;
-}
+};

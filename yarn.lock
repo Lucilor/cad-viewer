@@ -54,7 +54,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@lucilor/cad-viewer@workspace:."
   dependencies:
-    "@lucilor/utils": ^1.3.4
+    "@lucilor/utils": ^1.3.5
     "@svgdotjs/svg.js": ^3.0.16
     "@types/lodash": ^4.14.165
     "@types/uuid": ^8.3.0
@@ -74,13 +74,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lucilor/utils@npm:^1.3.4":
-  version: 1.3.4
-  resolution: "@lucilor/utils@npm:1.3.4"
+"@lucilor/utils@npm:^1.3.5":
+  version: 1.3.5
+  resolution: "@lucilor/utils@npm:1.3.5"
   dependencies:
     color: ^3.1.3
     jsencrypt: ^3.0.0-rc.1
-  checksum: 3041dd5aa595233a89a3d5ca1e782283e0446b61ef26f91b14818b12ed8099e78073229fe64d25b3960b316f4669641238889018fda8ded04e5e803749467c39
+  checksum: 8106fc8929878cfeadfee4b12ecfa1b84a038305b737a90900828aeb09d6ce9a9cd6f4d4354c301d4a413e3b6986f59dd5e76627cbb692f1303a35e86f28f909
   languageName: node
   linkType: hard
 

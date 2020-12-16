@@ -1,11 +1,11 @@
-import {Angle, AnyObject, Arc, index2RGB, Line, Point, Rectangle, RGB2Index} from "@lucilor/utils";
-import {G, Matrix, MatrixExtract, MatrixTransformParam, Svg} from "@svgdotjs/svg.js";
+import {Angle, Arc, index2RGB, Line, Matrix, MatrixLike, ObjectOf, Point, Rectangle, RGB2Index} from "@lucilor/utils";
+import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import Color from "color";
 import {cloneDeep, intersection} from "lodash";
 import {v4} from "uuid";
 import {CadLayer} from "./cad-layer";
 import {cadTypesKey, CadTypeKey, CadType, cadTypes} from "./cad-types";
-import {getVectorFromArray, lineweight2linewidth, linewidth2lineweight, mergeArray, separateArray} from "./utils";
+import {getVectorFromArray, lineweight2linewidth, linewidth2lineweight, mergeArray, separateArray} from "../utils";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 
@@ -15,7 +15,7 @@ export abstract class CadEntity {
     layer: string;
     color: Color;
     linewidth: number;
-    info: AnyObject;
+    info: ObjectOf<any>;
     _indexColor: number | null;
     _lineweight: number;
     parent?: CadEntity;
@@ -151,12 +151,12 @@ export abstract class CadEntity {
         if (typeof data.color === "number") {
             this._indexColor = data.color;
             if (data.color === 256) {
-                const layer = layers.find((layer) => layer.name === this.layer);
+                const layer = layers.find((l) => l.name === this.layer);
                 if (layer) {
                     this.color = new Color(layer.color);
                 }
             } else {
-                this.color = new Color(index2RGB(data.color, "number"));
+                this.color = new Color(index2RGB(data.color, "num"));
             }
         } else {
             if (data.color instanceof Color) {
@@ -171,7 +171,7 @@ export abstract class CadEntity {
             if (data.lineweight >= 0) {
                 this.linewidth = lineweight2linewidth(data.lineweight);
             } else if (data.lineweight === -1) {
-                const layer = layers.find((layer) => layer.name === this.layer);
+                const layer = layers.find((l) => l.name === this.layer);
                 if (layer) {
                     this.linewidth = layer.linewidth;
                 }
@@ -193,11 +193,12 @@ export abstract class CadEntity {
         this.opacity = data.opacity ?? 1;
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, _parent?: CadEntity) {
+    transform(matrix: MatrixLike, alter = false, _parent?: CadEntity) {
+        this.el?.attr("stroke", "red");
         if (!alter) {
             if (this.el) {
-                const oldMatrix = new Matrix(this.el.transform());
-                this.el.transform(oldMatrix.transform(matrix));
+                const oldMatrix = new Matrix2(this.el.transform());
+                this.el.transform(oldMatrix.transform(new Matrix(matrix)));
             }
             this.needsUpdate = true;
         }
@@ -224,14 +225,14 @@ export abstract class CadEntity {
                 delete this._visible;
             }
             if (this.needsUpdate) {
-                this.transform(this.el.transform(), true);
+                this.transform(new Matrix2(this.el.transform()).decompose(), true);
                 this.needsUpdate = false;
                 this.el.transform({});
             }
         }
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         this._indexColor = RGB2Index(this.color.hex());
         this.update();
         return {
@@ -318,7 +319,8 @@ export class CadArc extends CadEntity {
         this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
+        matrix = new Matrix(matrix);
         super.transform(matrix, false, parent);
         if (alter) {
             const curve = this.curve;
@@ -327,7 +329,7 @@ export class CadArc extends CadEntity {
             this.radius = curve.radius;
             this.start_angle = curve.startAngle.deg;
             this.end_angle = curve.endAngle.deg;
-            const {scaleX, scaleY} = matrix;
+            const [scaleX, scaleY] = matrix.scale();
             if (scaleX && scaleY && scaleX * scaleY < 0) {
                 this.clockwise = !this.clockwise;
             }
@@ -335,7 +337,7 @@ export class CadArc extends CadEntity {
         return this;
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         return {
             ...super.export(),
             center: this.center.toArray(),
@@ -376,7 +378,7 @@ export class CadCircle extends CadEntity {
         this.radius = data.radius ?? 0;
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
         super.transform(matrix, alter, parent);
         if (alter) {
             this.center.transform(matrix);
@@ -384,7 +386,7 @@ export class CadCircle extends CadEntity {
         return this;
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         return {
             ...super.export(),
             center: this.center.toArray(),
@@ -462,12 +464,12 @@ export class CadDimension extends CadEntity {
         this.quzhifanwei = data.quzhifanwei ?? "";
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
         super.transform(matrix, alter, parent);
         return this;
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         return {
             ...super.export(),
             dimstyle: this.dimstyle,
@@ -507,7 +509,7 @@ export class CadHatch extends CadEntity {
         vertices: Point[];
     }[];
 
-    constructor(data: AnyObject = {}, layers: CadLayer[] = [], resetId = false) {
+    constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
         this.type = "HATCH";
         this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
@@ -533,7 +535,7 @@ export class CadHatch extends CadEntity {
         }
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         const paths: any[] = [];
         this.paths.forEach((path) => {
             const edges: any[] = [];
@@ -545,7 +547,7 @@ export class CadHatch extends CadEntity {
         return {...super.export(), paths};
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
         super.transform(matrix, alter, parent);
         if (alter) {
             this.paths.forEach((path) => {
@@ -643,7 +645,7 @@ export class CadLine extends CadEntity {
         this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
         super.transform(matrix, alter, parent);
         if (alter) {
             this.start.transform(matrix);
@@ -652,7 +654,7 @@ export class CadLine extends CadEntity {
         return this;
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         return {
             ...super.export(),
             start: this.start.toArray(),
@@ -715,7 +717,7 @@ export class CadMtext extends CadEntity {
         }
     }
 
-    export(): AnyObject {
+    export(): ObjectOf<any> {
         const anchor = this.anchor.toArray();
         return {
             ...super.export(),
@@ -727,7 +729,7 @@ export class CadMtext extends CadEntity {
         };
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false, parent?: CadEntity) {
+    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
         super.transform(matrix, alter, parent);
         if (alter) {
             this.insert.transform(matrix);
@@ -759,7 +761,7 @@ export class CadMtext extends CadEntity {
     }
 }
 
-export function getCadEntity<T extends CadEntity>(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLayer[] = [], resetId = false) => {
     let entity: CadEntity | undefined;
     const type = data.type as CadType;
     if (type === "ARC") {
@@ -776,7 +778,7 @@ export function getCadEntity<T extends CadEntity>(data: any = {}, layers: CadLay
         entity = new CadMtext(data, layers, resetId);
     }
     return entity as T;
-}
+};
 
 export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch;
 
@@ -798,9 +800,9 @@ export class CadEntities {
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
         }
-        const idMap: {[key: string]: string} = {};
+        const idMap: ObjectOf<string> = {};
         cadTypesKey.forEach((key) => {
-            const group: CadEntity[] | AnyObject = data[key];
+            const group: CadEntity[] | ObjectOf<any> = data[key];
             if (Array.isArray(group)) {
                 group.forEach((e) => {
                     const eNew = e.clone(resetIds) as AnyCadEntity;
@@ -873,7 +875,7 @@ export class CadEntities {
     }
 
     export() {
-        const result: AnyObject = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
+        const result: ObjectOf<any> = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
         for (const key of cadTypesKey) {
             this[key].forEach((e: CadEntity) => {
                 if (e instanceof CadDimension) {
@@ -892,7 +894,7 @@ export class CadEntities {
         return new CadEntities(this, [], resetIds);
     }
 
-    transform(matrix: MatrixExtract | MatrixTransformParam, alter = false) {
+    transform(matrix: MatrixLike, alter = false) {
         this.forEach((e) => e.transform(matrix, alter));
     }
 
@@ -933,7 +935,7 @@ export class CadEntities {
     }
 
     fromArray(array: CadEntity[]) {
-        this.forEachType((array) => (array.length = 0));
+        this.forEachType((group) => (group.length = 0));
         array.forEach((e) => this.add(e));
         return this;
     }
@@ -1075,7 +1077,7 @@ export class CadEntities {
             }
         }
         if (distance2 !== undefined) {
-            [p3, p4].forEach((p) => (p.y = distance2));
+            [p3, p4].forEach((pn) => (pn.y = distance2));
         }
 
         const p5 = p3.clone();
