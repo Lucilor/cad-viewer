@@ -321,7 +321,7 @@ export class CadArc extends CadEntity {
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
         matrix = new Matrix(matrix);
-        super.transform(matrix, false, parent);
+        super.transform(matrix, alter, parent);
         if (alter) {
             const curve = this.curve;
             curve.transform(matrix);
