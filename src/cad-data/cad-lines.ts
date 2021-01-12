@@ -1,12 +1,10 @@
-import {CadArc, CadEntities, CadLine, CadMtext} from "./cad-entities";
+import {CadArc, CadEntities, CadLine, CadLineLike, CadMtext} from "./cad-entities";
 import {CadData} from "./cad-data";
 import {CadViewer} from "../cad-viewer";
 import {getVectorFromArray, isBetween} from "../utils";
 import {DEFAULT_TOLERANCE, Point} from "@lucilor/utils";
 
-export type CadLineLike = CadLine | CadArc;
-
-export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00"];
+export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"];
 
 export type PointsMap = {
     point: Point;
@@ -314,6 +312,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                     lengthText.info.offset[0] -= 5;
                 }
             }
+            lengthText.calcBoundingPoints = false;
             const offset = getVectorFromArray(lengthText.info.offset);
             lengthText.insert.copy(offset.add(outer));
             if (Array.isArray(lengthText.info.anchorOverwrite)) {
@@ -330,6 +329,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 line.addChild(gongshiText);
                 gongshiText.insert.copy(inner);
             }
+            gongshiText.calcBoundingPoints = false;
             gongshiText.anchor.set(1 - anchor.x, 1 - anchor.y);
 
             let bianhuazhiText = line.children.find((c) => c.info.isBianhuazhiText) as CadMtext;
@@ -340,6 +340,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 line.addChild(bianhuazhiText);
                 bianhuazhiText.insert.copy(outer);
             }
+            bianhuazhiText.calcBoundingPoints = false;
             bianhuazhiText.anchor.copy(anchor);
         });
     });

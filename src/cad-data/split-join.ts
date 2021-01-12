@@ -1,5 +1,5 @@
 import {Line, ObjectOf, Point, Rectangle} from "@lucilor/utils";
-import {CadData, CadOption} from "./cad-data";
+import {CadData, CadOption, getZhankai} from "./cad-data";
 import {sortLines} from "./cad-lines";
 import {CadLine, CadMtext, CadArc, CadCircle} from "./cad-entities";
 
@@ -50,10 +50,6 @@ export const splitCad = (data: CadData) => {
         名字: "name",
         分类: "type",
         条件: "conditions",
-        展开宽: "zhankaikuan",
-        展开高: "zhankaigao",
-        数量: "shuliang",
-        数量倍数: "shuliangbeishu",
         模板放大: "mubanfangda",
         开料时刨坑: "kailiaoshibaokeng",
         变形方式: "baseLines",
@@ -86,6 +82,7 @@ export const splitCad = (data: CadData) => {
                         v.options.push(new CadOption(key, value));
                     }
                 });
+                v.zhankai = [getZhankai(obj)];
                 return true;
             }
             return false;

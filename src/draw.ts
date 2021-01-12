@@ -40,6 +40,9 @@ export const drawArc = (
 ) => {
     const l0 = Math.PI * 2 * radius;
     const arc = new Arc(new Point(center.x, center.y), radius, new Angle(startAngle, "deg"), new Angle(endAngle, "deg"), clockwise);
+    if (arc.totalAngle.deg === 360) {
+        return drawCircle(draw, center, radius, i);
+    }
     const isLargeArc = arc.length / l0 > 0.5 ? 1 : 0;
     const {x: x0, y: y0} = arc.startPoint;
     const {x: x1, y: y1} = arc.endPoint;
