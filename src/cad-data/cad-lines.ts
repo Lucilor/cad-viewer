@@ -306,10 +306,16 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 lengthText.info.isLengthText = true;
                 lengthText.info.offset = [0, 0];
                 line.addChild(lengthText);
+                const textOffset = 10;
                 if (anchor.x === 0) {
-                    lengthText.info.offset[0] += 5;
+                    lengthText.info.offset[0] += textOffset;
                 } else if (anchor.x === 1) {
-                    lengthText.info.offset[0] -= 5;
+                    lengthText.info.offset[0] -= textOffset;
+                }
+                if (anchor.y === 0) {
+                    lengthText.info.offset[1] += textOffset;
+                } else if (anchor.y === 1) {
+                    lengthText.info.offset[1] -= textOffset;
                 }
             }
             lengthText.calcBoundingPoints = false;

@@ -553,32 +553,35 @@ export class CadViewer extends EventEmitter {
     }
 
     select(entities?: CadEntities | CadEntity | CadEntity[]): this {
+        let multi = true;
         if (!entities) {
             return this;
         } else if (entities instanceof CadEntity) {
-            return this.select(new CadEntities().add(entities));
+            multi = false;
+            entities = new CadEntities().add(entities);
         } else if (Array.isArray(entities)) {
-            return this.select(new CadEntities().fromArray(entities));
+            entities = new CadEntities().fromArray(entities);
         }
         if (entities.length) {
             entities.forEach((e) => (e.selected = true));
-            this.emit("entitiesselect", entities);
+            this.emit("entitiesselect", entities, multi);
         }
         return this;
     }
 
     unselect(entities?: CadEntities | CadEntity | CadEntity[]): this {
+        let multi = true;
         if (!entities) {
             return this;
         } else if (entities instanceof CadEntity) {
-            return this.unselect(new CadEntities().add(entities));
-        }
-        if (Array.isArray(entities)) {
-            return this.unselect(new CadEntities().fromArray(entities));
+            multi = false;
+            entities = new CadEntities().add(entities);
+        } else if (Array.isArray(entities)) {
+            entities = new CadEntities().fromArray(entities);
         }
         if (entities.length) {
             entities.forEach((e) => (e.selected = false));
-            this.emit("entitiesunselect", entities);
+            this.emit("entitiesunselect", entities, multi);
         }
         return this;
     }

@@ -21,8 +21,8 @@ export interface CadEvents {
     entitypointerdown: [PointerEvent, CadEntity];
     entitypointermove: [PointerEvent, CadEntity];
     entitypointerup: [PointerEvent, CadEntity];
-    entitiesselect: [CadEntities];
-    entitiesunselect: [CadEntities];
+    entitiesselect: [CadEntities, boolean];
+    entitiesunselect: [CadEntities, boolean];
     entitiesremove: [CadEntities];
     entitiesadd: [CadEntities];
     render: [CadEntities];
