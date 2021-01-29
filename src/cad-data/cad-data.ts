@@ -5,14 +5,17 @@ import {CadCircle, CadDimension, CadEntities, CadLine} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "../utils";
 
-export const getZhankai = (obj: ObjectOf<any> = {}) => ({
-    zhankaikuan: obj.zhankaikuan || "ceil(总长)+0",
-    zhankaigao: obj.zhankaigao || "",
-    shuliang: obj.shuliang || "1",
-    shuliangbeishu: obj.shuliangbeishu || "1",
-    name: obj.name || "",
-    kailiaomuban: obj.kailiaomuban || ""
-});
+export const getZhankai = (obj: ObjectOf<any> = {}) =>
+    ({
+        zhankaikuan: obj.zhankaikuan ?? "ceil(总长)+0",
+        zhankaigao: obj.zhankaigao ?? "",
+        shuliang: obj.shuliang ?? "1",
+        shuliangbeishu: obj.shuliangbeishu ?? "1",
+        name: obj.name ?? "",
+        kailiaomuban: obj.kailiaomuban ?? "",
+        flip: obj.flip ?? "",
+        kailiao: obj.kailiao === false ? false : true
+    } as CadData["zhankai"][0]);
 
 export class CadData {
     entities: CadEntities;
@@ -41,7 +44,16 @@ export class CadData {
     info: ObjectOf<any>;
     attributes: ObjectOf<string>;
     bancaihoudufangxiang: "none" | "gt0" | "lt0";
-    zhankai: {zhankaikuan: string; zhankaigao: string; shuliang: string; shuliangbeishu: string; name: string; kailiaomuban: string}[];
+    zhankai: {
+        zhankaikuan: string;
+        zhankaigao: string;
+        shuliang: string;
+        shuliangbeishu: string;
+        name: string;
+        kailiaomuban: string;
+        flip: "" | "v" | "h" | "vh";
+        kailiao: boolean;
+    }[];
     suanliaodanxianshibancai: boolean;
 
     constructor(data: ObjectOf<any> = {}) {
@@ -109,7 +121,7 @@ export class CadData {
         this.attributes = typeof data.attributes === "object" ? data.attributes : {};
         this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "none";
         if (Array.isArray(data.zhankai) && data.zhankai.length) {
-            this.zhankai = data.zhankai;
+            this.zhankai = data.zhankai.map((v) => getZhankai(v));
         } else {
             this.zhankai = [getZhankai()];
         }

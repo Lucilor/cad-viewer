@@ -291,35 +291,56 @@ export abstract class CadLineLike extends CadEntity {
     abstract get end(): Point;
     abstract get middle(): Point;
     abstract get length(): number;
+    mingzi: string;
+    qujian: string;
+    gongshi: string;
     hideLength: boolean;
     lengthTextSize: number;
     nextZhewan: "自动" | "无" | "1mm" | "6mm";
     betweenZhewan: "自动" | "无" | "1mm" | "6mm";
     zhewanOffset: number;
     zhewanValue: number;
-    zidingzhankaichang: number;
+    zidingzhankaichang: string;
+    kailiaofangshi: "自动计算" | "使用线长" | "指定长度";
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
+        this.mingzi = data.mingzi ?? "";
+        this.qujian = data.qujian ?? "";
+        this.gongshi = data.gongshi ?? "";
         this.hideLength = data.hideLength === true;
         this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
         this.nextZhewan = data.nextZhewan ?? "自动";
         this.betweenZhewan = data.betweenZhewan ?? "自动";
         this.zhewanOffset = data.zhewanOffset ?? 0;
         this.zhewanValue = data.zhewanValue ?? 0;
-        this.zidingzhankaichang = data.zidingzhankaichang ?? -1;
+        this.zidingzhankaichang = String(data.zidingzhankaichang) ?? "";
+        if (typeof data.kailiaofangshi === "string") {
+            this.kailiaofangshi = data.kailiaofangshi;
+        } else {
+            const zidingzhankaichangNum = Number(this.zidingzhankaichang);
+            if (!isNaN(zidingzhankaichangNum) && zidingzhankaichangNum > 0) {
+                this.kailiaofangshi = "指定长度";
+            } else {
+                this.kailiaofangshi = "自动计算";
+            }
+        }
     }
 
     export(): ObjectOf<any> {
         return {
             ...super.export(),
+            mingzi: this.mingzi,
+            qujian: this.qujian,
+            gongshi: this.gongshi,
             hideLength: this.hideLength,
             lengthTextSize: this.lengthTextSize,
             nextZhewan: this.nextZhewan,
             betweenZhewan: this.betweenZhewan,
             zhewanOffset: this.zhewanOffset,
             zhewanValue: this.zhewanValue,
-            zidingzhankaichang: this.zidingzhankaichang
+            zidingzhankaichang: this.zidingzhankaichang,
+            kailiaofangshi: this.kailiaofangshi
         };
     }
 }
@@ -330,8 +351,6 @@ export class CadArc extends CadLineLike {
     start_angle: number;
     end_angle: number;
     clockwise: boolean;
-    mingzi = "";
-    gongshi = "";
 
     get start() {
         return this.curve.getPoint(0);
@@ -636,9 +655,6 @@ export class CadHatch extends CadEntity {
 export class CadLine extends CadLineLike {
     start: Point;
     end: Point;
-    mingzi: string;
-    qujian: string;
-    gongshi: string;
     guanlianbianhuagongshi: string;
     kongwei: string;
     tiaojianquzhi: {
@@ -651,6 +667,7 @@ export class CadLine extends CadLineLike {
             input: boolean;
         }[];
     }[];
+    shiyongchazhi: string;
 
     get curve() {
         return new Line(this.start, this.end);
@@ -688,9 +705,6 @@ export class CadLine extends CadLineLike {
         this.type = "LINE";
         this.start = getVectorFromArray(data.start);
         this.end = getVectorFromArray(data.end);
-        this.mingzi = data.mingzi ?? "";
-        this.qujian = data.qujian ?? "";
-        this.gongshi = data.gongshi ?? "";
         this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
         this.kongwei = data.kongwei ?? "";
         this.tiaojianquzhi = data.tiaojianquzhi ?? [];
@@ -699,6 +713,7 @@ export class CadLine extends CadLineLike {
                 v.type = "选择";
             }
         });
+        this.shiyongchazhi = data.shiyongchazhi ?? "";
     }
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
@@ -715,12 +730,10 @@ export class CadLine extends CadLineLike {
             ...super.export(),
             start: this.start.toArray(),
             end: this.end.toArray(),
-            mingzi: this.mingzi,
-            qujian: this.qujian,
-            gongshi: this.gongshi,
             guanlianbianhuagongshi: this.guanlianbianhuagongshi,
             kongwei: this.kongwei,
-            tiaojianquzhi: this.tiaojianquzhi
+            tiaojianquzhi: this.tiaojianquzhi,
+            shiyongchazhi: this.shiyongchazhi
         };
     }
 

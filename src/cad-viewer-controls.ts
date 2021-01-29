@@ -25,6 +25,8 @@ export interface CadEvents {
     entitiesunselect: [CadEntities, boolean];
     entitiesremove: [CadEntities];
     entitiesadd: [CadEntities];
+    entitiescopy: [CadEntities];
+    entitiespaste: [CadEntities];
     render: [CadEntities];
     moveEntities: [CadEntities];
     zoom: [];
@@ -51,7 +53,12 @@ function onWheel(this: CadViewer, event: WheelEvent) {
 function onClick(this: CadViewer, event: MouseEvent) {
     event.preventDefault();
     this.dom.focus();
-    this.emit("click", event);
+    if (this.entitiesCopied) {
+        this.emit("entitiespaste", this.entitiesCopied);
+        this.entitiesCopied = undefined;
+    } else {
+        this.emit("click", event);
+    }
 }
 
 function onPointerDown(this: CadViewer, event: PointerEvent) {
@@ -69,12 +76,20 @@ function onPointerDown(this: CadViewer, event: PointerEvent) {
 
 function onPointerMove(this: CadViewer, event: PointerEvent) {
     event.preventDefault();
+    const {clientX, clientY, shiftKey} = event;
+    if (this.entitiesCopied && !pointer) {
+        const point = new Point(clientX, clientY);
+        pointer = {from: point, to: point.clone()};
+    }
     if (pointer) {
-        const {clientX, clientY, shiftKey} = event;
         const {selectMode, entityDraggable, dragAxis} = this.config();
         const {from, to} = pointer;
         const translate = new Point(clientX, clientY).sub(to).divide(this.zoom());
-        if ((button === 0 && shiftKey) || button === 1) {
+        if (this.entitiesCopied) {
+            const entities = this.entitiesCopied;
+            translate.y = -translate.y;
+            entities.transform({translate});
+        } else if ((button === 0 && shiftKey) || button === 1) {
             if (!dragAxis.includes("x")) {
                 translate.x = 0;
             }
@@ -197,12 +212,30 @@ function onKeyDown(this: CadViewer, event: KeyboardEvent) {
     if (key === "Escape") {
         this.unselectAll();
         event.preventDefault();
-    } else if (ctrlKey && key === "a") {
-        this.selectAll();
-        event.preventDefault();
+    } else if (ctrlKey) {
+        if (key === "a") {
+            event.preventDefault();
+            this.selectAll();
+        } else if (key === "c") {
+            event.preventDefault();
+            this.entitiesCopied = this.selected().clone(true);
+            this.emit("entitiescopy", this.entitiesCopied);
+        } else if (key === "v") {
+            event.preventDefault();
+            if (this.entitiesCopied) {
+                this.emit("entitiespaste", this.entitiesCopied);
+                this.entitiesCopied = undefined;
+            }
+        }
     } else if (key === "Delete" || key === "Backspace") {
-        this.remove(this.selected());
         event.preventDefault();
+        this.remove(this.selected());
+    } else if (key === "Enter") {
+        if (this.entitiesCopied) {
+            event.preventDefault();
+            this.emit("entitiespaste", this.entitiesCopied);
+            this.entitiesCopied = undefined;
+        }
     }
     this.emit("keydown", event);
 }

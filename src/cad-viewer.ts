@@ -86,6 +86,7 @@ export class CadViewer extends EventEmitter {
     dom: HTMLDivElement;
     draw: Svg;
     stylizer: CadStylizer;
+    entitiesCopied?: CadEntities;
     private _config: CadViewerConfig;
 
     constructor(data = new CadData(), config: Partial<CadViewerConfig> = {}) {
@@ -442,7 +443,8 @@ export class CadViewer extends EventEmitter {
             }
 
             // * 自动换行
-            if (text.match(/花件信息/)) {
+            if (text.startsWith("花件信息")) {
+                text = text.slice(4);
                 let lines = this.data.getAllEntities().line;
                 lines = lines.filter((e) => e.isVertical() && isBetween(insert.y, e.minY, e.maxY) && insert.x < e.start.x);
                 let dMin = Infinity;
@@ -452,28 +454,31 @@ export class CadViewer extends EventEmitter {
                         dMin = d;
                     }
                 }
-                if (el.width() > dMin) {
-                    const originalText = text.replace(/\n/g, "");
-                    const wrappedText: string[] = [];
+                const getWrapedText = (source: string, maxLength: number) => {
+                    const sourceLength = source.length;
                     let start = 0;
                     let end = 1;
                     const tmpEl = new G();
-                    while (end < originalText.length) {
-                        const tmpText = originalText.slice(start, end);
+                    const arr: string[] = [];
+                    while (end < sourceLength) {
+                        const tmpText = source.slice(start, end);
                         drawText(tmpEl, tmpText, fontStyle, insert.clone().add(offset), anchor);
-                        if (tmpEl.width() < dMin) {
+                        if (tmpEl.width() < maxLength) {
                             end++;
                         } else {
-                            wrappedText.push(originalText.slice(start, end - 1));
-                            start = end;
-                            end = start + 1;
+                            arr.push(source.slice(start, end - 1));
+                            start = end - 1;
                         }
                     }
+                    arr.push(source.slice(start));
                     tmpEl.remove();
-                    text = entity.text = wrappedText.join("\n");
-                }
+                    return arr.join("\n");
+                };
+                text = text
+                    .split("\n")
+                    .map((v) => getWrapedText(v, dMin))
+                    .join("\n");
             }
-
             drawResult = drawText(el, text, fontStyle, insert.clone().add(offset), anchor);
         }
         if (!drawResult || drawResult.length < 1) {

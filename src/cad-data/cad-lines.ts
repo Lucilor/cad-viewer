@@ -134,17 +134,9 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         arr = map;
     }
     arr.sort((a, b) => {
-        const l1 = a.lines[0];
-        const l2 = b.lines[0];
-        let notStart1 = 1;
-        let notStart2 = 1;
-        if (l1 instanceof CadLine && l1.mingzi === "起始线") {
-            notStart1 = 0;
-        }
-        if (l2 instanceof CadLine && l2.mingzi === "起始线") {
-            notStart2 = 0;
-        }
-        return notStart1 - notStart2;
+        const c = a.lines[0].mingzi === "起始线" ? -1 : 1;
+        const d = b.lines[0].mingzi === "起始线" ? -1 : 1;
+        return c - d;
     });
     const exclude: string[] = [];
     for (const v of arr) {
@@ -313,9 +305,9 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                     lengthText.info.offset[0] -= textOffset;
                 }
                 if (anchor.y === 0) {
-                    lengthText.info.offset[1] += textOffset;
-                } else if (anchor.y === 1) {
                     lengthText.info.offset[1] -= textOffset;
+                } else if (anchor.y === 1) {
+                    lengthText.info.offset[1] += textOffset;
                 }
             }
             lengthText.calcBoundingPoints = false;
