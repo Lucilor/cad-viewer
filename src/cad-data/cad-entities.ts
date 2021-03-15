@@ -1,7 +1,7 @@
 import {Angle, Arc, index2RGB, Line, Matrix, MatrixLike, ObjectOf, Point, Rectangle, RGB2Index} from "@lucilor/utils";
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import Color from "color";
-import {cloneDeep, intersection} from "lodash";
+import {cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {CadLayer} from "./cad-layer";
 import {cadTypesKey, CadTypeKey, CadType, cadTypes} from "./cad-types";
@@ -281,7 +281,13 @@ export abstract class CadEntity {
 
     abstract clone(resetId?: boolean): CadEntity;
 
-    abstract equals(entity: CadEntity): boolean;
+    equals(entity: CadEntity) {
+        const info1 = this.export();
+        const info2 = entity.export();
+        delete info1.id;
+        delete info2.id;
+        return JSON.stringify(info1) === JSON.stringify(info2);
+    }
 
     // abstract getBoundingRect(): Rectangle;
 }
@@ -291,6 +297,7 @@ export abstract class CadLineLike extends CadEntity {
     abstract get end(): Point;
     abstract get middle(): Point;
     abstract get length(): number;
+    swapped: boolean;
     mingzi: string;
     qujian: string;
     gongshi: string;
@@ -305,6 +312,7 @@ export abstract class CadLineLike extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
+        this.swapped = data.swapped === true;
         this.mingzi = data.mingzi ?? "";
         this.qujian = data.qujian ?? "";
         this.gongshi = data.gongshi ?? "";
@@ -496,16 +504,30 @@ export class CadDimension extends CadEntity {
     ref?: "entity1" | "entity2" | "minX" | "maxX" | "minY" | "maxY" | "minLength" | "maxLength";
     quzhifanwei: string;
 
-    private _renderStyle: 1 | 2 = 1;
+    private _renderStyle = 1;
     get renderStyle() {
         return this._renderStyle;
     }
     set renderStyle(value) {
         if (this._renderStyle !== value) {
-            this.el?.clear();
+            this.el?.remove();
+            this.el = null;
         }
         this._renderStyle = value;
     }
+
+    private _hideDimLines = false;
+    get hideDimLines() {
+        return this._hideDimLines;
+    }
+    set hideDimLines(value) {
+        if (this._hideDimLines !== value) {
+            this.el?.remove();
+            this.el = null;
+        }
+        this._hideDimLines = value;
+    }
+
     get boundingPoints() {
         if (this.root) {
             return this.root.getDimensionPoints(this);
@@ -538,8 +560,9 @@ export class CadDimension extends CadEntity {
         this.mingzi = data.mingzi ?? "";
         this.qujian = data.qujian ?? "";
         this.ref = data.ref ?? "entity1";
-        this.renderStyle = data.renderStyle ?? 1;
         this.quzhifanwei = data.quzhifanwei ?? "";
+        this.renderStyle = data.renderStyle ?? 1;
+        this.hideDimLines = data.hideDimLines === true;
     }
 
     transform(matrix: Matrix, alter = false, parent?: CadEntity) {
@@ -561,19 +584,14 @@ export class CadDimension extends CadEntity {
             mingzi: this.mingzi,
             qujian: this.qujian,
             ref: this.ref,
+            quzhifanwei: this.quzhifanwei,
             renderStyle: this.renderStyle,
-            quzhifanwei: this.quzhifanwei
+            hideDimLines: this.hideDimLines
         };
     }
 
     clone(resetId = false) {
         return new CadDimension(this, [], resetId);
-    }
-
-    equals(dimension: CadDimension) {
-        const aIds = [this.entity1.id, this.entity2.id];
-        const bIds = [dimension.entity1.id, dimension.entity2.id];
-        return intersection(aIds, bIds).length === 2 || this.id === dimension.id;
     }
 }
 
@@ -645,10 +663,6 @@ export class CadHatch extends CadEntity {
 
     clone(resetId = false) {
         return new CadHatch(this, [], resetId);
-    }
-
-    equals(entity: CadHatch) {
-        return JSON.stringify(this.export()) === JSON.stringify(entity.export());
     }
 }
 
@@ -970,7 +984,7 @@ export class CadEntities {
     }
 
     clone(resetIds = false) {
-        return new CadEntities(this, [], resetIds);
+        return new CadEntities(this.export(), [], resetIds);
     }
 
     transform(matrix: MatrixLike, alter = false) {
@@ -1091,11 +1105,11 @@ export class CadEntities {
                 throw new Error("Invalid ref: " + ref);
         }
         const getPoint = (e: CadLine, location: CadDimensionEntity["location"]) => {
-            const {start, end, middle} = e.clone();
+            const {start, end, middle, swapped} = e.clone();
             if (location === "start") {
-                return start;
+                return swapped ? end : start;
             } else if (location === "end") {
-                return end;
+                return swapped ? start : end;
             } else if (location === "center") {
                 return middle;
             } else if (location === "min") {

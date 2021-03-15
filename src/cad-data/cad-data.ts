@@ -5,17 +5,22 @@ import {CadCircle, CadDimension, CadEntities, CadLine} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "../utils";
 
-export const getZhankai = (obj: ObjectOf<any> = {}) =>
-    ({
-        zhankaikuan: obj.zhankaikuan ?? "ceil(总长)+0",
-        zhankaigao: obj.zhankaigao ?? "",
-        shuliang: obj.shuliang ?? "1",
-        shuliangbeishu: obj.shuliangbeishu ?? "1",
-        name: obj.name ?? "",
-        kailiaomuban: obj.kailiaomuban ?? "",
-        flip: obj.flip ?? "",
-        kailiao: obj.kailiao === false ? false : true
-    } as CadData["zhankai"][0]);
+export type CadZhankaiItem = CadData["zhankai"][0];
+export interface CadZhankaiItemSource extends Partial<CadZhankaiItem> {
+    flip?: "" | "v" | "h" | "vh";
+}
+export const getZhankai = (obj: CadZhankaiItemSource = {}): CadZhankaiItem => ({
+    zhankaikuan: obj.zhankaikuan ?? "ceil(总长)+0",
+    zhankaigao: obj.zhankaigao ?? "",
+    shuliang: obj.shuliang ?? "1",
+    shuliangbeishu: obj.shuliangbeishu ?? "1",
+    kailiaomuban: obj.kailiaomuban ?? "",
+    neikaimuban: obj.neikaimuban ?? "",
+    name: obj.name ?? "",
+    flipWaikai: obj.flip ?? obj.flipWaikai ?? "",
+    flipNeikai: obj.flipNeikai ?? "",
+    kailiao: obj.kailiao === false ? false : true
+});
 
 export class CadData {
     entities: CadEntities;
@@ -51,10 +56,13 @@ export class CadData {
         shuliangbeishu: string;
         name: string;
         kailiaomuban: string;
-        flip: "" | "v" | "h" | "vh";
+        neikaimuban: string;
+        flipWaikai: "" | "v" | "h" | "vh";
+        flipNeikai: "" | "v" | "h" | "vh";
         kailiao: boolean;
     }[];
     suanliaodanxianshibancai: boolean;
+    needsHuajian: boolean;
 
     constructor(data: ObjectOf<any> = {}) {
         if (typeof data !== "object") {
@@ -126,6 +134,7 @@ export class CadData {
             this.zhankai = [getZhankai()];
         }
         this.suanliaodanxianshibancai = data.suanliaodanxianshibancai ?? true;
+        this.needsHuajian = data.needsHuajian ?? true;
         this.updateDimensions();
     }
 
@@ -150,6 +159,7 @@ export class CadData {
         this.bancaihoudufangxiang = data.bancaihoudufangxiang;
         this.zhankai = cloneDeep(data.zhankai);
         this.suanliaodanxianshibancai = data.suanliaodanxianshibancai;
+        this.needsHuajian = data.needsHuajian;
         this.updatePartners().updateDimensions();
     }
 
@@ -193,7 +203,8 @@ export class CadData {
             attributes: cloneDeep(this.attributes),
             bancaihoudufangxiang: this.bancaihoudufangxiang,
             zhankai: cloneDeep(this.zhankai),
-            suanliaodanxianshibancai: this.suanliaodanxianshibancai
+            suanliaodanxianshibancai: this.suanliaodanxianshibancai,
+            needsHuajian: this.needsHuajian
         };
     }
 
@@ -240,7 +251,7 @@ export class CadData {
     }
 
     clone(resetIds = false) {
-        const data = new CadData(this);
+        const data = new CadData(this.export());
         if (resetIds) {
             this.layers = this.layers.map((v) => {
                 const nv = new CadLayer(v.export());

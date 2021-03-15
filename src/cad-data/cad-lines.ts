@@ -114,6 +114,7 @@ export const swapStartEnd = (entity: CadLineLike) => {
         [entity.start_angle, entity.end_angle] = [entity.end_angle, entity.start_angle];
         entity.clockwise = !entity.clockwise;
     }
+    entity.swapped = !entity.swapped;
 };
 
 export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {

@@ -1,4 +1,4 @@
-import {Circle, Container, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
+import {Circle, Container, Element, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {Angle, Arc, Point} from "@lucilor/utils";
 import {toFixedTrim} from "./utils";
 
@@ -109,7 +109,7 @@ export const drawShape = (draw: Container, points: Point[], type: "fill" | "stro
 
 export const drawDimension = (
     draw: Container,
-    renderStyle: 1 | 2 = 1,
+    renderStyle: number = 1,
     points: Point[],
     text: string,
     fontStyle: FontStyle,
@@ -125,32 +125,35 @@ export const drawDimension = (
     let l2: Line | null = null;
     let l3: Line | null = null;
     if (renderStyle === 1) {
-        l1 = drawLine(draw, p1, p3, i)?.[0];
-        l2 = drawLine(draw, p3, p4, i + 1)?.[0];
-        l3 = drawLine(draw, p4, p2, i + 2)?.[0];
-    } else {
+        l1 = drawLine(draw, p1, p3, i++)?.[0];
+        l2 = drawLine(draw, p3, p4, i++)?.[0];
+        l3 = drawLine(draw, p4, p2, i++)?.[0];
+    } else if (renderStyle === 2 || renderStyle === 3) {
         const length = 20;
         if (axis === "x") {
-            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), i)[0];
-            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), i + 1)[0];
+            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), i++)[0];
         } else if (axis === "y") {
-            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), i)[0];
-            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), i + 1)[0];
+            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), i++)[0];
         }
-        l3 = drawLine(draw, p3, p4, i + 2)[0];
+        if (renderStyle === 2) {
+            l3 = drawLine(draw, p3, p4, i++)[0];
+        }
     }
-    const tri1 = drawShape(draw, [p3, p5, p6], "fill", i + 3)[0];
-    const tri2 = drawShape(draw, [p4, p7, p8], "fill", i + 4)[0];
+    let tri1: Path | undefined;
+    let tri2: Path | undefined;
+    if (l3) {
+        tri1 = drawShape(draw, [p3, p5, p6], "fill", i++)[0];
+        tri2 = drawShape(draw, [p4, p7, p8], "fill", i++)[0];
+    }
     text = text.replace("<>", toFixedTrim(p3.distanceTo(p4)));
     const middle = p3.clone().add(p4).divide(2);
     let textEl: Text | null = null;
     if (axis === "x") {
-        textEl = drawText(draw, text, fontStyle, middle, new Point(0.5, 1), false, i + 5)[0];
+        textEl = drawText(draw, text, fontStyle, middle, new Point(0.5, 1), false, i++)[0];
     } else if (axis === "y") {
-        textEl = drawText(draw, text, fontStyle, middle, new Point(1, 0.5), true, i + 5)[0];
+        textEl = drawText(draw, text, fontStyle, middle, new Point(1, 0.5), true, i++)[0];
     }
-    if (!l1 || !l2 || !l3 || !textEl) {
-        return [];
-    }
-    return [l1, l2, l3, tri1, tri2, textEl];
+    return [l1, l2, l3, tri1, tri2, textEl].filter((v) => v) as Element[];
 };

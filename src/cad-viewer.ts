@@ -322,7 +322,8 @@ export class CadViewer extends EventEmitter {
             const {center, radius} = entity;
             drawResult = drawCircle(el, center, radius);
         } else if (entity instanceof CadDimension) {
-            const {mingzi, qujian, axis, renderStyle} = entity;
+            const {mingzi, qujian, axis} = entity;
+            const renderStyle = entity.hideDimLines ? -1 : entity.renderStyle;
             const points = this.data.getDimensionPoints(entity);
             let text = "";
             if (mingzi) {
