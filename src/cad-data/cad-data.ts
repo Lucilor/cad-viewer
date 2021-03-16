@@ -5,30 +5,13 @@ import {CadCircle, CadDimension, CadEntities, CadLine} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 import {mergeArray, separateArray, getVectorFromArray, isLinesParallel} from "../utils";
 
-export type CadZhankaiItem = CadData["zhankai"][0];
-export interface CadZhankaiItemSource extends Partial<CadZhankaiItem> {
-    flip?: "" | "v" | "h" | "vh";
-}
-export const getZhankai = (obj: CadZhankaiItemSource = {}): CadZhankaiItem => ({
-    zhankaikuan: obj.zhankaikuan ?? "ceil(总长)+0",
-    zhankaigao: obj.zhankaigao ?? "",
-    shuliang: obj.shuliang ?? "1",
-    shuliangbeishu: obj.shuliangbeishu ?? "1",
-    kailiaomuban: obj.kailiaomuban ?? "",
-    neikaimuban: obj.neikaimuban ?? "",
-    name: obj.name ?? "",
-    flipWaikai: obj.flip ?? obj.flipWaikai ?? "",
-    flipNeikai: obj.flipNeikai ?? "",
-    kailiao: obj.kailiao === false ? false : true
-});
-
 export class CadData {
     entities: CadEntities;
     layers: CadLayer[];
     id: string;
     name: string;
     type: string;
-    conditions: string[];
+    conditions: CadCondition[];
     options: CadOption[];
     baseLines: CadBaseLine[];
     jointPoints: CadJointPoint[];
@@ -49,18 +32,7 @@ export class CadData {
     info: ObjectOf<any>;
     attributes: ObjectOf<string>;
     bancaihoudufangxiang: "none" | "gt0" | "lt0";
-    zhankai: {
-        zhankaikuan: string;
-        zhankaigao: string;
-        shuliang: string;
-        shuliangbeishu: string;
-        name: string;
-        kailiaomuban: string;
-        neikaimuban: string;
-        flipWaikai: "" | "v" | "h" | "vh";
-        flipNeikai: "" | "v" | "h" | "vh";
-        kailiao: boolean;
-    }[];
+    zhankai: CadZhankai[];
     suanliaodanxianshibancai: boolean;
     needsHuajian: boolean;
 
@@ -78,7 +50,10 @@ export class CadData {
             }
         }
         this.entities = new CadEntities(data.entities || {}, this.layers);
-        this.conditions = Array.isArray(data.conditions) ? data.conditions : [];
+        this.conditions = [];
+        if (Array.isArray(data.conditions)) {
+            data.conditions.forEach((v: string | CadCondition) => this.conditions.push(new CadCondition(v)));
+        }
         this.options = [];
         if (typeof data.options === "object") {
             if (Array.isArray(data.options)) {
@@ -128,10 +103,10 @@ export class CadData {
         }
         this.attributes = typeof data.attributes === "object" ? data.attributes : {};
         this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "none";
-        if (Array.isArray(data.zhankai) && data.zhankai.length) {
-            this.zhankai = data.zhankai.map((v) => getZhankai(v));
+        if (Array.isArray(data.zhankai)) {
+            this.zhankai = data.zhankai.map((v) => new CadZhankai(v));
         } else {
-            this.zhankai = [getZhankai()];
+            this.zhankai = [];
         }
         this.suanliaodanxianshibancai = data.suanliaodanxianshibancai ?? true;
         this.needsHuajian = data.needsHuajian ?? true;
@@ -157,10 +132,10 @@ export class CadData {
         this.info = cloneDeep(data.info);
         this.attributes = cloneDeep(data.attributes);
         this.bancaihoudufangxiang = data.bancaihoudufangxiang;
-        this.zhankai = cloneDeep(data.zhankai);
         this.suanliaodanxianshibancai = data.suanliaodanxianshibancai;
         this.needsHuajian = data.needsHuajian;
         this.updatePartners().updateDimensions();
+        return this;
     }
 
     export(): ObjectOf<any> {
@@ -169,7 +144,7 @@ export class CadData {
         this.layers.forEach((v) => {
             exLayers[v.id] = v.export();
         });
-        const exOptions: ObjectOf<any> = {};
+        const exOptions: ObjectOf<string> = {};
         this.options.forEach((v) => {
             if (v.name) {
                 exOptions[v.name] = v.value;
@@ -181,7 +156,7 @@ export class CadData {
             id: this.id,
             name: this.name,
             type: this.type,
-            conditions: this.conditions.filter((v) => v),
+            conditions: this.conditions.map((v) => v.value).filter((v) => v),
             options: exOptions,
             baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.name && v.idX && v.idY),
             jointPoints: this.jointPoints.map((v) => v.export()),
@@ -202,7 +177,7 @@ export class CadData {
             info: this.info,
             attributes: cloneDeep(this.attributes),
             bancaihoudufangxiang: this.bancaihoudufangxiang,
-            zhankai: cloneDeep(this.zhankai),
+            zhankai: this.zhankai.map((v) => v.export()),
             suanliaodanxianshibancai: this.suanliaodanxianshibancai,
             needsHuajian: this.needsHuajian
         };
@@ -268,13 +243,14 @@ export class CadData {
     merge(data: CadData) {
         this.layers = this.layers.concat(data.layers);
         this.entities.merge(data.entities);
-        this.conditions = mergeArray(this.conditions, data.conditions);
+        this.conditions = mergeArray(this.conditions, data.conditions, "value");
         this.options = mergeArray(this.options, data.options, "name");
         this.jointPoints = mergeArray(this.jointPoints, data.jointPoints, "name");
         this.baseLines = mergeArray(this.baseLines, data.baseLines, "name");
         this.partners = mergeArray(this.partners, data.partners, "id");
         this.components.connections = mergeArray(this.components.connections, data.components.connections);
         this.components.data = mergeArray(this.components.data, data.components.data, "id");
+        this.zhankai = mergeArray(this.zhankai, data.zhankai, "name");
         return this;
     }
 
@@ -291,6 +267,7 @@ export class CadData {
         this.components.data = separateArray(this.components.data, data.components.data, "id");
         this.partners.forEach((v) => v.separate(data));
         this.components.data.forEach((v) => v.separate(data));
+        this.zhankai = separateArray(this.zhankai, data.zhankai, "name");
         return this;
     }
 
@@ -798,6 +775,22 @@ export class CadJointPoint {
     }
 }
 
+export class CadCondition {
+    value: string;
+
+    constructor(value: string | CadCondition = "") {
+        if (value instanceof CadCondition) {
+            this.value = value.value;
+        } else {
+            this.value = value;
+        }
+    }
+
+    equals(condition: CadCondition) {
+        return this.value === condition.value;
+    }
+}
+
 export class CadOption {
     name: string;
     value: string;
@@ -888,5 +881,55 @@ export class CadComponents {
         this.data.forEach((v) => data.push(v.export()));
         this.connections.forEach((v) => connections.push(v.export()));
         return {data, connections};
+    }
+}
+
+export class CadZhankai {
+    zhankaikuan: string;
+    zhankaigao: string;
+    shuliang: string;
+    shuliangbeishu: string;
+    name: string;
+    kailiaomuban: string;
+    neikaimuban: string;
+    flipWaikai: "" | "v" | "h" | "vh";
+    flipNeikai: "" | "v" | "h" | "vh";
+    kailiao: boolean;
+    conditions: CadCondition[];
+
+    constructor(data: ObjectOf<any> = {}) {
+        if (typeof data !== "object") {
+            data = {};
+        }
+        this.zhankaikuan = data.zhankaikuan ?? "ceil(总长)+0";
+        this.zhankaigao = data.zhankaigao ?? "";
+        this.shuliang = data.shuliang ?? "1";
+        this.shuliangbeishu = data.shuliangbeishu ?? "1";
+        this.kailiaomuban = data.kailiaomuban ?? "";
+        this.neikaimuban = data.neikaimuban ?? "";
+        this.name = data.name ?? "";
+        this.flipWaikai = data.flip ?? data.flipWaikai ?? "";
+        this.flipNeikai = data.flipNeikai ?? "";
+        this.kailiao = data.kailiao === false ? false : true;
+        this.conditions = [];
+        if (Array.isArray(data.conditions)) {
+            data.conditions.forEach((v: string | CadCondition) => this.conditions.push(new CadCondition(v)));
+        }
+    }
+
+    export() {
+        return {
+            zhankaikuan: this.zhankaikuan,
+            zhankaigao: this.zhankaigao,
+            shuliang: this.shuliang,
+            shuliangbeishu: this.shuliangbeishu,
+            name: this.name,
+            kailiaomuban: this.kailiaomuban,
+            neikaimuban: this.neikaimuban,
+            flipWaikai: this.flipWaikai,
+            flipNeikai: this.flipNeikai,
+            kailiao: this.kailiao,
+            conditions: this.conditions.map((v) => v.value).filter((v) => v)
+        };
     }
 }
