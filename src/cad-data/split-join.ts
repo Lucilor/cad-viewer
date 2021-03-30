@@ -1,5 +1,5 @@
 import {Line, ObjectOf, Point, Rectangle} from "@lucilor/utils";
-import {CadData, CadOption, CadZhankai} from "./cad-data";
+import {CadData, CadZhankai} from "./cad-data";
 import {sortLines} from "./cad-lines";
 import {CadLine, CadMtext, CadArc, CadCircle} from "./cad-entities";
 
@@ -79,7 +79,7 @@ export const splitCad = (data: CadData) => {
                             throw Error("CAD信息有错");
                         }
                     } else {
-                        v.options.push(new CadOption(key, value));
+                        v.options[key] = value;
                     }
                 });
                 v.zhankai = [new CadZhankai(obj)];

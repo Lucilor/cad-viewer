@@ -1,4 +1,5 @@
 import {ObjectOf, Point} from "@lucilor/utils";
+import {cloneDeep} from "lodash";
 import {CadLine} from "./cad-data/cad-entities";
 
 export const getVectorFromArray = (data: number[] | Point, defaultVal = new Point()) => {
@@ -10,6 +11,20 @@ export const getVectorFromArray = (data: number[] | Point, defaultVal = new Poin
     }
     data = data.filter((v) => !isNaN(v));
     return new Point(...data);
+};
+
+export const getArray = <T>(data: any): T[] => {
+    if (Array.isArray(data)) {
+        return cloneDeep(data);
+    }
+    return [];
+};
+
+export const getObject = <T>(data: any): ObjectOf<T> => {
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+        return cloneDeep(data);
+    }
+    return {};
 };
 
 export const isLinesParallel = (lines: CadLine[], accurary = 0) => {
@@ -51,6 +66,18 @@ export const separateArray = <T>(arr1: T[], arr2: T[], field?: string) => {
         arr1 = arr1.filter((v) => !arr2.includes(v));
     }
     return arr1;
+};
+
+export const mergeObject = <T>(obj1: ObjectOf<T>, obj2: ObjectOf<T>) => {
+    Object.assign(obj1, obj2);
+    return obj1;
+};
+
+export const separateObject = <T>(obj1: ObjectOf<T>, obj2: ObjectOf<T>) => {
+    for (const key in obj2) {
+        delete obj1[key];
+    }
+    return obj1;
 };
 
 export const isBetween = (n: number, min: number, max: number) => n > min && n < max;

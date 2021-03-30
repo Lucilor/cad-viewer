@@ -308,7 +308,7 @@ export abstract class CadLineLike extends CadEntity {
     zhewanOffset: number;
     zhewanValue: number;
     zidingzhankaichang: string;
-    kailiaofangshi: "自动计算" | "使用线长" | "指定长度";
+    zhankaifangshi: "自动计算" | "使用线长" | "指定长度";
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -323,14 +323,14 @@ export abstract class CadLineLike extends CadEntity {
         this.zhewanOffset = data.zhewanOffset ?? 0;
         this.zhewanValue = data.zhewanValue ?? 0;
         this.zidingzhankaichang = String(data.zidingzhankaichang) ?? "";
-        if (typeof data.kailiaofangshi === "string") {
-            this.kailiaofangshi = data.kailiaofangshi;
+        if (typeof data.zhankaifangshi === "string") {
+            this.zhankaifangshi = data.zhankaifangshi;
         } else {
             const zidingzhankaichangNum = Number(this.zidingzhankaichang);
             if (!isNaN(zidingzhankaichangNum) && zidingzhankaichangNum > 0) {
-                this.kailiaofangshi = "指定长度";
+                this.zhankaifangshi = "指定长度";
             } else {
-                this.kailiaofangshi = "自动计算";
+                this.zhankaifangshi = "自动计算";
             }
         }
     }
@@ -348,7 +348,7 @@ export abstract class CadLineLike extends CadEntity {
             zhewanOffset: this.zhewanOffset,
             zhewanValue: this.zhewanValue,
             zidingzhankaichang: this.zidingzhankaichang,
-            kailiaofangshi: this.kailiaofangshi
+            zhankaifangshi: this.zhankaifangshi
         };
     }
 }
