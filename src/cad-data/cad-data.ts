@@ -10,6 +10,7 @@ export class CadData {
     layers: CadLayer[] = [];
     id = "";
     name = "";
+    xianshimingzi = "";
     type = "";
     conditions: string[] = [];
     options: ObjectOf<string> = {};
@@ -27,6 +28,7 @@ export class CadData {
     bancaiwenlifangxiang: "垂直" | "水平" = "垂直";
     kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版" = "自动排版";
     morenkailiaobancai = "";
+    gudingkailiaobancai = "";
     suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料" = "算料+显示展开+开料";
     showKuandubiaozhu = false;
     info: ObjectOf<any> = {};
@@ -37,6 +39,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
+    suanliaodanxianshi: "尺寸+板材" | "尺寸" | "板材" | "都不显示" = "尺寸+板材";
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -48,6 +51,7 @@ export class CadData {
         }
         this.id = data.id || v4();
         this.name = data.name ?? "";
+        this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
         this.layers = [];
         if (typeof data.layers === "object") {
@@ -88,6 +92,7 @@ export class CadData {
         this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
         this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
         this.morenkailiaobancai = data.morenkailiaobancai ?? "";
+        this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
         this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
         this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
         this.info = getObject(data.info);
@@ -102,6 +107,7 @@ export class CadData {
         this.needsHuajian = data.needsHuajian ?? true;
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
+        this.suanliaodanxianshi = data.suanliaodanxianshi ?? "尺寸+板材";
         this.updateDimensions();
         return this;
     }
@@ -121,6 +127,7 @@ export class CadData {
             entities: this.entities.export(),
             id: this.id,
             name: this.name,
+            xianshimingzi: this.xianshimingzi,
             type: this.type,
             conditions: this.conditions,
             options: this.options,
@@ -138,6 +145,7 @@ export class CadData {
             bancaiwenlifangxiang: this.bancaiwenlifangxiang,
             kailiaopaibanfangshi: this.kailiaopaibanfangshi,
             morenkailiaobancai: this.morenkailiaobancai,
+            gudingkailiaobancai: this.gudingkailiaobancai,
             suanliaochuli: this.suanliaochuli,
             showKuandubiaozhu: this.showKuandubiaozhu,
             info: this.info,
@@ -147,7 +155,8 @@ export class CadData {
             suanliaodanxianshibancai: this.suanliaodanxianshibancai,
             needsHuajian: this.needsHuajian,
             kedulibancai: this.kedulibancai,
-            shuangxiangzhewan: this.shuangxiangzhewan
+            shuangxiangzhewan: this.shuangxiangzhewan,
+            suanliaodanxianshi: this.suanliaodanxianshi
         });
     }
 

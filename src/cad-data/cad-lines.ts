@@ -92,6 +92,12 @@ export const findAllAdjacentLines = (
     return {entities, closed};
 };
 
+export const findCrossingLine = (data: CadData, line: CadLine) => {
+    const lines = data.getAllEntities().line;
+    const curve = line.curve;
+    return lines.filter((l) => l.curve.intersects(curve));
+};
+
 export const setLinesLength = (data: CadData, lines: CadLine[], length: number) => {
     const pointsMap = generatePointsMap(data.getAllEntities());
     lines.forEach((line) => {

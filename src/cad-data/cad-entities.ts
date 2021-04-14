@@ -242,7 +242,7 @@ export abstract class CadEntity {
     export(): ObjectOf<any> {
         this._indexColor = RGB2Index(this.color.hex());
         this.update();
-        return {
+        return cloneDeep({
             id: this.id,
             layer: this.layer,
             type: this.type,
@@ -250,7 +250,7 @@ export abstract class CadEntity {
             lineweight: linewidth2lineweight(this.linewidth),
             children: this.children.export(),
             info: this.info
-        };
+        });
     }
 
     addChild(...children: CadEntity[]) {
@@ -309,6 +309,7 @@ export abstract class CadLineLike extends CadEntity {
     zhewanValue: number;
     zidingzhankaichang: string;
     zhankaifangshi: "自动计算" | "使用线长" | "指定长度";
+    zhankaixiaoshuchuli: "不处理" | "舍去小数" | "小数进一" | "四舍五入";
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -322,8 +323,10 @@ export abstract class CadLineLike extends CadEntity {
         this.betweenZhewan = data.betweenZhewan ?? "自动";
         this.zhewanOffset = data.zhewanOffset ?? 0;
         this.zhewanValue = data.zhewanValue ?? 0;
-        this.zidingzhankaichang = String(data.zidingzhankaichang) ?? "";
-        if (typeof data.zhankaifangshi === "string") {
+        this.zidingzhankaichang = data.zidingzhankaichang ?? "";
+        if (typeof data.kailiaofangshi === "string" && data.kailiaofangshi) {
+            this.zhankaifangshi = data.kailiaofangshi;
+        } else if (typeof data.zhankaifangshi === "string") {
             this.zhankaifangshi = data.zhankaifangshi;
         } else {
             const zidingzhankaichangNum = Number(this.zidingzhankaichang);
@@ -333,6 +336,7 @@ export abstract class CadLineLike extends CadEntity {
                 this.zhankaifangshi = "自动计算";
             }
         }
+        this.zhankaixiaoshuchuli = data.zhankaixiaoshuchuli ?? "不处理";
     }
 
     export(): ObjectOf<any> {
@@ -348,7 +352,8 @@ export abstract class CadLineLike extends CadEntity {
             zhewanOffset: this.zhewanOffset,
             zhewanValue: this.zhewanValue,
             zidingzhankaichang: this.zidingzhankaichang,
-            zhankaifangshi: this.zhankaifangshi
+            zhankaifangshi: this.zhankaifangshi,
+            zhankaixiaoshuchuli: this.zhankaixiaoshuchuli
         };
     }
 }
@@ -571,13 +576,13 @@ export class CadDimension extends CadEntity {
     }
 
     export(): ObjectOf<any> {
-        return {
+        return cloneDeep({
             ...super.export(),
             dimstyle: this.dimstyle,
             font_size: this.font_size,
             axis: this.axis,
-            entity1: {...this.entity1},
-            entity2: {...this.entity2},
+            entity1: this.entity1,
+            entity2: this.entity2,
             distance: this.distance,
             cad1: this.cad1,
             cad2: this.cad2,
@@ -587,7 +592,7 @@ export class CadDimension extends CadEntity {
             quzhifanwei: this.quzhifanwei,
             renderStyle: this.renderStyle,
             hideDimLines: this.hideDimLines
-        };
+        });
     }
 
     clone(resetId = false) {
