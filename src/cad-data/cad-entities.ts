@@ -310,6 +310,7 @@ export abstract class CadLineLike extends CadEntity {
     zidingzhankaichang: string;
     zhankaifangshi: "自动计算" | "使用线长" | "指定长度";
     zhankaixiaoshuchuli: "不处理" | "舍去小数" | "小数进一" | "四舍五入";
+    kailiaoshishanchu: boolean;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -337,6 +338,7 @@ export abstract class CadLineLike extends CadEntity {
             }
         }
         this.zhankaixiaoshuchuli = data.zhankaixiaoshuchuli ?? "不处理";
+        this.kailiaoshishanchu = !!data.kailiaoshishanchu;
     }
 
     export(): ObjectOf<any> {
@@ -353,7 +355,8 @@ export abstract class CadLineLike extends CadEntity {
             zhewanValue: this.zhewanValue,
             zidingzhankaichang: this.zidingzhankaichang,
             zhankaifangshi: this.zhankaifangshi,
-            zhankaixiaoshuchuli: this.zhankaixiaoshuchuli
+            zhankaixiaoshuchuli: this.zhankaixiaoshuchuli,
+            kailiaoshishanchu: this.kailiaoshishanchu
         };
     }
 }
@@ -857,6 +860,42 @@ export class CadMtext extends CadEntity {
     }
 }
 
+export class CadSpline extends CadEntity {
+    fitPoints: Point[] = [];
+    controlPoints: Point[] = [];
+    degree = 3;
+
+    constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super(data, layers, resetId);
+        if (Array.isArray(data.fitPoints)) {
+            data.fitPoints.forEach((v: any) => this.fitPoints.push(getVectorFromArray(v)));
+        }
+        if (Array.isArray(data.controlPoints)) {
+            data.controlPoints.forEach((v: any) => this.controlPoints.push(getVectorFromArray(v)));
+        }
+        if (typeof data.degree === "number") {
+            this.degree = data.degree;
+        }
+    }
+
+    export(): ObjectOf<any> {
+        return {
+            ...super.export(),
+            fitPoints: this.fitPoints.map((v) => v.toArray()),
+            controlPoints: this.controlPoints.map((v) => v.toArray()),
+            degree: this.degree
+        };
+    }
+
+    get boundingPoints() {
+        return [];
+    }
+
+    clone(resetId = false) {
+        return new CadSpline(this, [], resetId);
+    }
+}
+
 export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLayer[] = [], resetId = false) => {
     let entity: CadEntity | undefined;
     const type = data.type as CadType;
@@ -872,11 +911,13 @@ export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLay
         entity = new CadLine(data, layers, resetId);
     } else if (type === "MTEXT") {
         entity = new CadMtext(data, layers, resetId);
+    } else if (type === "SPLINE") {
+        entity = new CadSpline(data, layers, resetId);
     }
     return entity as T;
 };
 
-export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch;
+export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch & CadSpline;
 
 export class CadEntities {
     line: CadLine[] = [];
@@ -885,6 +926,7 @@ export class CadEntities {
     mtext: CadMtext[] = [];
     dimension: CadDimension[] = [];
     hatch: CadHatch[] = [];
+    spline: CadSpline[] = [];
 
     get length() {
         let result = 0;
@@ -973,7 +1015,7 @@ export class CadEntities {
     }
 
     export() {
-        const result: ObjectOf<any> = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}};
+        const result: ObjectOf<any> = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}, spline: {}};
         for (const key of cadTypesKey) {
             this[key].forEach((e: CadEntity) => {
                 if (e instanceof CadDimension) {
