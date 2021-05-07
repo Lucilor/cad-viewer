@@ -42,7 +42,7 @@ export class CadData {
     kedulibancai = false;
     shuangxiangzhewan = false;
     suanliaodanxianshi: "尺寸+板材" | "尺寸" | "板材" | "都不显示" = "尺寸+板材";
-    zhidingweizhipaokeng: string[] = [];
+    zhidingweizhipaokeng: string[][] = [];
     suanliaodanZoom = 1.5;
 
     constructor(data?: ObjectOf<any>) {
