@@ -1,7 +1,7 @@
 import {index2RGB, RGB2Index} from "@lucilor/utils";
-import {lineweight2linewidth, linewidth2lineweight} from "../utils";
 import Color from "color";
 import {v4} from "uuid";
+import {lineweight2linewidth, linewidth2lineweight} from "../utils";
 
 export class CadLayer {
     id: string;

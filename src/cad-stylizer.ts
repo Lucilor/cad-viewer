@@ -1,5 +1,5 @@
 import Color from "color";
-import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entities";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entities";
 import {CadViewer} from "./cad-viewer";
 
 export interface CadStyle {
@@ -32,7 +32,7 @@ export class CadStylizer {
         let color = new Color(params.color || entity?.color || 0);
         if (params.linewidth && params.linewidth > 0) {
             result.linewidth = params.linewidth;
-        } else if (entity.linewidth > 0) {
+        } else if (entity instanceof CadLineLike && entity.linewidth > 0) {
             result.linewidth = entity.linewidth;
         } else {
             result.linewidth = 1;

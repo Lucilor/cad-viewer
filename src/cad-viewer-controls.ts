@@ -1,4 +1,4 @@
-import {Point, Rectangle} from "@lucilor/utils";
+import { Point, Rectangle } from "@lucilor/utils";
 import {CadDimension, CadEntities, CadEntity} from "./cad-data/cad-entities";
 import {CadViewer} from "./cad-viewer";
 
@@ -28,7 +28,7 @@ export interface CadEvents {
     entitiescopy: [CadEntities];
     entitiespaste: [CadEntities];
     render: [CadEntities];
-    moveEntities: [CadEntities];
+    moveentities: [CadEntities];
     zoom: [];
 }
 export type CadEventCallBack<T extends keyof CadEvents> = (...params: CadEvents[T]) => void;

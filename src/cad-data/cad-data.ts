@@ -1,14 +1,15 @@
 import {Matrix, MatrixLike, ObjectOf, Point} from "@lucilor/utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
-import {getArray, getObject, getVectorFromArray, isLinesParallel, mergeArray, mergeObject, separateArray, separateObject} from "../utils";
-import {CadCircle, CadDimension, CadEntities, CadLine} from "./cad-entities";
+import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, isLinesParallel} from "../utils";
+import {CadEntities, CadLine, CadDimension, CadCircle} from "./cad-entities";
 import {CadLayer} from "./cad-layer";
 
 export class CadData {
     entities = new CadEntities();
     layers: CadLayer[] = [];
     id = "";
+    numId = 0;
     name = "";
     xianshimingzi = "";
     type = "";
@@ -25,7 +26,8 @@ export class CadData {
     kailiaomuban = "";
     kailiaoshibaokeng = false;
     bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形" = "自由";
-    bancaiwenlifangxiang: "垂直" | "水平" = "垂直";
+    bancaiwenlifangxiang: "垂直" | "水平" | "不限" | "指定垂直" | "指定水平" | "指定不限" = "垂直";
+    huajianwenlifangxiang?: "垂直" | "水平" = "垂直";
     kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版" = "自动排版";
     morenkailiaobancai = "";
     gudingkailiaobancai = "";
@@ -40,6 +42,8 @@ export class CadData {
     kedulibancai = false;
     shuangxiangzhewan = false;
     suanliaodanxianshi: "尺寸+板材" | "尺寸" | "板材" | "都不显示" = "尺寸+板材";
+    zhidingweizhipaokeng: string[] = [];
+    suanliaodanZoom = 1.5;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -49,7 +53,8 @@ export class CadData {
         if (typeof data !== "object") {
             data = {};
         }
-        this.id = data.id || v4();
+        this.id = data.id ?? v4();
+        this.numId = data.numId ?? 0;
         this.name = data.name ?? "";
         this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
@@ -90,6 +95,7 @@ export class CadData {
         this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
         this.bianxingfangshi = data.bianxingfangshi ?? "自由";
         this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
+        this.huajianwenlifangxiang = data.huajianwenlifangxiang;
         this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
         this.morenkailiaobancai = data.morenkailiaobancai ?? "";
         this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
@@ -108,6 +114,8 @@ export class CadData {
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "尺寸+板材";
+        this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
+        this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.updateDimensions();
         return this;
     }
@@ -126,6 +134,7 @@ export class CadData {
             layers: exLayers,
             entities: this.entities.export(),
             id: this.id,
+            numId: this.numId,
             name: this.name,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
@@ -143,6 +152,7 @@ export class CadData {
             kailiaoshibaokeng: this.kailiaoshibaokeng,
             bianxingfangshi: this.bianxingfangshi,
             bancaiwenlifangxiang: this.bancaiwenlifangxiang,
+            huajianwenlifangxiang: this.huajianwenlifangxiang,
             kailiaopaibanfangshi: this.kailiaopaibanfangshi,
             morenkailiaobancai: this.morenkailiaobancai,
             gudingkailiaobancai: this.gudingkailiaobancai,
@@ -156,7 +166,9 @@ export class CadData {
             needsHuajian: this.needsHuajian,
             kedulibancai: this.kedulibancai,
             shuangxiangzhewan: this.shuangxiangzhewan,
-            suanliaodanxianshi: this.suanliaodanxianshi
+            suanliaodanxianshi: this.suanliaodanxianshi,
+            zhidingweizhipaokeng: this.zhidingweizhipaokeng,
+            suanliaodanZoom: this.suanliaodanZoom
         });
     }
 

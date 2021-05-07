@@ -1,8 +1,8 @@
-import {CadArc, CadEntities, CadLine, CadLineLike, CadMtext} from "./cad-entities";
+import {DEFAULT_TOLERANCE, isBetween, Point} from "@lucilor/utils";
+import {CadViewer} from "..";
+import {getVectorFromArray} from "../utils";
 import {CadData} from "./cad-data";
-import {CadViewer} from "../cad-viewer";
-import {getVectorFromArray, isBetween} from "../utils";
-import {DEFAULT_TOLERANCE, Point} from "@lucilor/utils";
+import {CadLineLike, CadEntities, CadLine, CadArc, CadMtext} from "./cad-entities";
 
 export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"];
 

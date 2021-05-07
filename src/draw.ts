@@ -1,5 +1,5 @@
+import { Angle, Arc, Point } from "@lucilor/utils";
 import {Circle, Container, Element, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
-import {Angle, Arc, Point} from "@lucilor/utils";
 import {toFixedTrim} from "./utils";
 
 export interface FontStyle {
