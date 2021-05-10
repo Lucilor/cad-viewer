@@ -1,4 +1,4 @@
-import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@lucilor/utils";
+import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
 import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, isLinesParallel} from "../utils";

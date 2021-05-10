@@ -40,7 +40,6 @@
 		"webpack-node-externals": "^3.0.0"
 	},
 	"dependencies": {
-		"@lucilor/utils": "^1.5.1",
 		"@svgdotjs/svg.js": "^3.0.16",
 		"lodash": "^4.17.21",
 		"uuid": "^8.3.2"

@@ -1,4 +1,4 @@
-import { Angle, Arc, Point } from "@lucilor/utils";
+import { Angle, Arc, Point } from "@utils";
 import {Circle, Container, Element, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {toFixedTrim} from "./utils";
 

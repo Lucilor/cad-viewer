@@ -1,4 +1,4 @@
-import {DEFAULT_TOLERANCE, isBetween, Point} from "@lucilor/utils";
+import {DEFAULT_TOLERANCE, isBetween, Point} from "@utils";
 import {CadViewer} from "..";
 import {getVectorFromArray} from "../utils";
 import {CadData} from "./cad-data";

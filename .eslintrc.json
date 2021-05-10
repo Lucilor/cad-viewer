@@ -14,8 +14,7 @@
         "sourceType": "module"
     },
     "rules": {
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-unused-vars": ["error", {"argsIgnorePattern": "."}],
         "quotes": ["error", "double", {"allowTemplateLiterals": true}],
         "object-curly-spacing": ["error", "never"],

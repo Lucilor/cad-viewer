@@ -6,7 +6,6 @@ src/
 tsconfig.json
 tslint.json
 webpack.*.js
-*.ps1
 
 # yarn
 .yarn/*

@@ -1,4 +1,4 @@
-import {isBetween, Point} from "@lucilor/utils";
+import {isBetween, Point} from "@utils";
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";

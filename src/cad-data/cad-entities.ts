@@ -1,4 +1,4 @@
-import {Angle, Arc, index2RGB, Line, Matrix, MatrixLike, ObjectOf, Point, Rectangle, RGB2Index} from "@lucilor/utils";
+import {Angle, Arc, index2RGB, Line, Matrix, MatrixLike, ObjectOf, Point, Rectangle, RGB2Index} from "@utils";
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import Color from "color";
 import {cloneDeep} from "lodash";
@@ -617,7 +617,7 @@ export class CadHatch extends CadEntity {
     }[];
 
     get boundingPoints() {
-        return [];
+        return [] as Point[];
     }
 
     constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {
@@ -868,7 +868,7 @@ export class CadSpline extends CadEntity {
     controlPoints: Point[] = [];
     degree = 3;
     get boundingPoints() {
-        return [];
+        return [] as Point[];
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
