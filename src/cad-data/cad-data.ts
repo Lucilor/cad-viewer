@@ -1,4 +1,4 @@
-import {Matrix, MatrixLike, ObjectOf, Point} from "@lucilor/utils";
+import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@lucilor/utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
 import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, isLinesParallel} from "../utils";
@@ -130,6 +130,12 @@ export class CadData {
         this.layers.forEach((v) => {
             exLayers[v.id] = v.export();
         });
+        const options = {...this.options};
+        keysOf(options).forEach((k) => {
+            if (!k || !options[k]) {
+                delete options[k];
+            }
+        });
         return cloneDeep({
             layers: exLayers,
             entities: this.entities.export(),
@@ -138,8 +144,8 @@ export class CadData {
             name: this.name,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
-            conditions: this.conditions,
-            options: this.options,
+            conditions: this.conditions.filter((v) => v),
+            options,
             baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.name && v.idX && v.idY),
             jointPoints: this.jointPoints.map((v) => v.export()),
             parent: this.parent,
