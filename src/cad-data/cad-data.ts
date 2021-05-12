@@ -44,6 +44,7 @@ export class CadData {
     suanliaodanxianshi: "尺寸+板材" | "尺寸" | "板材" | "都不显示" = "尺寸+板材";
     zhidingweizhipaokeng: string[][] = [];
     suanliaodanZoom = 1.5;
+    企料前后宽同时改变 = true;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -116,6 +117,7 @@ export class CadData {
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "尺寸+板材";
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
+        this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
         this.updateDimensions();
         return this;
     }
@@ -174,7 +176,8 @@ export class CadData {
             shuangxiangzhewan: this.shuangxiangzhewan,
             suanliaodanxianshi: this.suanliaodanxianshi,
             zhidingweizhipaokeng: this.zhidingweizhipaokeng,
-            suanliaodanZoom: this.suanliaodanZoom
+            suanliaodanZoom: this.suanliaodanZoom,
+            企料前后宽同时改变: this.企料前后宽同时改变
         });
     }
 
