@@ -276,6 +276,30 @@ export abstract class CadEntity {
     // abstract getBoundingRect(): Rectangle;
 }
 
+// export enum 变化方式 {
+//     按比例,
+//     只能减小,
+//     只能增大,
+//     只能旋转,
+//     先旋转后按比例,
+//     旋转不足时再按比例,
+//     按比例不足时再旋转,
+//     旋转按比例都可以,
+//     不可改变
+// }
+
+export const 变化方式 = [
+    "按比例",
+    "只能减小",
+    "只能增大",
+    "只能旋转",
+    "先旋转后按比例",
+    "旋转不足时再按比例",
+    "按比例不足时再旋转",
+    "旋转按比例都可以",
+    "不可改变"
+];
+
 export abstract class CadLineLike extends CadEntity {
     abstract get start(): Point;
     abstract get end(): Point;
@@ -297,6 +321,8 @@ export abstract class CadLineLike extends CadEntity {
     zhankaifangshi: "自动计算" | "使用线长" | "指定长度";
     zhankaixiaoshuchuli: "不处理" | "舍去小数" | "小数进一" | "四舍五入";
     kailiaoshishanchu: boolean;
+    变化方式: string;
+    角度范围: number[];
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -338,6 +364,8 @@ export abstract class CadLineLike extends CadEntity {
                 }
             }
         }
+        this.变化方式 = data.变化方式 ?? 变化方式[0];
+        this.角度范围 = data.角度范围 ?? [0, 90];
     }
 
     export(): ObjectOf<any> {
@@ -356,7 +384,9 @@ export abstract class CadLineLike extends CadEntity {
             zidingzhankaichang: this.zidingzhankaichang,
             zhankaifangshi: this.zhankaifangshi,
             zhankaixiaoshuchuli: this.zhankaixiaoshuchuli,
-            kailiaoshishanchu: this.kailiaoshishanchu
+            kailiaoshishanchu: this.kailiaoshishanchu,
+            变化方式: this.变化方式,
+            角度范围: this.角度范围
         };
     }
 }
