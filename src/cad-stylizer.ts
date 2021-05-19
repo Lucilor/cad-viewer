@@ -1,5 +1,5 @@
 import Color from "color";
-import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entities";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadViewer} from "./cad-viewer";
 
 export interface CadStyle {

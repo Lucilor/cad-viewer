@@ -1,14 +1,15 @@
-import {isBetween, Point} from "@utils";
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
+import {isBetween, Point} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
-import {CadEntities, CadEntity, CadArc, CadCircle, CadDimension, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entities";
+import {CadEntities} from "./cad-data/cad-entities";
+import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
 import {CadType} from "./cad-data/cad-types";
-import {CadStylizer, CadStyle} from "./cad-stylizer";
-import {controls, CadEvents, CadEventCallBack} from "./cad-viewer-controls";
-import {drawArc, drawCircle, drawDimension, drawShape, drawLine, drawText, FontStyle} from "./draw";
-import {toFixedTrim, getVectorFromArray} from "./utils";
+import {CadStyle, CadStylizer} from "./cad-stylizer";
+import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
+import {drawArc, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
+import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 
 const typesOrder: CadType[] = ["DIMENSION", "HATCH", "MTEXT", "CIRCLE", "ARC", "LINE"];
 

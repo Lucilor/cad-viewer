@@ -1,6 +1,5 @@
 import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
-import {CadLine} from "./cad-data/cad-entities";
 
 export const getVectorFromArray = (data: number[] | Point, defaultVal = new Point()) => {
     if (data instanceof Point) {
@@ -25,20 +24,6 @@ export const getObject = <T>(data: any): ObjectOf<T> => {
         return cloneDeep(data);
     }
     return {};
-};
-
-export const isLinesParallel = (lines: CadLine[], accurary = 0) => {
-    const line0 = lines[0];
-    const theta0 = Math.atan((line0.start.y - line0.end.y) / (line0.start.x - line0.end.x));
-    for (let i = 1; i < lines.length; i++) {
-        const {start, end} = lines[i];
-        const theta1 = Math.atan((start.y - end.y) / (start.x - end.x));
-        const dTheta = Math.abs(theta0 - theta1);
-        if (dTheta !== Math.PI && dTheta > accurary) {
-            return false;
-        }
-    }
-    return true;
 };
 
 export const mergeArray = <T>(arr1: T[], arr2: T[], field?: string) => {

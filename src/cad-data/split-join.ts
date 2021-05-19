@@ -1,7 +1,7 @@
 import {CadData, CadZhankai} from "./cad-data";
 import {sortLines} from "./cad-lines";
-import {CadLine, CadMtext, CadArc, CadCircle} from "./cad-entities";
 import {Line, ObjectOf, Point, Rectangle} from "@utils";
+import {CadArc, CadCircle, CadLine, CadMtext} from "./cad-entity";
 
 export const splitCad = (data: CadData) => {
     const lines = data.entities.line.filter((v) => v.color.rgbNumber() === 0x00ff00);

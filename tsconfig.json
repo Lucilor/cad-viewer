@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-		"baseUrl": "./",
+        "baseUrl": "./",
         "outDir": "./lib/",
         "sourceMap": true,
         "noImplicitAny": true,
@@ -10,7 +10,7 @@
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "declaration": true,
-        "lib": ["ES2019", "DOM"],
+        "lib": ["ES2020", "DOM"],
         "esModuleInterop": true,
         "paths": {
             "@utils": ["src/utils/src"]

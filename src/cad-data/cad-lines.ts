@@ -1,8 +1,8 @@
 import {DEFAULT_TOLERANCE, isBetween, Point} from "@utils";
-import {CadViewer} from "..";
-import {getVectorFromArray} from "../utils";
+import {CadArc, CadLine, CadLineLike, CadMtext, CadViewer} from "..";
+import {getVectorFromArray} from "../cad-utils";
 import {CadData} from "./cad-data";
-import {CadLineLike, CadEntities, CadLine, CadArc, CadMtext} from "./cad-entities";
+import {CadEntities} from "./cad-entities";
 
 export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"];
 
@@ -367,4 +367,18 @@ export const autoFixLine = (cad: CadViewer, line: CadLine, tolerance = DEFAULT_T
     const {entities} = findAllAdjacentLines(map, line, line.end, tolerance);
     entities.forEach((e) => e.transform({translate}));
     line.end.add(translate);
+};
+
+export const isLinesParallel = (lines: CadLine[], accurary = 0) => {
+    const line0 = lines[0];
+    const theta0 = Math.atan((line0.start.y - line0.end.y) / (line0.start.x - line0.end.x));
+    for (let i = 1; i < lines.length; i++) {
+        const {start, end} = lines[i];
+        const theta1 = Math.atan((start.y - end.y) / (start.x - end.x));
+        const dTheta = Math.abs(theta0 - theta1);
+        if (dTheta !== Math.PI && dTheta > accurary) {
+            return false;
+        }
+    }
+    return true;
 };

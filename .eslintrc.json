@@ -4,7 +4,7 @@
         "es2021": true,
         "node": true
     },
-    "extends": [],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
     "globals": {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
@@ -48,6 +48,8 @@
         "no-underscore-dangle": "off",
         "no-console": "off",
         "no-restricted-syntax": "off",
-        "no-dupe-else-if": "error"
+        "no-dupe-else-if": "error",
+        "eqeqeq": "error",
+        "no-shadow": "error"
     }
 }

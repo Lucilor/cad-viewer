@@ -1,6 +1,6 @@
-import { Angle, Arc, Point } from "@utils";
+import {Angle, Arc, Point} from "@utils";
 import {Circle, Container, Element, Line, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
-import {toFixedTrim} from "./utils";
+import {toFixedTrim} from "./cad-utils";
 
 export interface FontStyle {
     size: number;

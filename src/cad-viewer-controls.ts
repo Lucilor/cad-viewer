@@ -1,5 +1,6 @@
 import {Point, Rectangle} from "@utils";
-import {CadDimension, CadEntities, CadEntity} from "./cad-data/cad-entities";
+import {CadEntities} from "./cad-data/cad-entities";
+import {CadDimension, CadEntity} from "./cad-data/cad-entity";
 import {CadViewer} from "./cad-viewer";
 
 let pointer: {from: Point; to: Point} | null = null;
