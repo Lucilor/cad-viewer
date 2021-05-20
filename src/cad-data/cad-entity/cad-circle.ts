@@ -1,9 +1,11 @@
 import {Point, Arc, Angle, Matrix, ObjectOf} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadCircle extends CadEntity {
+    type: CadType = "CIRCLE";
     center: Point;
     radius: number;
 

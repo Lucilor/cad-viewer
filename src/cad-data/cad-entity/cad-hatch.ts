@@ -1,9 +1,11 @@
 import {Point, ObjectOf, Matrix} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadHatch extends CadEntity {
+    type: CadType = "HATCH";
     bgcolor: number[];
     paths: {
         edges: {
@@ -19,7 +21,6 @@ export class CadHatch extends CadEntity {
 
     constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.type = "HATCH";
         this.bgcolor = Array.isArray(data.bgcolor) ? data.bgcolor : [0, 0, 0];
         this.paths = [];
         if (Array.isArray(data.paths)) {

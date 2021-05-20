@@ -1,6 +1,7 @@
 import {Matrix, ObjectOf} from "@utils";
 import {cloneDeep} from "lodash";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export interface CadDimensionEntity {
@@ -10,6 +11,7 @@ export interface CadDimensionEntity {
 }
 
 export class CadDimension extends CadEntity {
+    type: CadType = "DIMENSION";
     font_size: number;
     dimstyle: string;
     axis: "x" | "y";
@@ -58,7 +60,6 @@ export class CadDimension extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.type = "DIMENSION";
         this.font_size = data.font_size || 16;
         if (this.font_size === 2.5) {
             this.font_size = 36;

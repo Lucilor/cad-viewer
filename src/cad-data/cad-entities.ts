@@ -1,7 +1,7 @@
 import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadLayer} from "./cad-layer";
-import {cadTypesKey, CadTypeKey, CadType, cadTypes} from "./cad-types";
+import {cadTypesKey, CadTypeKey, CadType} from "./cad-types";
 import {
     CadArc,
     CadCircle,
@@ -138,16 +138,11 @@ export class CadEntities {
     }
 
     export() {
-        const result: ObjectOf<any> = {line: {}, circle: {}, arc: {}, mtext: {}, dimension: {}, hatch: {}, spline: {}, point: {}};
+        const result: ObjectOf<any> = {};
         for (const key of cadTypesKey) {
+            result[key] = {};
             this[key].forEach((e: CadEntity) => {
-                if (e instanceof CadDimension) {
-                    if (e.entity1.id && e.entity2.id) {
-                        result[key][e.id] = e.export();
-                    }
-                } else {
-                    result[key][e.id] = e.export();
-                }
+                result[key][e.id] = e.export();
             });
         }
         return result;
@@ -162,10 +157,9 @@ export class CadEntities {
     }
 
     forEachType(callback: (array: CadEntity[], type: CadTypeKey, TYPE: CadType) => void) {
-        for (let i = 0; i < cadTypes.length; i++) {
-            const arr = this[cadTypesKey[i]];
-            callback(arr, cadTypesKey[i], cadTypes[i]);
-        }
+        cadTypesKey.forEach((key) => {
+            callback(this[key], key, key.toUpperCase() as CadType);
+        });
     }
 
     forEach(callback: (value: CadEntity, index: number, array: CadEntity[]) => void, recursive = false) {
@@ -343,26 +337,7 @@ export class CadEntities {
             [p3, p4].forEach((pn) => (pn.y = distance2));
         }
 
-        const p5 = p3.clone();
-        const p6 = p3.clone();
-        const p7 = p4.clone();
-        const p8 = p4.clone();
-        const arrowSize = Math.max(1, Math.min(8, p3.distanceTo(p4) / 20));
-        const arrowLength = arrowSize * Math.sqrt(3);
-        if (axis === "x") {
-            p5.add(new Point(arrowLength, -arrowSize));
-            p6.add(new Point(arrowLength, arrowSize));
-            p7.add(new Point(-arrowLength, -arrowSize));
-            p8.add(new Point(-arrowLength, arrowSize));
-        }
-        if (axis === "y") {
-            p5.add(new Point(-arrowSize, -arrowLength));
-            p6.add(new Point(arrowSize, -arrowLength));
-            p7.add(new Point(-arrowSize, arrowLength));
-            p8.add(new Point(arrowSize, arrowLength));
-        }
-
-        return [p1, p2, p3, p4, p5, p6, p7, p8];
+        return [p1, p2, p3, p4];
     }
 
     getBoundingRect() {

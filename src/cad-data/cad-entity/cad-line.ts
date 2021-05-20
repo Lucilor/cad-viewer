@@ -1,10 +1,12 @@
 import {Line, MatrixLike, ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadLine extends CadLineLike {
+    type: CadType = "LINE";
     start: Point;
     end: Point;
     guanlianbianhuagongshi: string;
@@ -54,7 +56,6 @@ export class CadLine extends CadLineLike {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.type = "LINE";
         this.start = getVectorFromArray(data.start);
         this.end = getVectorFromArray(data.end);
         this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";

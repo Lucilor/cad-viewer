@@ -4,14 +4,12 @@ import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
-import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
-import {CadType} from "./cad-data/cad-types";
+import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
-import {drawArc, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
+import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
-
-const typesOrder: CadType[] = ["DIMENSION", "HATCH", "MTEXT", "CIRCLE", "ARC", "LINE"];
 
 export interface CadViewerConfig {
     width: number; // 宽
@@ -116,7 +114,7 @@ export class CadViewer extends EventEmitter {
         dom.focus();
 
         this._config = getConfigProxy();
-        typesOrder.forEach((t) => this.draw.group().attr("group", t));
+        cadTypes.forEach((t) => this.draw.group().attr("group", t));
         this.config({...this._config, ...config}).center();
     }
 
@@ -483,6 +481,12 @@ export class CadViewer extends EventEmitter {
                     .join("\n");
             }
             drawResult = drawText(el, text, fontStyle, insert.clone().add(offset), anchor);
+        } else if (entity instanceof CadSpline) {
+            // TODO
+        } else if (entity instanceof CadLeader) {
+            const start = new Point(entity.vertices[1]);
+            const end = new Point(entity.vertices[0]);
+            drawResult = drawArrow(el, start, end, entity.size, false);
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
@@ -718,7 +722,7 @@ export class CadViewer extends EventEmitter {
 
     reset(data?: CadData) {
         this.draw.clear();
-        typesOrder.forEach((t) => this.draw.group().attr("group", t));
+        cadTypes.forEach((t) => this.draw.group().attr("group", t));
         if (data instanceof CadData) {
             this.data = data;
         }

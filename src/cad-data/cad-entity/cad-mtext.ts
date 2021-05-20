@@ -2,9 +2,11 @@ import {Matrix, ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadMtext extends CadEntity {
+    type: CadType = "MTEXT";
     insert: Point;
     font_size: number;
     text: string;
@@ -27,7 +29,6 @@ export class CadMtext extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.type = "MTEXT";
         this.insert = getVectorFromArray(data.insert);
         this.text = data.text ?? "";
         this.anchor = getVectorFromArray(data.anchor);

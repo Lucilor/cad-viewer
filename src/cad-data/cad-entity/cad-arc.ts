@@ -1,10 +1,12 @@
 import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadArc extends CadLineLike {
+    type: CadType = "ARC";
     center: Point;
     radius: number;
     start_angle: number;
@@ -38,7 +40,6 @@ export class CadArc extends CadLineLike {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.type = "ARC";
         this.center = getVectorFromArray(data.center);
         this.radius = data.radius ?? 0;
         this.start_angle = data.start_angle ?? 0;

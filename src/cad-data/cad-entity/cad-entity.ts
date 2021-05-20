@@ -5,11 +5,11 @@ import {cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
-import {CadType, cadTypes} from "../cad-types";
+import {CadType} from "../cad-types";
 
 export abstract class CadEntity {
     id: string;
-    type: CadType = "";
+    abstract type: CadType;
     layer: string;
     color: Color;
     info: ObjectOf<any>;
@@ -124,9 +124,6 @@ export abstract class CadEntity {
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
-        }
-        if (cadTypes.includes(data.type)) {
-            this.type = data.type;
         }
         if (typeof data.id === "string" && !resetId) {
             this.id = data.id;

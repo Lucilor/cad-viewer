@@ -1,55 +1,66 @@
 {
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true
-    },
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
-    "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
-    },
-    "parserOptions": {
-        "project": "tsconfig.json",
-        "ecmaVersion": 12,
-        "sourceType": "module"
-    },
-    "rules": {
-        "@typescript-eslint/indent": [
-            "error",
-            4,
-            {
-                "SwitchCase": 1
+    "root": true,
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "parserOptions": {
+                "project": "tsconfig.json",
+                "createDefaultProgram": true
+            },
+            "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+            "plugins": ["prefer-arrow"],
+            "rules": {
+                "@typescript-eslint/indent": [
+                    "error",
+                    4,
+                    {
+                        "SwitchCase": 1
+                    }
+                ],
+                "@typescript-eslint/naming-convention": [
+                    "error",
+                    {
+                        "selector": "default",
+                        "format": ["camelCase", "PascalCase", "snake_case", "UPPER_CASE"],
+                        "leadingUnderscore": "allowSingleOrDouble"
+                    }
+                ],
+                "@typescript-eslint/quotes": [
+                    "error",
+                    "double",
+                    {
+                        "allowTemplateLiterals": true,
+                        "avoidEscape": true
+                    }
+                ],
+                "@typescript-eslint/no-unused-vars": [
+                    "warn",
+                    {
+                        "argsIgnorePattern": "."
+                    }
+                ],
+                "@typescript-eslint/no-explicit-any": "off",
+                "@typescript-eslint/explicit-module-boundary-types": "off",
+                "guard-for-in": "off",
+                "no-underscore-dangle": "off",
+                "no-console": "off",
+                "no-restricted-syntax": "off",
+                "no-dupe-else-if": "error",
+                "eqeqeq": ["error", "always"],
+                "prefer-arrow-callback": "error",
+                "arrow-parens": "error",
+                "arrow-body-style": ["error", "as-needed"],
+                "prefer-arrow/prefer-arrow-functions": [
+                    "error",
+                    {
+                        "disallowPrototype": true,
+                        "singleReturnOnly": false,
+                        "classPropertiesAllowed": false
+                    }
+                ],
+                "no-shadow": "error",
+                "no-empty": ["error", {"allowEmptyCatch": true}]
             }
-        ],
-        "@typescript-eslint/naming-convention": [
-            "error",
-            {
-                "selector": "default",
-                "format": ["camelCase", "PascalCase", "snake_case", "UPPER_CASE"],
-                "leadingUnderscore": "allowSingleOrDouble"
-            }
-        ],
-        "@typescript-eslint/quotes": [
-            "error",
-            "double",
-            {
-                "allowTemplateLiterals": true,
-                "avoidEscape": true
-            }
-        ],
-        "@typescript-eslint/no-unused-vars": [
-            "warn",
-            {
-                "argsIgnorePattern": "."
-            }
-        ],
-        "guard-for-in": "off",
-        "no-underscore-dangle": "off",
-        "no-console": "off",
-        "no-restricted-syntax": "off",
-        "no-dupe-else-if": "error",
-        "eqeqeq": "error",
-        "no-shadow": "error"
-    }
+        }
+    ]
 }

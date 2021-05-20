@@ -1,9 +1,11 @@
 import {ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadSpline extends CadEntity {
+    type: CadType = "SPLINE";
     fitPoints: Point[] = [];
     controlPoints: Point[] = [];
     degree = 3;
