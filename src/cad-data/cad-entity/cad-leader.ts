@@ -1,4 +1,5 @@
 import {ObjectOf, Point} from "@utils";
+import {cloneDeep} from "lodash";
 import {getArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -21,7 +22,7 @@ export class CadLeader extends CadEntity {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            vertices: this.vertices,
+            vertices: cloneDeep(this.vertices),
             size: this.size
         };
     }
