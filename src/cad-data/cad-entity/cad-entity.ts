@@ -33,7 +33,7 @@ export abstract class CadEntity {
         return NaN;
     }
 
-    private _selectable?: boolean;
+    protected _selectable?: boolean;
     get selectable() {
         if (this.el) {
             return this.el.hasClass("selectable");
@@ -54,7 +54,7 @@ export abstract class CadEntity {
         this.children.forEach((c) => (c.selectable = value));
     }
 
-    private _selected?: boolean;
+    protected _selected?: boolean;
     get selected() {
         if (this.el) {
             return this.el.hasClass("selected") && this.selectable;
@@ -87,7 +87,7 @@ export abstract class CadEntity {
         this.children.forEach((c) => (c.selected = value));
     }
 
-    private _opacity?: number;
+    protected _opacity?: number;
     get opacity() {
         if (this.el) {
             return Number(this.el.css("opacity") ?? 1);
