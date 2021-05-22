@@ -119,7 +119,6 @@ export class CadDimension extends CadEntity {
     }
 
     set selected(value: boolean) {
-        console.log(this);
         if (this.el) {
             if (value && this.selectable) {
                 this.el.addClass("selected");
