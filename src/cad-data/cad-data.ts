@@ -25,7 +25,6 @@ export class CadData {
     huajian = "";
     xinghaohuajian: ObjectOf<string> = {};
     mubanfangda = true;
-    kailiaomuban = "";
     kailiaoshibaokeng = false;
     bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形" = "自由";
     bancaiwenlifangxiang: "垂直" | "水平" | "不限" | "指定垂直" | "指定水平" | "指定不限" = "垂直";
@@ -96,7 +95,6 @@ export class CadData {
         this.huajian = data.huajian ?? "";
         this.xinghaohuajian = getObject(data.xinghaohuajian);
         this.mubanfangda = data.mubanfangda ?? true;
-        this.kailiaomuban = data.kailiaomuban ?? "";
         this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
         this.bianxingfangshi = data.bianxingfangshi ?? "自由";
         this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
@@ -113,6 +111,9 @@ export class CadData {
             this.zhankai = data.zhankai.map((v) => new CadZhankai(v));
         } else {
             this.zhankai = [new CadZhankai()];
+        }
+        if (data.kailiaomuban && !this.zhankai[0].kailiaomuban) {
+            this.zhankai[0].kailiaomuban = data.kailiaomuban;
         }
         this.suanliaodanxianshibancai = data.suanliaodanxianshibancai ?? true;
         this.needsHuajian = data.needsHuajian ?? true;
@@ -162,7 +163,6 @@ export class CadData {
             huajian: this.huajian,
             xinghaohuajian: this.xinghaohuajian,
             mubanfangda: this.mubanfangda,
-            kailiaomuban: this.kailiaomuban,
             kailiaoshibaokeng: this.kailiaoshibaokeng,
             bianxingfangshi: this.bianxingfangshi,
             bancaiwenlifangxiang: this.bancaiwenlifangxiang,
