@@ -164,7 +164,7 @@ export abstract class CadEntity {
         this.opacity = data.opacity ?? 1;
     }
 
-    transform(matrix: MatrixLike, alter = false, _parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, alter = false, _parent?: CadEntity) {
         this.el?.attr("stroke", "red");
         if (!alter) {
             if (this.el) {
@@ -173,9 +173,11 @@ export abstract class CadEntity {
             }
             this.needsUpdate = true;
         }
-        this.children.forEach((e) => e.transform(matrix, alter, this));
+        this.children.forEach((e) => e._transform(matrix, alter, this));
         return this;
     }
+
+    abstract transform(matrix: MatrixLike, alter?: boolean): this;
 
     update() {
         if (this.el) {

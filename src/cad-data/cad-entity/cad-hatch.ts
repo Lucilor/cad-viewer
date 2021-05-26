@@ -56,8 +56,8 @@ export class CadHatch extends CadEntity {
         return {...super.export(), paths};
     }
 
-    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        super.transform(matrix, alter, parent);
+    transform(matrix: Matrix, alter = false) {
+        this._transform(matrix, alter);
         if (alter) {
             this.paths.forEach((path) => {
                 path.edges.forEach((edge) => {

@@ -57,8 +57,8 @@ export class CadMtext extends CadEntity {
         };
     }
 
-    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        super.transform(matrix, alter, parent);
+    transform(matrix: Matrix, alter = false) {
+        this._transform(matrix, alter);
         if (alter) {
             this.insert.transform(matrix);
             const m = new Matrix(matrix);

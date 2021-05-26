@@ -484,8 +484,8 @@ export class CadViewer extends EventEmitter {
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
-            const start = new Point(entity.vertices[1]);
-            const end = new Point(entity.vertices[0]);
+            const start = entity.vertices[1];
+            const end = entity.vertices[0];
             drawResult = drawArrow(el, start, end, entity.size, false);
         }
         if (!drawResult || drawResult.length < 1) {

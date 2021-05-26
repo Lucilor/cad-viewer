@@ -1,21 +1,23 @@
-import {ObjectOf, Point} from "@utils";
+import {MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
-import {getArray} from "../../cad-utils";
+import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadLeader extends CadEntity {
     type: CadType = "LEADER";
-    vertices: [[number, number], [number, number]];
+    vertices: Point[] = [];
     size: number;
     get boundingPoints() {
-        return this.vertices.map((v) => new Point(v));
+        return this.vertices.map((v) => v.clone());
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.vertices = getArray(data.vertices) as CadLeader["vertices"];
+        if (Array.isArray(data.vertices)) {
+            data.vertices.forEach((v: any) => this.vertices.push(getVectorFromArray(v)));
+        }
         this.size = data.size ?? 5;
     }
 
@@ -29,5 +31,13 @@ export class CadLeader extends CadEntity {
 
     clone(resetId = false) {
         return new CadLeader(resetId);
+    }
+
+    transform(matrix: MatrixLike, alter = false) {
+        this._transform(matrix, alter);
+        if (alter) {
+            this.vertices.forEach((v) => v.transform(matrix));
+        }
+        return this;
     }
 }

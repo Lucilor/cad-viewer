@@ -1,4 +1,4 @@
-import {ObjectOf, Point} from "@utils";
+import {MatrixLike, ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -37,5 +37,14 @@ export class CadSpline extends CadEntity {
 
     clone(resetId = false) {
         return new CadSpline(this, [], resetId);
+    }
+
+    transform(matrix: MatrixLike, alter = false) {
+        this._transform(matrix, alter);
+        if (alter) {
+            this.fitPoints.forEach((p) => p.transform(matrix));
+            this.controlPoints.forEach((p) => p.transform(matrix));
+        }
+        return this;
     }
 }
