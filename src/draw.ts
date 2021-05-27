@@ -143,7 +143,7 @@ export const drawDimension = (
     let l1: SvgLine | null = null;
     let l2: SvgLine | null = null;
     let arrow: ReturnType<typeof drawArrow> = [];
-    const arrowSize = Math.max(1, Math.min(8, p3.distanceTo(p4) / 20));
+    const arrowSize = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
     if (renderStyle === 1) {
         l1 = drawLine(draw, p1, p3, i++)?.[0];
         l2 = drawLine(draw, p2, p4, i++)?.[0];
