@@ -29,8 +29,8 @@ export abstract class CadLineLike extends CadEntity {
     gongshi: string;
     hideLength: boolean;
     lengthTextSize: number;
-    nextZhewan: "自动" | "无" | "1mm" | "6mm";
-    betweenZhewan: "自动" | "无" | "1mm" | "6mm";
+    nextZhewan: string;
+    betweenZhewan: string;
     zhewanOffset: number;
     zhewanValue: number;
     zidingzhankaichang: string;
