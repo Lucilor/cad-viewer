@@ -1,5 +1,4 @@
 import {ObjectOf, Point} from "@utils";
-import {lineweight2linewidth, linewidth2lineweight} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadEntity} from "./cad-entity";
@@ -22,8 +21,6 @@ export abstract class CadLineLike extends CadEntity {
     abstract get middle(): Point;
     abstract get length(): number;
     swapped: boolean;
-    linewidth: number;
-    _lineweight: number;
     mingzi: string;
     qujian: string;
     gongshi: string;
@@ -67,19 +64,6 @@ export abstract class CadLineLike extends CadEntity {
         }
         this.zhankaixiaoshuchuli = data.zhankaixiaoshuchuli ?? "不处理";
         this.kailiaoshishanchu = !!data.kailiaoshishanchu;
-        this.linewidth = data.linewidth ?? 1;
-        this._lineweight = -3;
-        if (typeof data.lineweight === "number") {
-            this._lineweight = data.lineweight;
-            if (data.lineweight >= 0) {
-                this.linewidth = lineweight2linewidth(data.lineweight);
-            } else if (data.lineweight === -1) {
-                const layer = layers.find((l) => l.name === this.layer);
-                if (layer) {
-                    this.linewidth = layer.linewidth;
-                }
-            }
-        }
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
     }
@@ -87,7 +71,6 @@ export abstract class CadLineLike extends CadEntity {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            lineweight: linewidth2lineweight(this.linewidth),
             mingzi: this.mingzi,
             qujian: this.qujian,
             gongshi: this.gongshi,

@@ -1,8 +1,9 @@
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
-import {ObjectOf, Point, index2RGB, RGB2Index, MatrixLike, Matrix, Angle} from "@utils";
+import {Angle, index2RGB, Matrix, MatrixLike, ObjectOf, Point, RGB2Index} from "@utils";
 import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
+import {lineweight2linewidth, linewidth2lineweight} from "../../cad-utils";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -21,6 +22,8 @@ export abstract class CadEntity {
     calcBoundingPoints = true;
     abstract get boundingPoints(): Point[];
     root?: CadEntities;
+    linewidth: number;
+    _lineweight: number;
 
     get scale() {
         if (this.el) {
@@ -162,6 +165,19 @@ export abstract class CadEntity {
         }
         this.visible = data.visible ?? true;
         this.opacity = data.opacity ?? 1;
+        this.linewidth = data.linewidth ?? 1;
+        this._lineweight = -3;
+        if (typeof data.lineweight === "number") {
+            this._lineweight = data.lineweight;
+            if (data.lineweight >= 0) {
+                this.linewidth = lineweight2linewidth(data.lineweight);
+            } else if (data.lineweight === -1) {
+                const layer = layers.find((l) => l.name === this.layer);
+                if (layer) {
+                    this.linewidth = layer.linewidth;
+                }
+            }
+        }
     }
 
     protected _transform(matrix: MatrixLike, alter = false, _parent?: CadEntity) {
@@ -218,7 +234,8 @@ export abstract class CadEntity {
             type: this.type,
             color: this._indexColor,
             children: this.children.export(),
-            info: this.info
+            info: this.info,
+            lineweight: linewidth2lineweight(this.linewidth)
         });
     }
 
