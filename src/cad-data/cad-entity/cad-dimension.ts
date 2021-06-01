@@ -118,6 +118,13 @@ export class CadDimension extends CadEntity {
         return new CadDimension(this, [], resetId);
     }
 
+    get selected() {
+        if (this.el) {
+            return this.el.hasClass("selected") && this.selectable;
+        } else {
+            return typeof this._selected === "boolean" ? this._selected : false;
+        }
+    }
     set selected(value: boolean) {
         if (this.el) {
             if (value && this.selectable) {
