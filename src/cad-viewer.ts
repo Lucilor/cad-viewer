@@ -93,11 +93,6 @@ export class CadViewer extends EventEmitter {
         this.data = data;
 
         const dom = document.createElement("div");
-        dom.id = data.id;
-        dom.setAttribute("name", data.name);
-        dom.classList.add("cad-viewer");
-        dom.id = data.id;
-        dom.setAttribute("name", data.name);
         dom.classList.add("cad-viewer");
         this.dom = dom;
         this.draw = SVG().addTo(dom).size("100%", "100%");
@@ -726,6 +721,8 @@ export class CadViewer extends EventEmitter {
         if (data instanceof CadData) {
             this.data = data;
         }
+        this.dom.id = this.data.id;
+        this.dom.setAttribute("name", this.data.name);
         this.traverse((e) => {
             e.el = null;
             e.children.forEach((c) => (c.el = null));
