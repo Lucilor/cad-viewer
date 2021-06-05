@@ -150,7 +150,7 @@ export const drawDimension = (
         arrow = drawArrow(draw, p3, p4, arrowSize, true, i);
         i += arrow.length;
     } else if (renderStyle === 2 || renderStyle === 3) {
-        const length = 20;
+        const length = 12;
         if (axis === "x") {
             l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), i++)[0];
             l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), i++)[0];
