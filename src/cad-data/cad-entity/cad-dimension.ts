@@ -88,8 +88,8 @@ export class CadDimension extends CadEntity {
         this.xianshigongshiwenben = data.xianshigongshiwenben ?? "";
     }
 
-    transform(matrix: Matrix, alter = false) {
-        this._transform(matrix, alter);
+    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
+        this._transform(matrix, alter, parent);
         return this;
     }
 

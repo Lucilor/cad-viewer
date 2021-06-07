@@ -2,6 +2,7 @@ import {Line, MatrixLike, ObjectOf, Point} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
+import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadLine extends CadLineLike {
@@ -68,8 +69,8 @@ export class CadLine extends CadLineLike {
         this.shiyongchazhi = data.shiyongchazhi ?? "";
     }
 
-    transform(matrix: MatrixLike, alter = false) {
-        this._transform(matrix, alter);
+    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
+        this._transform(matrix, alter, parent);
         if (alter) {
             this.start.transform(matrix);
             this.end.transform(matrix);

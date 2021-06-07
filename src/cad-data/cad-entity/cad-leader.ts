@@ -33,8 +33,8 @@ export class CadLeader extends CadEntity {
         return new CadLeader(resetId);
     }
 
-    transform(matrix: MatrixLike, alter = false) {
-        this._transform(matrix, alter);
+    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
+        this._transform(matrix, alter, parent);
         if (alter) {
             this.vertices.forEach((v) => v.transform(matrix));
         }

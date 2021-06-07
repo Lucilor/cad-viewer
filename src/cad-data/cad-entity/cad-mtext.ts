@@ -58,7 +58,7 @@ export class CadMtext extends CadEntity {
     }
 
     transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        this._transform(matrix, alter);
+        this._transform(matrix, alter, parent);
         if (alter) {
             this.insert.transform(matrix);
             const m = new Matrix(matrix);
@@ -67,6 +67,7 @@ export class CadMtext extends CadEntity {
                     this.info.offset = [0, 0];
                 }
                 if (!parent) {
+                    console.warn(this.info.offset, m.e, m.f);
                     this.info.offset[0] += m.e;
                     this.info.offset[1] += m.f;
                 }

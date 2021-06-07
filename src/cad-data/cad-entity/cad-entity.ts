@@ -18,7 +18,7 @@ export abstract class CadEntity {
     parent?: CadEntity;
     children: CadEntities;
     el?: G | null;
-    needsUpdate = false;
+    updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
     calcBoundingPoints = true;
     abstract get boundingPoints(): Point[];
     root?: CadEntities;
@@ -180,16 +180,15 @@ export abstract class CadEntity {
         }
     }
 
-    protected _transform(matrix: MatrixLike, alter = false, _parent?: CadEntity) {
-        this.el?.attr("stroke", "red");
+    protected _transform(matrix: MatrixLike, alter = false, parent: CadEntity | undefined) {
         if (!alter) {
             if (this.el) {
                 const oldMatrix = new Matrix2(this.el.transform());
                 this.el.transform(oldMatrix.transform(new Matrix(matrix)));
             }
-            this.needsUpdate = true;
+            this.updateInfo = {update: true, parent};
         }
-        this.children.forEach((e) => e._transform(matrix, alter, this));
+        this.children.forEach((e) => e.transform(matrix, alter, this));
         return this;
     }
 
@@ -213,13 +212,13 @@ export abstract class CadEntity {
                 this.visible = this._visible;
                 delete this._visible;
             }
-            if (this.needsUpdate) {
+            if (this.updateInfo.update) {
                 const newMatrix = new Matrix2(this.el.transform()).decompose();
                 if (typeof newMatrix.rotate === "number") {
                     newMatrix.rotate = new Angle(newMatrix.rotate, "deg").rad;
                 }
                 this.transform(newMatrix, true);
-                this.needsUpdate = false;
+                this.updateInfo = {update: false};
                 this.el.transform({});
             }
         }
