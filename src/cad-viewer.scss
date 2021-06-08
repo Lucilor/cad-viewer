@@ -1,50 +1,58 @@
+@mixin stroke-color($color) {
+    stroke: $color;
+    &[fill]:not([fill="none"]) {
+        fill: $color;
+    }
+}
+
+@mixin fill-color($color) {
+    fill: $color;
+    &[stroke]:not([stroke="none"]) {
+        stroke: $color;
+    }
+}
+
 .cad-viewer {
-	svg {
-		box-sizing: border-box;
+    svg {
+        box-sizing: border-box;
 
-		* {
-			user-select: none;
-			&.selectable {
-				cursor: pointer;
-			}
-		}
+        * {
+            user-select: none;
+            &.selectable {
+                cursor: pointer;
+            }
+        }
 
-		g {
-			&:hover.selectable {
-				line,
-				circle,
-				path {
-					stroke: cyan;
-					&[fill]:not([fill="none"]) {
-						fill: cyan;
-					}
-				}
+        g {
+            &:hover.selectable {
+                line,
+                circle,
+                path {
+                    @include stroke-color(cyan);
+                }
 
-				text {
-					fill: cyan;
-					&[stroke]:not([stroke="none"]) {
-						stroke: cyan;
-					}
-				}
-			}
+                text {
+                    @include fill-color(cyan);
+                }
+            }
 
-			// &.selected.selectable {
-			// 	line,
-			// 	circle,
-			// 	path[fill="none"] {
-			// 		stroke-dasharray: 25, 7;
-			// 	}
+            &.selected.selectable {
+                line,
+                circle,
+                path {
+                    @include stroke-color(#ffca1c);
+                }
 
-			// 	text {
-			// 		font-style: italic;
-			// 	}
-			// }
-		}
-	}
+                text {
+                    @include fill-color(#ffca1c);
+                }
+            }
+        }
+    }
 
-	.multi-selector {
-		position: absolute;
-		background-color: rgba(29, 149, 234, 0.3);
-		border: white solid 1px;
-	}
+    .multi-selector {
+        position: absolute;
+        background-color: rgba(29, 149, 234, 0.3);
+        border: white solid 1px;
+    }
 }

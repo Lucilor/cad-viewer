@@ -129,21 +129,8 @@ export class CadDimension extends CadEntity {
         if (this.el) {
             if (value && this.selectable) {
                 this.el.addClass("selected");
-                this.el.children().forEach((c, i) => {
-                    if (c.hasClass("stroke")) {
-                        if (this.renderStyle === 1) {
-                            c.css("stroke-dasharray", "20, 7");
-                        } else if (this.renderStyle === 2 && i === 2) {
-                            c.css("stroke-dasharray", "20, 7");
-                        }
-                    }
-                });
             } else {
-                this.el.removeClass("selected").css("stroke-dasharray", "");
-                this.el.children().forEach((c) => {
-                    c.css("stroke-dasharray", "");
-                    c.css("fill", "");
-                });
+                this.el.removeClass("selected");
             }
         } else {
             this._selected = value;

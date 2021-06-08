@@ -69,20 +69,8 @@ export abstract class CadEntity {
         if (this.el) {
             if (value && this.selectable) {
                 this.el.addClass("selected");
-                this.el.children().forEach((c, i) => {
-                    if (c.hasClass("stroke")) {
-                        c.css("stroke-dasharray", "20, 7");
-                    }
-                    if (c.hasClass("fill")) {
-                        c.css("fill", "#ffca1c");
-                    }
-                });
             } else {
-                this.el.removeClass("selected").css("stroke-dasharray", "");
-                this.el.children().forEach((c) => {
-                    c.css("stroke-dasharray", "");
-                    c.css("fill", "");
-                });
+                this.el.removeClass("selected");
             }
         } else {
             this._selected = value;
