@@ -50,6 +50,12 @@ export class CadLine extends CadLineLike {
     get minY() {
         return Math.min(this.start.y, this.end.y);
     }
+    get deltaX() {
+        return this.end.x - this.start.x;
+    }
+    get deltaY() {
+        return this.end.y - this.start.y;
+    }
     get boundingPoints() {
         return [this.start, this.end];
     }

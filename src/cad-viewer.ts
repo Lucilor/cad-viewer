@@ -345,8 +345,8 @@ export class CadViewer extends EventEmitter {
                 drawResult = [];
             }
         } else if (entity instanceof CadLine) {
-            const {start, end} = entity;
-            drawResult = drawLine(el, start, end);
+            const {start, end, dashArray} = entity;
+            drawResult = drawLine(el, start, end, {dashArray});
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
             const {insert, anchor} = entity;

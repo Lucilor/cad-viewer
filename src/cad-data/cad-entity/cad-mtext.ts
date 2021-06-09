@@ -5,6 +5,13 @@ import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
+export interface CadMtextInfo {
+    [key: string]: any;
+    isLengthText?: boolean;
+    isGongshiText?: boolean;
+    offset?: number[];
+}
+
 export class CadMtext extends CadEntity {
     type: CadType = "MTEXT";
     insert: Point;
@@ -13,6 +20,7 @@ export class CadMtext extends CadEntity {
     anchor: Point;
     fontFamily: string;
     fontWeight: string;
+    info!: CadMtextInfo;
 
     get boundingPoints() {
         const rect = this.el?.node?.getBoundingClientRect();

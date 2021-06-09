@@ -8,12 +8,20 @@ export interface FontStyle {
     weight: string;
 }
 
-export const drawLine = (draw: Container, start: Point, end: Point, i = 0) => {
+export interface LineStyle {
+    dashArray?: number[];
+}
+
+export const drawLine = (draw: Container, start: Point, end: Point, style?: LineStyle, i = 0) => {
     let el = draw.children()[i] as SvgLine;
     if (el instanceof SvgLine) {
         el.plot(start.x, start.y, end.x, end.y);
     } else {
         el = draw.line(start.x, start.y, end.x, end.y).addClass("stroke").fill("none");
+    }
+    const {dashArray} = style || {};
+    if (dashArray && dashArray.length > 0) {
+        el.css("stroke-dasharray", dashArray.join(", "));
     }
     return [el];
 };
@@ -115,7 +123,7 @@ export const drawArrow = (draw: Container, start: Point, end: Point, size: numbe
         const p3 = p.clone().add(size * Math.cos(theta2), size * Math.sin(theta2));
         return [p, p2, p3];
     };
-    const result1 = drawLine(draw, start, end, i++);
+    const result1 = drawLine(draw, start, end, {}, i++);
     let result2: ReturnType<typeof drawShape> = [];
     if (double) {
         const triangle1 = getTriangle(start, new Line(start, end).theta);
@@ -145,18 +153,18 @@ export const drawDimension = (
     let arrow: ReturnType<typeof drawArrow> = [];
     const arrowSize = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
     if (renderStyle === 1) {
-        l1 = drawLine(draw, p1, p3, i++)?.[0];
-        l2 = drawLine(draw, p2, p4, i++)?.[0];
+        l1 = drawLine(draw, p1, p3, {}, i++)?.[0];
+        l2 = drawLine(draw, p2, p4, {}, i++)?.[0];
         arrow = drawArrow(draw, p3, p4, arrowSize, true, i);
         i += arrow.length;
     } else if (renderStyle === 2 || renderStyle === 3) {
         const length = 12;
         if (axis === "x") {
-            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), i++)[0];
+            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), {}, i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), {}, i++)[0];
         } else if (axis === "y") {
-            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), i++)[0];
+            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), {}, i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), {}, i++)[0];
         }
         if (renderStyle === 2) {
             arrow = drawArrow(draw, p3, p4, arrowSize, true, i);

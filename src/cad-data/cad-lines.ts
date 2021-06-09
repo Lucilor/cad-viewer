@@ -28,6 +28,9 @@ export const generatePointsMap = (entities?: CadEntities, tolerance = DEFAULT_TO
         }
     };
     entities.line.forEach((entity) => {
+        if (entity.info.ignorePointsMap) {
+            return;
+        }
         const {start, end} = entity;
         if (start.distanceTo(end) > 0) {
             addToMap(start, entity);

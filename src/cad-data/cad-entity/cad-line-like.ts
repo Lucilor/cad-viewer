@@ -1,4 +1,5 @@
 import {ObjectOf, Point} from "@utils";
+import {cloneDeep} from "lodash";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadEntity} from "./cad-entity";
@@ -14,6 +15,11 @@ export const 变化方式 = [
     "旋转按比例都可以",
     "不可改变"
 ];
+
+export interface CadLineLikeInfo {
+    [key: string]: any;
+    ignorePointsMap?: boolean;
+}
 
 export abstract class CadLineLike extends CadEntity {
     abstract get start(): Point;
@@ -36,6 +42,8 @@ export abstract class CadLineLike extends CadEntity {
     kailiaoshishanchu: boolean;
     变化方式: string;
     角度范围: number[];
+    dashArray?: number[];
+    info!: CadLineLikeInfo;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -66,11 +74,13 @@ export abstract class CadLineLike extends CadEntity {
         this.kailiaoshishanchu = !!data.kailiaoshishanchu;
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
+        if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
+            this.dashArray = cloneDeep(data.dashArray);
+        }
     }
 
     export(): ObjectOf<any> {
-        return {
-            ...super.export(),
+        const result: ObjectOf<any> = {
             mingzi: this.mingzi,
             qujian: this.qujian,
             gongshi: this.gongshi,
@@ -86,6 +96,13 @@ export abstract class CadLineLike extends CadEntity {
             kailiaoshishanchu: this.kailiaoshishanchu,
             变化方式: this.变化方式,
             角度范围: this.角度范围
+        };
+        if (this.dashArray && this.dashArray.length > 0) {
+            result.dashArray = cloneDeep(this.dashArray);
+        }
+        return {
+            ...super.export(),
+            ...result
         };
     }
 }

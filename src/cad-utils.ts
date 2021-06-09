@@ -1,7 +1,7 @@
 import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
 
-export const getVectorFromArray = (data: number[] | Point, defaultVal = new Point()) => {
+export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = new Point()) => {
     if (data instanceof Point) {
         return data.clone();
     }
