@@ -10,6 +10,7 @@ import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
 import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
+import Color from "color";
 
 export interface CadViewerConfig {
     width: number; // 宽
@@ -442,7 +443,7 @@ export class CadViewer extends EventEmitter {
             if (text.startsWith("花件信息")) {
                 text = text.slice(4);
                 let lines = this.data.getAllEntities().line;
-                lines = lines.filter((e) => e.isVertical() && isBetween(insert.y, e.minY, e.maxY) && insert.x < e.start.x);
+                lines = lines.filter((e) => e.isVertical() && isBetween(insert.y, e.minY, e.maxY) && e.start.x - insert.x > 50);
                 let dMin = Infinity;
                 for (const e of lines) {
                     const d = e.start.x - insert.x - 1;
@@ -462,6 +463,10 @@ export class CadViewer extends EventEmitter {
                         if (tmpEl.width() < maxLength) {
                             end++;
                         } else {
+                            if (start === end - 1) {
+                                lines.forEach((e) => (e.color = new Color("red")));
+                                throw new Error("花件信息自动换行时出错");
+                            }
                             arr.push(source.slice(start, end - 1));
                             start = end - 1;
                         }
@@ -470,10 +475,15 @@ export class CadViewer extends EventEmitter {
                     tmpEl.remove();
                     return arr.join("\n");
                 };
-                text = text
-                    .split("\n")
-                    .map((v) => getWrapedText(v, dMin))
-                    .join("\n");
+                try {
+                    text = text
+                        .split("\n")
+                        .map((v) => getWrapedText(v, dMin))
+                        .join("\n");
+                } catch (error) {
+                    text = "花件信息自动换行时出错\n" + text;
+                    entity.color = new Color("red");
+                }
             }
             drawResult = drawText(el, text, fontStyle, insert.clone().add(offset), anchor);
         } else if (entity instanceof CadSpline) {
