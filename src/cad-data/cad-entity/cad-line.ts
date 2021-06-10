@@ -3,7 +3,11 @@ import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
-import {CadLineLike} from "./cad-line-like";
+import {CadLineLike, CadLineLikeInfo} from "./cad-line-like";
+
+export interface CadLineInfo extends CadLineLikeInfo {
+    宽高虚线?: string;
+}
 
 export class CadLine extends CadLineLike {
     type: CadType = "LINE";
@@ -22,6 +26,7 @@ export class CadLine extends CadLineLike {
         }[];
     }[];
     shiyongchazhi: string;
+    info!: CadLineInfo;
 
     get curve() {
         return new Line(this.start, this.end);
