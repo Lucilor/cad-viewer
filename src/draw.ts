@@ -2,6 +2,8 @@ import {Angle, Arc, Line, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {toFixedTrim} from "./cad-utils";
 
+export const DEFAULT_DASH_ARRAY = [20, 7];
+
 export interface FontStyle {
     size: number;
     family: string;
@@ -115,7 +117,18 @@ export const drawShape = (draw: Container, points: Point[], type: "fill" | "stro
     return [el];
 };
 
-export const drawArrow = (draw: Container, start: Point, end: Point, size: number, double: boolean, i = 0) => {
+interface ArrowStyle {
+    size?: number;
+    double?: boolean;
+    line?: LineStyle;
+}
+
+export const drawArrow = (draw: Container, start: Point, end: Point, style?: ArrowStyle, i = 0) => {
+    const {size: sizeRaw, double, line: lineStyle} = style || {};
+    let size = Number(sizeRaw);
+    if (isNaN(size)) {
+        size = 1;
+    }
     const getTriangle = (p: Point, theta: Angle) => {
         const theta1 = theta.clone().add(new Angle(30, "deg")).rad;
         const theta2 = theta.clone().sub(new Angle(30, "deg")).rad;
@@ -123,7 +136,7 @@ export const drawArrow = (draw: Container, start: Point, end: Point, size: numbe
         const p3 = p.clone().add(size * Math.cos(theta2), size * Math.sin(theta2));
         return [p, p2, p3];
     };
-    const result1 = drawLine(draw, start, end, {}, i++);
+    const result1 = drawLine(draw, start, end, lineStyle, i++);
     let result2: ReturnType<typeof drawShape> = [];
     if (double) {
         const triangle1 = getTriangle(start, new Line(start, end).theta);
@@ -133,6 +146,11 @@ export const drawArrow = (draw: Container, start: Point, end: Point, size: numbe
     const result3 = drawShape(draw, triangle2, "fill", i++);
     return [...result1, ...result2, ...result3];
 };
+
+export interface DimensionStyle {
+    font: FontStyle;
+    arrow: ArrowStyle;
+}
 
 export const drawDimension = (
     draw: Container,
@@ -151,23 +169,25 @@ export const drawDimension = (
     let l1: SvgLine | null = null;
     let l2: SvgLine | null = null;
     let arrow: ReturnType<typeof drawArrow> = [];
-    const arrowSize = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
+    const arrowStyle: ArrowStyle = {size: Math.max(1, Math.min(20, p3.distanceTo(p4) / 8)), double: true};
+    const lineStyle: LineStyle = {};
     if (renderStyle === 1) {
-        l1 = drawLine(draw, p1, p3, {}, i++)?.[0];
-        l2 = drawLine(draw, p2, p4, {}, i++)?.[0];
-        arrow = drawArrow(draw, p3, p4, arrowSize, true, i);
+        l1 = drawLine(draw, p1, p3, lineStyle, i++)?.[0];
+        l2 = drawLine(draw, p2, p4, lineStyle, i++)?.[0];
+        arrow = drawArrow(draw, p3, p4, arrowStyle, i);
         i += arrow.length;
     } else if (renderStyle === 2 || renderStyle === 3) {
         const length = 12;
         if (axis === "x") {
-            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), {}, i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), {}, i++)[0];
+            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), lineStyle, i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), lineStyle, i++)[0];
         } else if (axis === "y") {
-            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), {}, i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), {}, i++)[0];
+            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), lineStyle, i++)[0];
+            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), lineStyle, i++)[0];
         }
         if (renderStyle === 2) {
-            arrow = drawArrow(draw, p3, p4, arrowSize, true, i);
+            arrowStyle.line = {dashArray: DEFAULT_DASH_ARRAY};
+            arrow = drawArrow(draw, p3, p4, arrowStyle, i);
             i += arrow.length;
         }
     }

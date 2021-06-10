@@ -491,7 +491,7 @@ export class CadViewer extends EventEmitter {
         } else if (entity instanceof CadLeader) {
             const start = entity.vertices[1];
             const end = entity.vertices[0];
-            drawResult = drawArrow(el, start, end, entity.size, false);
+            drawResult = drawArrow(el, start, end, {size: entity.size, double: false});
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
