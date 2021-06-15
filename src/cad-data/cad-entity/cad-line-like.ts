@@ -42,6 +42,7 @@ export abstract class CadLineLike extends CadEntity {
     kailiaoshishanchu: boolean;
     变化方式: string;
     角度范围: number[];
+    可输入修改: boolean;
     dashArray?: number[];
     info!: CadLineLikeInfo;
 
@@ -74,6 +75,7 @@ export abstract class CadLineLike extends CadEntity {
         this.kailiaoshishanchu = !!data.kailiaoshishanchu;
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
+        this.可输入修改 = typeof data.可输入修改 === "boolean" ? data.可输入修改 : true;
         if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
             this.dashArray = cloneDeep(data.dashArray);
         }
@@ -95,7 +97,8 @@ export abstract class CadLineLike extends CadEntity {
             zhankaixiaoshuchuli: this.zhankaixiaoshuchuli,
             kailiaoshishanchu: this.kailiaoshishanchu,
             变化方式: this.变化方式,
-            角度范围: this.角度范围
+            角度范围: this.角度范围,
+            可输入修改: this.可输入修改
         };
         if (this.dashArray && this.dashArray.length > 0) {
             result.dashArray = cloneDeep(this.dashArray);
