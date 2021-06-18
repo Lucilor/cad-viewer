@@ -7,6 +7,21 @@ import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
+export const 算料单显示 = [
+    "尺寸+板材",
+    "尺寸",
+    "板材",
+    "名字+展开宽+展开高",
+    "名字+展开高+板材",
+    "名字+展开高",
+    "展开宽+展开高+板材",
+    "展开宽+展开高",
+    "展开高+板材",
+    "不显示名字",
+    "不显示展开宽",
+    "都不显示"
+];
+
 export class CadData {
     entities = new CadEntities();
     layers: CadLayer[] = [];
@@ -42,7 +57,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
-    suanliaodanxianshi: "尺寸+板材" | "尺寸" | "板材" | "都不显示" = "尺寸+板材";
+    suanliaodanxianshi = 算料单显示[0];
     zhidingweizhipaokeng: string[][] = [];
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
@@ -120,7 +135,7 @@ export class CadData {
         this.needsHuajian = data.needsHuajian ?? true;
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
-        this.suanliaodanxianshi = data.suanliaodanxianshi ?? "尺寸+板材";
+        this.suanliaodanxianshi = data.suanliaodanxianshi ?? 算料单显示[0];
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
