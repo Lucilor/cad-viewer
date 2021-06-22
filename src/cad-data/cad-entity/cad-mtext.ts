@@ -42,7 +42,16 @@ export class CadMtext extends CadEntity {
         this.anchor = getVectorFromArray(data.anchor);
         this.fontFamily = data.fontFamily ?? "";
         this.fontWeight = data.fontWeight ?? "normal";
-        this.font_size = data.font_size ?? DEFAULT_LENGTH_TEXT_SIZE;
+        if (this.text.includes("     ") && !isNaN(Number(this.text))) {
+            this.font_size = 36;
+            this.insert.y += 11;
+            this.insert.x -= 4;
+            this.text = this.text.replace("     ", "");
+            this.fontFamily = "仿宋";
+            this.fontWeight = "bolder";
+        } else {
+            this.font_size = data.font_size ?? DEFAULT_LENGTH_TEXT_SIZE;
+        }
     }
 
     export(): ObjectOf<any> {

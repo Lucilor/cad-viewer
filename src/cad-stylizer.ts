@@ -2,14 +2,16 @@ import Color from "color";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
 import {CadViewer} from "./cad-viewer";
 
+export interface FontStyle {
+    size: number;
+    family: string;
+    weight: string;
+}
 export interface CadStyle {
     color: string;
     linewidth: number;
-    fontSize: number;
+    fontStyle: FontStyle;
     opacity: number;
-    fontStyle: string;
-    fontFamily: string;
-    fontWeight: string;
 }
 
 export class CadStylizer {
@@ -23,11 +25,8 @@ export class CadStylizer {
         const result: CadStyle = {
             color: "white",
             linewidth: 1,
-            fontSize: 16,
-            opacity: 1,
-            fontStyle: "normal",
-            fontFamily: "",
-            fontWeight: ""
+            fontStyle: {size: 16, family: "", weight: ""},
+            opacity: 1
         };
         let color = new Color(params.color || entity?.color || 0);
         if (params.linewidth && params.linewidth > 0) {
@@ -41,7 +40,7 @@ export class CadStylizer {
         if (entity instanceof CadMtext || entity instanceof CadDimension) {
             eFontSize = entity.font_size;
         }
-        result.fontSize = params.fontSize || eFontSize || 16;
+        result.fontStyle.size = params.fontStyle?.size || eFontSize || 16;
         result.opacity = entity.opacity;
         if (typeof params.opacity === "number") {
             result.opacity = params.opacity;
@@ -63,14 +62,14 @@ export class CadStylizer {
             result.linewidth = Math.max(minLinewidth, result.linewidth);
         }
 
-        result.fontFamily = cad.config("fontFamily");
+        result.fontStyle.family = cad.config("fontFamily");
         if (entity instanceof CadMtext && entity.fontFamily) {
-            result.fontFamily = entity.fontFamily;
+            result.fontStyle.family = entity.fontFamily;
         }
 
-        result.fontWeight = cad.config("fontWeight");
+        result.fontStyle.family = cad.config("fontWeight");
         if (entity instanceof CadMtext && entity.fontWeight) {
-            result.fontWeight = entity.fontWeight;
+            result.fontStyle.family = entity.fontWeight;
         }
         return result;
     }

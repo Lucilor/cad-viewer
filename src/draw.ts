@@ -1,14 +1,9 @@
 import {Angle, Arc, Line, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {toFixedTrim} from "./cad-utils";
+import {FontStyle} from "./cad-stylizer";
 
 export const DEFAULT_DASH_ARRAY = [20, 7];
-
-export interface FontStyle {
-    size: number;
-    family: string;
-    weight: string;
-}
 
 export interface LineStyle {
     dashArray?: number[];

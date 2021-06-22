@@ -8,8 +8,8 @@ import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
-import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText, FontStyle} from "./draw";
-import {getVectorFromArray, toFixedTrim} from "./cad-utils";
+import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
+import {getVectorFromArray, getWrapedText, toFixedTrim} from "./cad-utils";
 import Color from "color";
 
 export interface CadViewerConfig {
@@ -281,8 +281,7 @@ export class CadViewer extends EventEmitter {
 
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
-        const {color, linewidth, fontSize, fontFamily, fontWeight} = stylizer.get(entity, style);
-        const fontStyle: FontStyle = {size: fontSize, family: fontFamily, weight: fontWeight};
+        const {color, linewidth, fontStyle} = stylizer.get(entity, style);
         if (!entity.visible) {
             entity.el?.remove();
             entity.el = null;
@@ -435,7 +434,7 @@ export class CadViewer extends EventEmitter {
                 const offsetYfactor = -0.1;
 
                 if (anchor.y === 0) {
-                    offset.y = offsetYfactor * fontSize;
+                    offset.y = offsetYfactor * fontStyle.size;
                 }
             }
 
@@ -451,34 +450,10 @@ export class CadViewer extends EventEmitter {
                         dMin = d;
                     }
                 }
-                const getWrapedText = (source: string, maxLength: number) => {
-                    const sourceLength = source.length;
-                    let start = 0;
-                    let end = 1;
-                    const tmpEl = new G();
-                    const arr: string[] = [];
-                    while (end < sourceLength) {
-                        const tmpText = source.slice(start, end);
-                        drawText(tmpEl, tmpText, fontStyle, insert.clone().add(offset), anchor);
-                        if (tmpEl.width() < maxLength) {
-                            end++;
-                        } else {
-                            if (start === end - 1) {
-                                lines.forEach((e) => (e.color = new Color("red")));
-                                throw new Error("花件信息自动换行时出错");
-                            }
-                            arr.push(source.slice(start, end - 1));
-                            start = end - 1;
-                        }
-                    }
-                    arr.push(source.slice(start));
-                    tmpEl.remove();
-                    return arr.join("\n");
-                };
                 try {
                     text = text
                         .split("\n")
-                        .map((v) => getWrapedText(v, dMin))
+                        .map((v) => getWrapedText(v, dMin, fontStyle, insert.clone().add(offset), anchor))
                         .join("\n");
                 } catch (error) {
                     text = "花件信息自动换行时出错\n" + text;
