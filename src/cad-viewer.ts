@@ -460,7 +460,8 @@ export class CadViewer extends EventEmitter {
                     entity.color = new Color("red");
                 }
             }
-            drawResult = drawText(el, text, fontStyle, insert.clone().add(offset), anchor);
+            const {fontStyle: fontStyle2} = this.stylizer.get(entity, style);
+            drawResult = drawText(el, text, fontStyle2, insert.clone().add(offset), anchor);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
@@ -484,7 +485,7 @@ export class CadViewer extends EventEmitter {
             }
         });
         entity.update();
-        entity.children.forEach((c) => this.drawEntity(c, style));
+        entity.children.forEach((c) => this.drawEntity(c, style), true);
         return this;
     }
 
