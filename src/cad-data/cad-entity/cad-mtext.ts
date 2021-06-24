@@ -67,7 +67,6 @@ export class CadMtext extends CadEntity {
                     this.info.offset = [0, 0];
                 }
                 if (!parent) {
-                    console.warn(this.info.offset, m.e, m.f);
                     this.info.offset[0] += m.e;
                     this.info.offset[1] += m.f;
                 }
