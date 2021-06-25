@@ -163,5 +163,5 @@ export const getWrapedText = (
     }
     arr.push(source.slice(start));
     tmpEl.remove();
-    return arr.join("\n");
+    return arr;
 };

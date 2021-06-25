@@ -453,7 +453,7 @@ export class CadViewer extends EventEmitter {
                 try {
                     text = text
                         .split("\n")
-                        .map((v) => getWrapedText(v, dMin, fontStyle, insert.clone().add(offset), anchor))
+                        .map((v) => getWrapedText(v, dMin, fontStyle, insert.clone().add(offset), anchor).join("\n"))
                         .join("\n");
                 } catch (error) {
                     text = "花件信息自动换行时出错\n" + text;
