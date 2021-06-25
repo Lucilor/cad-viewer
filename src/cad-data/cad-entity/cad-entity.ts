@@ -88,7 +88,7 @@ export abstract class CadEntity {
     }
     set opacity(value) {
         if (this.el) {
-            this.el.css("opacity", value);
+            this.el.css("opacity", value.toString());
         } else {
             this._opacity = value;
         }

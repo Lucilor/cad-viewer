@@ -60,7 +60,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@lucilor/cad-viewer@workspace:."
   dependencies:
-    "@svgdotjs/svg.js": 3.0.16
+    "@svgdotjs/svg.js": 3.1.1
     "@types/lodash": ^4.14.170
     "@types/uuid": ^8.3.0
     "@typescript-eslint/eslint-plugin": ^4.28.0
@@ -69,7 +69,7 @@ __metadata:
     eslint: ^7.29.0
     eslint-plugin-prefer-arrow: ^1.2.3
     lodash: ^4.17.21
-    terser-webpack-plugin: ^5.1.3
+    terser-webpack-plugin: ^5.1.4
     ts-loader: ^9.2.3
     typescript: ^4.2.4
     uuid: ^8.3.2
@@ -107,10 +107,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@svgdotjs/svg.js@npm:3.0.16":
-  version: 3.0.16
-  resolution: "@svgdotjs/svg.js@npm:3.0.16"
-  checksum: beb400aaa1b9d6c8d44bf597b4f66b233125cb4e379df882eebead1b158e42b69df206b043ad923e87b731b428a414548c7fca2da9bc79c5dd66e455d27b1511
+"@svgdotjs/svg.js@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@svgdotjs/svg.js@npm:3.1.1"
+  checksum: 8764d13ad9971cbb8597451090dbeed2f98f9a461c5514b52eb9108b8b973605633864e528d64e7afdaf70c0532fdd5742fb0fdeb1806429515001a1d8f2972f
   languageName: node
   linkType: hard
 
@@ -2162,6 +2162,15 @@ resolve@^1.9.0:
   languageName: node
   linkType: hard
 
+"serialize-javascript@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "serialize-javascript@npm:6.0.0"
+  dependencies:
+    randombytes: ^2.1.0
+  checksum: e086a40bfcb9d341c37a4e52bc200d143b54397cf1bb486f38cd40cdbaac4b82437d981472df94dbcff6334269e0d82daffbd6b75dd50fe54a5a5da2273f2360
+  languageName: node
+  linkType: hard
+
 "shallow-clone@npm:^3.0.0":
   version: 3.0.1
   resolution: "shallow-clone@npm:3.0.1"
@@ -2345,6 +2354,22 @@ resolve@^1.9.0:
   peerDependencies:
     webpack: ^5.1.0
   checksum: 4f3bc6c949fe14a55783cb488cc8e8c736329547cfcf0f80b139aa9bed571ac921684add0dd0647b05d737f1427806f669d6ba89c56651d91c2d1dce88be6eba
+  languageName: node
+  linkType: hard
+
+"terser-webpack-plugin@npm:^5.1.4":
+  version: 5.1.4
+  resolution: "terser-webpack-plugin@npm:5.1.4"
+  dependencies:
+    jest-worker: ^27.0.2
+    p-limit: ^3.1.0
+    schema-utils: ^3.0.0
+    serialize-javascript: ^6.0.0
+    source-map: ^0.6.1
+    terser: ^5.7.0
+  peerDependencies:
+    webpack: ^5.1.0
+  checksum: dac075a86ddcd4beae294cd9fbbce50532c6a06703a4c114fbc99ac64796503ba75d704106427a05c9371efb15b78e82bc75485f9efc8608ce772654121669f8
   languageName: node
   linkType: hard
 

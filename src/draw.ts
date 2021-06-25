@@ -18,7 +18,7 @@ export const drawLine = (draw: Container, start: Point, end: Point, style?: Line
     }
     const {dashArray} = style || {};
     if (dashArray && dashArray.length > 0) {
-        el.css("stroke-dasharray", dashArray.join(", "));
+        el.css("strokeDasharray", dashArray.join(", "));
     }
     return [el];
 };
@@ -75,19 +75,19 @@ export const drawText = (draw: Container, text: string, style: FontStyle, positi
         el.text(text).font({size});
     } else {
         el = draw.text(text).addClass("fill").stroke("none");
-        el.css("transform-box", "fill-box");
-        el.css("white-space", "pre");
+        el.css("transformBox", "fill-box");
+        el.css("whiteSpace", "pre");
         el.font({size}).leading(1);
     }
     if (vertical) {
-        el.css("writing-mode", "vertical-lr");
+        el.css("writingMode", "vertical-lr");
         el.css("transform", `translate(${-anchor.x * 100}%, ${(1 - anchor.y) * 100}%) scale(-1, 1) rotate(180deg)`);
     } else {
-        el.css("writing-mode", "");
+        el.css("writingMode", "");
         el.css("transform", `translate(${-anchor.x * 100}%, ${anchor.y * 100}%) scale(1, -1)`);
     }
-    el.css("font-family", family);
-    el.css("font-weight", weight);
+    el.css("fontFamily", family);
+    el.css("fontWeight", weight);
     el.move(position.x, position.y);
     return [el];
 };
