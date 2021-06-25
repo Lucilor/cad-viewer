@@ -66,13 +66,17 @@ export class CadStylizer {
         result.fontStyle.weight = cad.config("fontWeight");
         if (entity instanceof CadMtext) {
             if (entity.fontFamily) {
+                if (result.fontStyle.family) {
+                    result.fontStyle.family = `${result.fontStyle.family}, ${entity.fontFamily}`;
+                } else {
+                    result.fontStyle.family = entity.fontFamily;
+                }
                 result.fontStyle.family = entity.fontFamily;
             }
             if (entity.fontWeight) {
                 result.fontStyle.weight = entity.fontWeight;
             }
         }
-
         return result;
     }
 

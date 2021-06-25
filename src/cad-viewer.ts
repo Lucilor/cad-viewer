@@ -1,5 +1,5 @@
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
-import {isBetween, Point} from "@utils";
+import {isBetween, loadImage, Point} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -11,6 +11,11 @@ import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
 import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
 import {getVectorFromArray, getWrapedText, toFixedTrim} from "./cad-utils";
 import Color from "color";
+
+export interface CadViewerFont {
+    name: string;
+    url: string;
+}
 
 export interface CadViewerConfig {
     width: number; // 宽
@@ -27,7 +32,7 @@ export interface CadViewerConfig {
     hideLineLength: boolean; // 是否隐藏线长度(即使lineLength>0)
     hideLineGongshi: boolean; // 是否隐藏线公式(即使lineGongshi>0)
     minLinewidth: number; // 所有线的最小宽度(调大以便选中)
-    fontFamily: string; // 设置字体
+    fontFamily: string; // 设置字体,
     fontWeight: string; // 设置字体粗细
     enableZoom: boolean; // 是否启用缩放
 }
@@ -48,7 +53,7 @@ const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
         hideLineLength: false,
         hideLineGongshi: false,
         minLinewidth: 1,
-        fontFamily: "微软雅黑",
+        fontFamily: "",
         fontWeight: "normal",
         enableZoom: true
     };
@@ -88,6 +93,10 @@ export class CadViewer extends EventEmitter {
     stylizer: CadStylizer;
     entitiesCopied?: CadEntities;
     private _config: CadViewerConfig;
+    private _fonts: CadViewerFont[] = [];
+    get fonts() {
+        return cloneDeep(this._fonts);
+    }
 
     constructor(data = new CadData(), config: Partial<CadViewerConfig> = {}) {
         super();
@@ -120,10 +129,20 @@ export class CadViewer extends EventEmitter {
     config<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
     config<T extends keyof CadViewerConfig>(config?: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
         if (!config) {
-            return cloneDeep(this._config);
+            const result = cloneDeep(this._config);
+            result["fontFamily"] = this.config("fontFamily");
+            return result;
         }
         if (typeof config === "string") {
             if (value === undefined) {
+                if (config === "fontFamily") {
+                    const fontNames = this._fonts.length > 0 ? this._fonts.map((v) => v.name) : [];
+                    const fontFamily = this._config["fontFamily"];
+                    if (fontFamily) {
+                        fontNames.push(fontFamily);
+                    }
+                    return fontNames.join(", ");
+                }
                 return this._config[config];
             } else {
                 const tmp: Partial<CadViewerConfig> = {};
@@ -155,7 +174,7 @@ export class CadViewer extends EventEmitter {
                         needsRender = true;
                         break;
                     case "fontFamily":
-                        this.dom.style.fontFamily = config.fontFamily as string;
+                        this.dom.style.fontFamily = this.config("fontFamily");
                         break;
                     case "selectMode":
                         if (config.selectMode === "none") {
@@ -675,19 +694,14 @@ export class CadViewer extends EventEmitter {
         return "data:image/svg+xml;base64," + window.btoa(str);
     }
 
-    toCanvas() {
-        const img = new Image();
-        img.src = this.toBase64();
-        return new Promise<HTMLCanvasElement>((resolve) => {
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext("2d");
-                ctx?.drawImage(img, 0, 0);
-                resolve(canvas);
-            };
-        });
+    async toCanvas() {
+        const img = await loadImage(this.toBase64());
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+        return canvas;
     }
 
     traverse(callback: (e: CadEntity) => void, recursive = false) {
@@ -702,7 +716,7 @@ export class CadViewer extends EventEmitter {
     }
 
     reset(data?: CadData) {
-        this.draw.clear();
+        this.draw.find("g").forEach((v) => v.remove());
         cadTypes.forEach((t) => this.draw.group().attr("group", t));
         if (data instanceof CadData) {
             this.data = data;
@@ -727,5 +741,33 @@ export class CadViewer extends EventEmitter {
             notToMove.transform({translate: [-x, -y]});
         }
         this.emit("moveentities", toMove);
+    }
+
+    async loadFont(font: CadViewerFont) {
+        const {name, url} = font;
+        const loadedFont = this._fonts.find((v) => v.name === name);
+        if (loadedFont && loadedFont.url === url) {
+            return;
+        }
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise<void>((resolve, reject) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(blob);
+            fileReader.onload = () => {
+                const style = document.createElement("style");
+                style.innerHTML = `
+                @font-face {
+                    font-family: "${name}";
+                    src: url("${fileReader.result}");
+                }
+                `;
+                style.setAttribute("name", name);
+                this.draw.defs().node.append(style);
+                this._fonts.push(cloneDeep(font));
+                resolve();
+            };
+            fileReader.onerror = reject;
+        });
     }
 }
