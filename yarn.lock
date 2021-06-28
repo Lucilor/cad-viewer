@@ -60,7 +60,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@lucilor/cad-viewer@workspace:."
   dependencies:
-    "@svgdotjs/svg.js": 3.1.1
+    "@svgdotjs/svg.js": 3.0.16
     "@types/lodash": ^4.14.170
     "@types/uuid": ^8.3.0
     "@typescript-eslint/eslint-plugin": ^4.28.0
@@ -107,10 +107,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@svgdotjs/svg.js@npm:3.1.1":
-  version: 3.1.1
-  resolution: "@svgdotjs/svg.js@npm:3.1.1"
-  checksum: 8764d13ad9971cbb8597451090dbeed2f98f9a461c5514b52eb9108b8b973605633864e528d64e7afdaf70c0532fdd5742fb0fdeb1806429515001a1d8f2972f
+"@svgdotjs/svg.js@npm:3.0.16":
+  version: 3.0.16
+  resolution: "@svgdotjs/svg.js@npm:3.0.16"
+  checksum: beb400aaa1b9d6c8d44bf597b4f66b233125cb4e379df882eebead1b158e42b69df206b043ad923e87b731b428a414548c7fca2da9bc79c5dd66e455d27b1511
   languageName: node
   linkType: hard
 

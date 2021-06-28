@@ -295,7 +295,7 @@ export class CadViewer extends EventEmitter {
         } else {
             this._config.backgroundColor = color;
         }
-        this.draw.css("backgroundColor", color.toString());
+        this.draw.css("background-color", color.toString());
     }
 
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
@@ -411,7 +411,7 @@ export class CadViewer extends EventEmitter {
 
                 if (entity.el && entity.el.width()) {
                     // * 计算文字尺寸
-                    const size = new Point(Number(entity.el.width()), Number(entity.el.height()));
+                    const size = new Point(entity.el.width(), entity.el.height());
                     entity.info.size = size.toArray();
 
                     // * 重新计算锚点
