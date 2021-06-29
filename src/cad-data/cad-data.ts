@@ -63,6 +63,7 @@ export class CadData {
     算料单展开显示位置: "CAD上面" | "CAD下面" = "CAD下面";
     属于门框门扇: "未区分" | "门框" | "门扇" = "未区分";
     内开做分体 = false;
+    板材绑定选项 = "";
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -142,6 +143,7 @@ export class CadData {
         this.算料单展开显示位置 = data.算料单展开显示位置 ?? "CAD下面";
         this.属于门框门扇 = data.属于门框门扇 ?? "未区分";
         this.内开做分体 = data.内开做分体 ?? false;
+        this.板材绑定选项 = data.板材绑定选项 ?? "";
         this.updateDimensions();
         return this;
     }
@@ -204,7 +206,8 @@ export class CadData {
             主CAD: this.主CAD,
             算料单展开显示位置: this.算料单展开显示位置,
             属于门框门扇: this.属于门框门扇,
-            内开做分体: this.内开做分体
+            内开做分体: this.内开做分体,
+            板材绑定选项: this.板材绑定选项
         });
     }
 
