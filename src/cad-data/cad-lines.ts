@@ -144,8 +144,8 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         arr = map;
     }
     arr.sort((a, b) => {
-        const c = a.lines[0].mingzi === "起始线" ? -1 : 1;
-        const d = b.lines[0].mingzi === "起始线" ? -1 : 1;
+        const c = a.lines[0].mingzi === "起始线" ? -Infinity : a.lines[0].start.x;
+        const d = b.lines[0].mingzi === "起始线" ? -Infinity : b.lines[0].start.x;
         return c - d;
     });
     const exclude: string[] = [];
