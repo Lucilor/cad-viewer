@@ -66,6 +66,9 @@ export class CadEntities {
             const group: CadEntity[] | ObjectOf<any> = data[key];
             if (Array.isArray(group)) {
                 group.forEach((e) => {
+                    if (!(e instanceof CadEntity)) {
+                        e = getCadEntity(e, layers, resetIds);
+                    }
                     const eNew = e.clone(resetIds) as AnyCadEntity;
                     eNew.root = this;
                     this[key].push(eNew);
