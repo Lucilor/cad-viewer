@@ -372,32 +372,39 @@ export class CadViewer extends EventEmitter {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
                 if (entity.info.isLengthText) {
-                    entity.text = toFixedTrim(parent.length);
-                    entity.font_size = parent.lengthTextSize;
                     if (hideLineLength || parent.hideLength) {
                         el.remove();
                         entity.el = null;
+                    } else {
+                        entity.text = toFixedTrim(parent.length);
+                        entity.font_size = parent.lengthTextSize;
+                        foundOffset = getVectorFromArray(entity.info.offset);
                     }
-                    foundOffset = getVectorFromArray(entity.info.offset);
                 } else if (entity.info.isGongshiText) {
-                    if (parent.gongshi) {
-                        entity.text = `${parent.mingzi}=${parent.gongshi}`;
-                    } else {
-                        entity.text = parent.mingzi;
-                    }
-                    entity.font_size = lineGongshi;
-                    foundOffset = getVectorFromArray(entity.info.offset);
-                } else if (entity.info.isBianhuazhiText) {
-                    if (parent instanceof CadLine && parent.guanlianbianhuagongshi) {
-                        entity.text = `变化值=${parent.guanlianbianhuagongshi}`;
-                    } else {
-                        entity.text = "";
-                    }
-                    entity.font_size = lineGongshi - 3;
-                    foundOffset = getVectorFromArray(entity.info.offset);
                     if (hideLineGongshi) {
                         el.remove();
                         entity.el = null;
+                    } else {
+                        if (parent.gongshi) {
+                            entity.text = `${parent.mingzi}=${parent.gongshi}`;
+                        } else {
+                            entity.text = parent.mingzi;
+                        }
+                        entity.font_size = lineGongshi;
+                        foundOffset = getVectorFromArray(entity.info.offset);
+                    }
+                } else if (entity.info.isBianhuazhiText) {
+                    if (hideLineGongshi) {
+                        el.remove();
+                        entity.el = null;
+                    } else {
+                        if (parent instanceof CadLine && parent.guanlianbianhuagongshi) {
+                            entity.text = `变化值=${parent.guanlianbianhuagongshi}`;
+                        } else {
+                            entity.text = "";
+                        }
+                        entity.font_size = lineGongshi - 3;
+                        foundOffset = getVectorFromArray(entity.info.offset);
                     }
                 }
                 const middle = parent.middle;
