@@ -36,6 +36,8 @@ export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLay
         entity = new CadSpline(data, layers, resetId);
     } else if (type === "LEADER") {
         entity = new CadLeader(data, layers, resetId);
+    } else {
+        throw new Error(`unsupported entity type: ${type}`);
     }
     return entity as T;
 };
@@ -67,7 +69,12 @@ export class CadEntities {
             if (Array.isArray(group)) {
                 group.forEach((e) => {
                     if (!(e instanceof CadEntity)) {
-                        e = getCadEntity(e, layers, resetIds);
+                        try {
+                            e = getCadEntity(e, layers, resetIds);
+                        } catch (error) {
+                            console.warn("failed to create entity: \n" + JSON.stringify(e));
+                            return;
+                        }
                     }
                     const eNew = e.clone(resetIds) as AnyCadEntity;
                     eNew.root = this;
