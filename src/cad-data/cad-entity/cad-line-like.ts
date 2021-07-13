@@ -45,6 +45,7 @@ export abstract class CadLineLike extends CadEntity {
     可输入修改: boolean;
     dashArray?: number[];
     info!: CadLineLikeInfo;
+    圆弧显示: "默认" | "半径" | "弧长" = "默认";
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -79,6 +80,7 @@ export abstract class CadLineLike extends CadEntity {
         if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
             this.dashArray = cloneDeep(data.dashArray);
         }
+        this.圆弧显示 = data.圆弧显示 ?? "默认";
     }
 
     export(): ObjectOf<any> {
@@ -98,7 +100,8 @@ export abstract class CadLineLike extends CadEntity {
             kailiaoshishanchu: this.kailiaoshishanchu,
             变化方式: this.变化方式,
             角度范围: this.角度范围,
-            可输入修改: this.可输入修改
+            可输入修改: this.可输入修改,
+            圆弧显示: this.圆弧显示
         };
         if (this.dashArray && this.dashArray.length > 0) {
             result.dashArray = cloneDeep(this.dashArray);

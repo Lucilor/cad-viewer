@@ -1,5 +1,5 @@
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
-import {isBetween, loadImage, Point} from "@utils";
+import {isBetween, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -85,6 +85,8 @@ const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
         }
     });
 };
+
+const session = new SessionStorage("cadViewer");
 
 export class CadViewer extends EventEmitter {
     data: CadData;
@@ -756,25 +758,40 @@ export class CadViewer extends EventEmitter {
         if (loadedFont && loadedFont.url === url) {
             return;
         }
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise<void>((resolve, reject) => {
-            const fileReader = new FileReader();
-            fileReader.readAsDataURL(blob);
-            fileReader.onload = () => {
-                const style = document.createElement("style");
-                style.innerHTML = `
-                @font-face {
-                    font-family: "${name}";
-                    src: url("${fileReader.result}");
-                }
-                `;
-                style.setAttribute("name", name);
-                this.draw.defs().node.append(style);
-                this._fonts.push(cloneDeep(font));
-                resolve();
-            };
-            fileReader.onerror = reject;
-        });
+        const fontCache = session.load<ObjectOf<string>>("fontCache") || {};
+        let dataUrl = fontCache[url] || null;
+        if (!dataUrl) {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            dataUrl = await new Promise<string | null>((resolve, reject) => {
+                const fileReader = new FileReader();
+                fileReader.readAsDataURL(blob);
+                fileReader.onload = () => {
+                    const result = fileReader.result;
+                    if (typeof result === "string") {
+                        resolve(result);
+                    } else {
+                        resolve(null);
+                    }
+                };
+                fileReader.onerror = () => resolve(null);
+            });
+        }
+        if (!dataUrl) {
+            return;
+        }
+        fontCache[url] = dataUrl;
+        session.save("fontCache", fontCache);
+        const style = document.createElement("style");
+        style.innerHTML = `
+            @font-face {
+                font-family: "${name}";
+                src: url("${dataUrl}");
+            }
+        `;
+        style.setAttribute("name", name);
+        this.draw.defs().node.append(style);
+        this._fonts.push(cloneDeep(font));
+        fontCache[name] = dataUrl;
     }
 }
