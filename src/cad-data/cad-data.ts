@@ -496,10 +496,10 @@ export class CadData {
         let c1: CadData | undefined;
         let c2: CadData | undefined;
         for (const c of components.data) {
-            if (c.id === ids[0] || c.id === ids[0]) {
+            if (c.id === ids[0]) {
                 c1 = c;
             }
-            if (c.id === ids[1] || c.id === ids[1]) {
+            if (c.id === ids[1]) {
                 c2 = c;
             }
             if (c1 && c2) {
@@ -688,6 +688,7 @@ export class CadData {
             }
         }
         components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
+        console.log(translate)
         this.moveComponent(c2, translate, c1, true);
         components.connections.push(cloneDeep(connection));
         return this;
