@@ -3,11 +3,7 @@ import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
-import {CadLineLike, CadLineLikeInfo} from "./cad-line-like";
-
-export interface CadLineInfo extends CadLineLikeInfo {
-    宽高虚线?: string;
-}
+import {CadLineLike} from "./cad-line-like";
 
 export class CadLine extends CadLineLike {
     type: CadType = "LINE";
@@ -26,7 +22,7 @@ export class CadLine extends CadLineLike {
         }[];
     }[];
     shiyongchazhi: string;
-    info!: CadLineInfo;
+    宽高虚线?: {source: string; position: "上" | "下" | "左" | "右"};
 
     get curve() {
         return new Line(this.start, this.end);
@@ -42,24 +38,6 @@ export class CadLine extends CadLineLike {
     }
     get middle() {
         return this.curve.middle;
-    }
-    get maxX() {
-        return Math.max(this.start.x, this.end.x);
-    }
-    get maxY() {
-        return Math.max(this.start.y, this.end.y);
-    }
-    get minX() {
-        return Math.min(this.start.x, this.end.x);
-    }
-    get minY() {
-        return Math.min(this.start.y, this.end.y);
-    }
-    get deltaX() {
-        return this.end.x - this.start.x;
-    }
-    get deltaY() {
-        return this.end.y - this.start.y;
     }
     get boundingPoints() {
         return [this.start, this.end];
@@ -78,6 +56,9 @@ export class CadLine extends CadLineLike {
             }
         });
         this.shiyongchazhi = data.shiyongchazhi ?? "";
+        if (data.宽高虚线) {
+            this.宽高虚线 = data.宽高虚线;
+        }
     }
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
@@ -89,8 +70,8 @@ export class CadLine extends CadLineLike {
         return this;
     }
 
-    export(): ObjectOf<any> {
-        return {
+    export() {
+        const result: ObjectOf<any> = {
             ...super.export(),
             start: this.start.toArray(),
             end: this.end.toArray(),
@@ -99,6 +80,10 @@ export class CadLine extends CadLineLike {
             tiaojianquzhi: this.tiaojianquzhi,
             shiyongchazhi: this.shiyongchazhi
         };
+        if (this.宽高虚线) {
+            result.宽高虚线 = this.宽高虚线;
+        }
+        return result;
     }
 
     clone(resetId = false) {

@@ -94,16 +94,6 @@ export class CadEntities {
                 });
             }
         });
-        if (data.宽高虚线) {
-            Object.values(data.宽高虚线).forEach((e: any) => {
-                const eNew = getCadEntity<CadLine>(e, layers, resetIds);
-                eNew.root = this;
-                this.line.push(eNew);
-                if (resetIds) {
-                    idMap[e.id] = eNew.id;
-                }
-            });
-        }
         if (resetIds) {
             this.dimension.forEach((e) => {
                 const e1Id = idMap[e.entity1.id];
@@ -162,14 +152,7 @@ export class CadEntities {
         for (const key of cadTypesKey) {
             result[key] = {};
             this[key].forEach((e: CadEntity) => {
-                if (e instanceof CadLine && typeof e.info.宽高虚线 === "string") {
-                    if (!result.宽高虚线) {
-                        result.宽高虚线 = {};
-                    }
-                    result.宽高虚线[e.id] = e.export();
-                } else {
-                    result[key][e.id] = e.export();
-                }
+                result[key][e.id] = e.export();
             });
         }
         return result;
