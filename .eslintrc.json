@@ -7,7 +7,7 @@
                 "project": "tsconfig.json",
                 "createDefaultProgram": true
             },
-            "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+            "extends": ["eslint:recommended", "plugin:@typescript-eslint/eslint-recommended", "plugin:@typescript-eslint/recommended"],
             "plugins": ["prefer-arrow"],
             "rules": {
                 "@typescript-eslint/indent": [
@@ -44,8 +44,6 @@
                 "guard-for-in": "off",
                 "no-underscore-dangle": "off",
                 "no-console": "off",
-                "no-restricted-syntax": "off",
-                "no-dupe-else-if": "error",
                 "eqeqeq": ["error", "always"],
                 "prefer-arrow-callback": "error",
                 "arrow-parens": "error",
