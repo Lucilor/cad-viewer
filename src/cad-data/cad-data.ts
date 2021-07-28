@@ -11,6 +11,7 @@ export const 算料单显示 = [
     "尺寸+板材",
     "尺寸",
     "板材",
+    "名字",
     "名字+展开宽+展开高",
     "名字+展开高+板材",
     "名字+展开高",
@@ -688,7 +689,6 @@ export class CadData {
             }
         }
         components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
-        console.log(translate)
         this.moveComponent(c2, translate, c1, true);
         components.connections.push(cloneDeep(connection));
         return this;

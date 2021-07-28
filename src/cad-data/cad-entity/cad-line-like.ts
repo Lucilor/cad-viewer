@@ -26,6 +26,24 @@ export abstract class CadLineLike extends CadEntity {
     abstract get end(): Point;
     abstract get middle(): Point;
     abstract get length(): number;
+    get deltaX() {
+        return this.end.x - this.start.x;
+    }
+    get deltaY() {
+        return this.end.y - this.start.y;
+    }
+    get maxX() {
+        return Math.max(this.start.x, this.end.x);
+    }
+    get maxY() {
+        return Math.max(this.start.y, this.end.y);
+    }
+    get minX() {
+        return Math.min(this.start.x, this.end.x);
+    }
+    get minY() {
+        return Math.min(this.start.y, this.end.y);
+    }
     swapped: boolean;
     mingzi: string;
     qujian: string;
