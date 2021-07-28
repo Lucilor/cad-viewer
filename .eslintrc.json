@@ -1,5 +1,8 @@
 {
     "root": true,
+    "env": {
+        "es6": true
+    },
     "overrides": [
         {
             "files": ["*.ts"],
@@ -57,7 +60,9 @@
                     }
                 ],
                 "no-shadow": "error",
-                "no-empty": ["error", {"allowEmptyCatch": true}]
+                "no-empty": ["error", {"allowEmptyCatch": true}],
+                "object-curly-spacing": ["error", "never"],
+                "array-bracket-spacing": ["error", "never"]
             }
         }
     ]
