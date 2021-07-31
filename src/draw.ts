@@ -7,16 +7,40 @@ export const DEFAULT_DASH_ARRAY = [20, 7];
 
 export interface LineStyle {
     dashArray?: number[];
+    padding?: number | number[];
 }
 
 export const drawLine = (draw: Container, start: Point, end: Point, style?: LineStyle, i = 0) => {
     let el = draw.children()[i] as SvgLine;
-    if (el instanceof SvgLine) {
-        el.plot(start.x, start.y, end.x, end.y);
-    } else {
-        el = draw.line(start.x, start.y, end.x, end.y).addClass("stroke").fill("none");
+    let {x: x1, y: y1} = start;
+    let {x: x2, y: y2} = end;
+    const {dashArray, padding} = style || {};
+    if (dashArray && dashArray.length > 0) {
+        const line = new Line(start, end);
+        let [offsetStart, offsetEnd] = Array.isArray(padding) ? [...padding] : [padding];
+        const getNum = (n: any) => {
+            const result = Number(n);
+            if (isNaN(result)) {
+                return 0;
+            }
+            return Math.min(result, line.length / 10);
+        };
+        offsetStart = getNum(offsetStart);
+        offsetEnd = typeof offsetEnd === "number" ? getNum(offsetEnd) : offsetStart;
+        const theta = line.theta.rad;
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        x1 += offsetStart * cos;
+        y1 += offsetStart * sin;
+        x2 -= offsetEnd * cos;
+        y2 -= offsetEnd * sin;
+        console.log(offsetStart, offsetEnd, cos, sin);
     }
-    const {dashArray} = style || {};
+    if (el instanceof SvgLine) {
+        el.plot(x1, y1, x2, y2);
+    } else {
+        el = draw.line(x1, y1, x2, y2).addClass("stroke").fill("none");
+    }
     if (dashArray && dashArray.length > 0) {
         el.css("stroke-dasharray", dashArray.join(", "));
     }
