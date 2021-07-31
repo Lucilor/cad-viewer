@@ -14,6 +14,7 @@ import {
     CadMtext,
     CadSpline
 } from "./cad-entity";
+import {v4} from "uuid";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 
@@ -160,6 +161,25 @@ export class CadEntities {
 
     clone(resetIds = false) {
         return new CadEntities(this.export(), [], resetIds);
+    }
+
+    resetIds() {
+        const idMap: ObjectOf<string> = {};
+        this.forEach((e) => {
+            const id = v4();
+            idMap[e.id] = id;
+            e.id = id;
+        });
+        this.dimension.forEach((e) => {
+            const e1Id = idMap[e.entity1.id];
+            const e2Id = idMap[e.entity2.id];
+            if (e1Id) {
+                e.entity1.id = e1Id;
+            }
+            if (e2Id) {
+                e.entity2.id = e2Id;
+            }
+        });
     }
 
     transform(matrix: MatrixLike, alter = false) {

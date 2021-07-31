@@ -269,6 +269,21 @@ export class CadData {
         return data;
     }
 
+    resetIds(entitiesOnly = false) {
+        if (!entitiesOnly) {
+            this.id = v4();
+        }
+        this.entities.resetIds();
+        this.partners.forEach((v) => {
+            v.parent = this.id;
+            v.resetIds(entitiesOnly);
+        });
+        this.components.data.forEach((v) => {
+            v.parent = this.id;
+            v.resetIds(entitiesOnly);
+        });
+    }
+
     merge(data: CadData) {
         this.layers = this.layers.concat(data.layers);
         this.entities.merge(data.entities);
@@ -379,6 +394,7 @@ export class CadData {
         } else {
             data.push(partner);
         }
+        partner.parent = this.id;
     }
 
     updatePartners() {
@@ -407,6 +423,7 @@ export class CadData {
         } else {
             data.push(component);
         }
+        component.parent = this.id;
         return this;
     }
 
