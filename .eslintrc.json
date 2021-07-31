@@ -44,6 +44,7 @@
                 ],
                 "@typescript-eslint/no-explicit-any": "off",
                 "@typescript-eslint/explicit-module-boundary-types": "off",
+                "@typescript-eslint/semi": "error",
                 "guard-for-in": "off",
                 "no-underscore-dangle": "off",
                 "no-console": "off",
