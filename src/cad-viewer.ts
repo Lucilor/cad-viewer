@@ -35,6 +35,7 @@ export interface CadViewerConfig {
     fontFamily: string; // 设置字体,
     fontWeight: string; // 设置字体粗细
     enableZoom: boolean; // 是否启用缩放
+    dashedLinePadding: number | number[]; // 虚线前后留白
 }
 
 const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
@@ -55,7 +56,8 @@ const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
         minLinewidth: 1,
         fontFamily: "",
         fontWeight: "normal",
-        enableZoom: true
+        enableZoom: true,
+        dashedLinePadding: 2
     };
     for (const key in config) {
         if (key in defalutConfig) {
@@ -366,7 +368,7 @@ export class CadViewer extends EventEmitter {
             }
         } else if (entity instanceof CadLine) {
             const {start, end, dashArray} = entity;
-            drawResult = drawLine(el, start, end, {dashArray});
+            drawResult = drawLine(el, start, end, {dashArray, padding: this.config("dashedLinePadding")});
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
             const {insert, anchor} = entity;
