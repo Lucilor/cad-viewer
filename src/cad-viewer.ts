@@ -370,7 +370,7 @@ export class CadViewer extends EventEmitter {
             drawResult = drawLine(el, start, end, {dashArray, padding: this.config("dashedLinePadding")});
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
-            const {insert, anchor,text} = entity;
+            const {insert, anchor, text} = entity;
             if (parent instanceof CadLine || parent instanceof CadArc) {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
@@ -495,7 +495,7 @@ export class CadViewer extends EventEmitter {
         }
         if (entities.length) {
             entities.dimension.forEach((e) => (e.visible = !this._config.hideDimensions));
-            entities.forEach((e) => this.drawEntity(e, style));
+            entities.forEach((e) => this.drawEntity(e, style), true);
             this.emit("render", entities);
         }
         return this;
