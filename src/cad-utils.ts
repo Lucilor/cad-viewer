@@ -1,7 +1,5 @@
-import {G} from "@svgdotjs/svg.js";
 import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
-import {drawText} from "./draw";
 
 export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = new Point()) => {
     if (data instanceof Point) {
@@ -119,35 +117,4 @@ export const linewidth2lineweight = (x: number) => x * 5 + 15;
 export const toFixedTrim = (num: number, fractionDigits?: number | undefined) => {
     const str = num.toFixed(fractionDigits);
     return str.replace(/\.[1-9]*0+/, "");
-};
-
-type DrawTextParams = Parameters<typeof drawText>;
-export const getWrapedText = (
-    source: string,
-    maxLength: number,
-    style: DrawTextParams[2],
-    position: DrawTextParams[3],
-    anchor: DrawTextParams[4]
-) => {
-    const sourceLength = source.length;
-    let start = 0;
-    let end = 1;
-    const tmpEl = new G();
-    const arr: string[] = [];
-    while (end < sourceLength) {
-        const tmpText = source.slice(start, end);
-        drawText(tmpEl, tmpText, style, position, anchor);
-        if (tmpEl.width() < maxLength) {
-            end++;
-        } else {
-            if (start === end - 1) {
-                throw new Error("文字自动换行时出错");
-            }
-            arr.push(source.slice(start, end - 1));
-            start = end - 1;
-        }
-    }
-    arr.push(source.slice(start));
-    tmpEl.remove();
-    return arr;
 };

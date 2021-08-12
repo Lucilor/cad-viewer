@@ -34,7 +34,6 @@ export const drawLine = (draw: Container, start: Point, end: Point, style?: Line
         y1 += offsetStart * sin;
         x2 -= offsetEnd * cos;
         y2 -= offsetEnd * sin;
-        console.log(offsetStart, offsetEnd, cos, sin);
     }
     if (el instanceof SvgLine) {
         el.plot(x1, y1, x2, y2);

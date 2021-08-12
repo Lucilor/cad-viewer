@@ -8,16 +8,21 @@ import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
 export const 算料单显示 = [
-    "尺寸+板材",
     "尺寸",
     "板材",
+    "尺寸+板材",
     "名字",
+    "名字+板材",
+    "名字+展开宽",
     "名字+展开宽+展开高",
     "名字+展开高+板材",
     "名字+展开高",
-    "展开宽+展开高+板材",
+    "展开宽",
+    "展开高",
     "展开宽+展开高",
+    "展开宽+板材",
     "展开高+板材",
+    "展开宽+展开高+板材",
     "都不显示"
 ];
 
@@ -65,6 +70,7 @@ export class CadData {
     属于门框门扇: "未区分" | "门框" | "门扇" = "未区分";
     内开做分体 = false;
     板材绑定选项 = "";
+    算料单线长显示的最小长度 = 6;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -145,6 +151,7 @@ export class CadData {
         this.属于门框门扇 = data.属于门框门扇 ?? "未区分";
         this.内开做分体 = data.内开做分体 ?? false;
         this.板材绑定选项 = data.板材绑定选项 ?? "";
+        this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? 6;
         this.updateDimensions();
         return this;
     }

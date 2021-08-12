@@ -1,5 +1,5 @@
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
-import {isBetween, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
+import {loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -9,8 +9,7 @@ import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
 import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
-import {getVectorFromArray, getWrapedText, toFixedTrim} from "./cad-utils";
-import Color from "color";
+import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 
 export interface CadViewerFont {
     name: string;
@@ -371,7 +370,7 @@ export class CadViewer extends EventEmitter {
             drawResult = drawLine(el, start, end, {dashArray, padding: this.config("dashedLinePadding")});
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
-            const {insert, anchor} = entity;
+            const {insert, anchor, text} = entity;
             if (parent instanceof CadLine || parent instanceof CadArc) {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
@@ -456,42 +455,7 @@ export class CadViewer extends EventEmitter {
                     }
                 }
             }
-            let text = entity.text;
-            const offset = new Point(0, 0);
-            // * 算料单特殊逻辑
-            if (this.data.info.算料单) {
-                // ? 调整字体的玄学数字
-                const offsetYfactor = -0.1;
-
-                if (anchor.y === 0) {
-                    offset.y = offsetYfactor * fontStyle.size;
-                }
-            }
-
-            // * 自动换行
-            if (text.startsWith("花件信息")) {
-                text = text.slice(4);
-                let lines = this.data.getAllEntities().line;
-                lines = lines.filter((e) => e.isVertical() && isBetween(insert.y, e.minY, e.maxY) && e.start.x - insert.x > 50);
-                let dMin = Infinity;
-                for (const e of lines) {
-                    const d = e.start.x - insert.x - 1;
-                    if (dMin > d) {
-                        dMin = d;
-                    }
-                }
-                try {
-                    text = text
-                        .split("\n")
-                        .map((v) => getWrapedText(v, dMin, fontStyle, insert.clone().add(offset), anchor).join("\n"))
-                        .join("\n");
-                } catch (error) {
-                    text = "花件信息自动换行时出错\n" + text;
-                    entity.color = new Color("red");
-                }
-            }
-            const {fontStyle: fontStyle2} = this.stylizer.get(entity, style);
-            drawResult = drawText(el, text, fontStyle2, insert.clone().add(offset), anchor);
+            drawResult = drawText(el, text, fontStyle, insert, anchor);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
@@ -531,7 +495,7 @@ export class CadViewer extends EventEmitter {
         }
         if (entities.length) {
             entities.dimension.forEach((e) => (e.visible = !this._config.hideDimensions));
-            entities.forEach((e) => this.drawEntity(e, style));
+            entities.forEach((e) => this.drawEntity(e, style), true);
             this.emit("render", entities);
         }
         return this;
