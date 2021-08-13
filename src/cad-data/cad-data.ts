@@ -61,7 +61,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
-    suanliaodanxianshi = 算料单显示[0];
+    suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
