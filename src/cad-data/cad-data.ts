@@ -71,6 +71,7 @@ export class CadData {
     内开做分体 = false;
     板材绑定选项 = "";
     算料单线长显示的最小长度 = 6;
+    检查企料厚度 = true;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -152,6 +153,7 @@ export class CadData {
         this.内开做分体 = data.内开做分体 ?? false;
         this.板材绑定选项 = data.板材绑定选项 ?? "";
         this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? 6;
+        this.检查企料厚度 = data.检查企料厚度 ?? true;
         this.updateDimensions();
         return this;
     }
@@ -216,7 +218,8 @@ export class CadData {
             属于门框门扇: this.属于门框门扇,
             内开做分体: this.内开做分体,
             板材绑定选项: this.板材绑定选项,
-            算料单线长显示的最小长度: this.算料单线长显示的最小长度
+            算料单线长显示的最小长度: this.算料单线长显示的最小长度,
+            检查企料厚度: this.检查企料厚度
         });
     }
 
