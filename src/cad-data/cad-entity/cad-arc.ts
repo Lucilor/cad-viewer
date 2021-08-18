@@ -57,10 +57,7 @@ export class CadArc extends CadLineLike {
             this.radius = curve.radius;
             this.start_angle = curve.startAngle.deg;
             this.end_angle = curve.endAngle.deg;
-            const [scaleX, scaleY] = matrix.scale();
-            if (scaleX && scaleY && scaleX * scaleY < 0) {
-                this.clockwise = !this.clockwise;
-            }
+            this.clockwise = curve.clockwise;
         }
         return this;
     }

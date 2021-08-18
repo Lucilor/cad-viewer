@@ -143,7 +143,7 @@ export class CadData {
         this.needsHuajian = data.needsHuajian ?? true;
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
-        this.suanliaodanxianshi = data.suanliaodanxianshi ?? 算料单显示[0];
+        this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
@@ -293,6 +293,7 @@ export class CadData {
             v.parent = this.id;
             v.resetIds(entitiesOnly);
         });
+        return this;
     }
 
     merge(data: CadData) {
