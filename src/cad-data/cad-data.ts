@@ -7,25 +7,6 @@ import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
-export const 算料单显示 = [
-    "尺寸",
-    "板材",
-    "尺寸+板材",
-    "名字",
-    "名字+板材",
-    "名字+展开宽",
-    "名字+展开宽+展开高",
-    "名字+展开高+板材",
-    "名字+展开高",
-    "展开宽",
-    "展开高",
-    "展开宽+展开高",
-    "展开宽+板材",
-    "展开高+板材",
-    "展开宽+展开高+板材",
-    "都不显示"
-];
-
 export class CadData {
     entities = new CadEntities();
     layers: CadLayer[] = [];
