@@ -102,15 +102,15 @@ export const findCrossingLine = (data: CadData, line: CadLine) => {
 };
 
 export const setLinesLength = (data: CadData, lines: CadLine[], length: number) => {
-    const pointsMap = generatePointsMap(data.getAllEntities());
     lines.forEach((line) => {
         if (line instanceof CadLine) {
+            const pointsMap = generatePointsMap(data.getAllEntities());
             const {entities} = findAllAdjacentLines(pointsMap, line, line.end);
             const d = length - line.length;
             const theta = line.theta.rad;
             const translate = new Point(Math.cos(theta), Math.sin(theta)).multiply(d);
             line.end.add(translate);
-            entities.forEach((e) => e.transform({translate}));
+            entities.forEach((e) => e.transform({translate}, true));
         }
     });
 };
