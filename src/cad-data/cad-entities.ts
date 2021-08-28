@@ -341,23 +341,15 @@ export class CadEntities {
         }
         let p3 = p1.clone();
         let p4 = p2.clone();
-        let p: Point;
-        if (entity.id === entity1.id) {
-            p = getPoint(line1, entity1.location);
-        } else {
-            p = getPoint(line2, entity2.location);
-        }
+        const p = entity.id === entity1.id ? p1.clone() : p2.clone();
         if (axis === "x") {
-            p3.y = p.y + distance;
-            p4.y = p.y + distance;
+            p3.y = p4.y = p.y + distance;
             if (p3.x > p4.x) {
                 [p3, p4] = [p4, p3];
                 [p1, p2] = [p2, p1];
             }
-        }
-        if (axis === "y") {
-            p3.x = p.x + distance;
-            p4.x = p.x + distance;
+        } else if (axis === "y") {
+            p3.x = p4.x = p.x + distance;
             if (p3.y < p4.y) {
                 [p3, p4] = [p4, p3];
                 [p1, p2] = [p2, p1];

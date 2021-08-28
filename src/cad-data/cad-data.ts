@@ -53,6 +53,7 @@ export class CadData {
     板材绑定选项 = "";
     算料单线长显示的最小长度: number | null = null;
     检查企料厚度 = true;
+    对应门扇厚度 = 0;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -135,6 +136,7 @@ export class CadData {
         this.板材绑定选项 = data.板材绑定选项 ?? "";
         this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? null;
         this.检查企料厚度 = data.检查企料厚度 ?? true;
+        this.对应门扇厚度 = data.对应门扇厚度 ?? 0;
         this.updateDimensions();
         return this;
     }
@@ -200,7 +202,8 @@ export class CadData {
             内开做分体: this.内开做分体,
             板材绑定选项: this.板材绑定选项,
             算料单线长显示的最小长度: this.算料单线长显示的最小长度,
-            检查企料厚度: this.检查企料厚度
+            检查企料厚度: this.检查企料厚度,
+            对应门扇厚度: this.对应门扇厚度
         });
     }
 
