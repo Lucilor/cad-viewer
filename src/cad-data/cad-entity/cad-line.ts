@@ -14,7 +14,7 @@ export class CadLine extends CadLineLike {
     tiaojianquzhi: {
         key: string;
         level: number;
-        type: "选择" | "数值";
+        type: "选择" | "数值" | "数值+选择";
         data: {
             name: string;
             value: number;

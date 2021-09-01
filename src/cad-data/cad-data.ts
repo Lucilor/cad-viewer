@@ -15,6 +15,7 @@ export class CadData {
     name = "";
     xianshimingzi = "";
     type = "";
+    type2 = "";
     conditions: string[] = [];
     options: ObjectOf<string> = {};
     baseLines: CadBaseLine[] = [];
@@ -68,6 +69,7 @@ export class CadData {
         this.name = data.name ?? "";
         this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
+        this.type2 = data.type2 ?? "";
         this.layers = [];
         if (typeof data.layers === "object") {
             for (const id in data.layers) {
@@ -165,6 +167,7 @@ export class CadData {
             name: this.name,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
+            type2: this.type2,
             conditions: this.conditions.filter((v) => v),
             options,
             baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.name && v.idX && v.idY),
