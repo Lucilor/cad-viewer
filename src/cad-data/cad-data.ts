@@ -7,25 +7,6 @@ import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
-export const 算料单显示 = [
-    "尺寸",
-    "板材",
-    "尺寸+板材",
-    "名字",
-    "名字+板材",
-    "名字+展开宽",
-    "名字+展开宽+展开高",
-    "名字+展开高+板材",
-    "名字+展开高",
-    "展开宽",
-    "展开高",
-    "展开宽+展开高",
-    "展开宽+板材",
-    "展开高+板材",
-    "展开宽+展开高+板材",
-    "都不显示"
-];
-
 export class CadData {
     entities = new CadEntities();
     layers: CadLayer[] = [];
@@ -34,6 +15,7 @@ export class CadData {
     name = "";
     xianshimingzi = "";
     type = "";
+    type2 = "";
     conditions: string[] = [];
     options: ObjectOf<string> = {};
     baseLines: CadBaseLine[] = [];
@@ -61,7 +43,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
-    suanliaodanxianshi = 算料单显示[0];
+    suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
@@ -70,7 +52,9 @@ export class CadData {
     属于门框门扇: "未区分" | "门框" | "门扇" = "未区分";
     内开做分体 = false;
     板材绑定选项 = "";
-    算料单线长显示的最小长度 = 6;
+    算料单线长显示的最小长度: number | null = null;
+    检查企料厚度 = true;
+    对应门扇厚度 = 0;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -85,6 +69,7 @@ export class CadData {
         this.name = data.name ?? "";
         this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
+        this.type2 = data.type2 ?? "";
         this.layers = [];
         if (typeof data.layers === "object") {
             for (const id in data.layers) {
@@ -142,7 +127,7 @@ export class CadData {
         this.needsHuajian = data.needsHuajian ?? true;
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
-        this.suanliaodanxianshi = data.suanliaodanxianshi ?? 算料单显示[0];
+        this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
@@ -151,7 +136,9 @@ export class CadData {
         this.属于门框门扇 = data.属于门框门扇 ?? "未区分";
         this.内开做分体 = data.内开做分体 ?? false;
         this.板材绑定选项 = data.板材绑定选项 ?? "";
-        this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? 6;
+        this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? null;
+        this.检查企料厚度 = data.检查企料厚度 ?? true;
+        this.对应门扇厚度 = data.对应门扇厚度 ?? 0;
         this.updateDimensions();
         return this;
     }
@@ -180,6 +167,7 @@ export class CadData {
             name: this.name,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
+            type2: this.type2,
             conditions: this.conditions.filter((v) => v),
             options,
             baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.name && v.idX && v.idY),
@@ -215,7 +203,10 @@ export class CadData {
             算料单展开显示位置: this.算料单展开显示位置,
             属于门框门扇: this.属于门框门扇,
             内开做分体: this.内开做分体,
-            板材绑定选项: this.板材绑定选项
+            板材绑定选项: this.板材绑定选项,
+            算料单线长显示的最小长度: this.算料单线长显示的最小长度,
+            检查企料厚度: this.检查企料厚度,
+            对应门扇厚度: this.对应门扇厚度
         });
     }
 
@@ -289,6 +280,7 @@ export class CadData {
             v.parent = this.id;
             v.resetIds(entitiesOnly);
         });
+        return this;
     }
 
     merge(data: CadData) {

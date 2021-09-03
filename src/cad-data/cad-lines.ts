@@ -102,15 +102,15 @@ export const findCrossingLine = (data: CadData, line: CadLine) => {
 };
 
 export const setLinesLength = (data: CadData, lines: CadLine[], length: number) => {
-    const pointsMap = generatePointsMap(data.getAllEntities());
     lines.forEach((line) => {
         if (line instanceof CadLine) {
+            const pointsMap = generatePointsMap(data.getAllEntities());
             const {entities} = findAllAdjacentLines(pointsMap, line, line.end);
             const d = length - line.length;
             const theta = line.theta.rad;
             const translate = new Point(Math.cos(theta), Math.sin(theta)).multiply(d);
             line.end.add(translate);
-            entities.forEach((e) => e.transform({translate}));
+            entities.forEach((e) => e.transform({translate}, true));
         }
     });
 };
@@ -149,6 +149,7 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         return c - d;
     });
     const exclude: string[] = [];
+    let regen = false;
     for (const v of arr) {
         const startLine = v.lines[0];
         if (exclude.includes(startLine.id)) {
@@ -156,9 +157,13 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         }
         if (v.point.equals(startLine.end)) {
             swapStartEnd(startLine);
-            map = generatePointsMap(entities);
+            regen = true;
         }
         const startPoint = startLine.end;
+        if (regen) {
+            map = generatePointsMap(entities);
+            regen = false;
+        }
         const adjLines = findAllAdjacentLines(map, startLine, startPoint).entities.filter((e) => e.length);
         const lines = [startLine, ...adjLines];
         for (let i = 1; i < lines.length; i++) {
@@ -166,6 +171,7 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
             const curr = lines[i];
             if (prev.end.distanceTo(curr.start) > tolerance) {
                 swapStartEnd(curr);
+                regen = true;
             }
         }
         exclude.push(...lines.map((e) => e.id));
