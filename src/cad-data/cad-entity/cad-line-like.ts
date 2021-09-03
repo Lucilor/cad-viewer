@@ -57,7 +57,7 @@ export abstract class CadLineLike extends CadEntity {
     zidingzhankaichang: string;
     zhankaifangshi: "自动计算" | "使用线长" | "指定长度";
     zhankaixiaoshuchuli: "不处理" | "舍去小数" | "小数进一" | "四舍五入";
-    suanliaosanxiaoshuchuli: "不处理" | "舍去小数" | "小数进一" | "四舍五入";
+    suanliaosanxiaoshuchuli: "默认" | "舍去小数" | "小数进一" | "四舍五入";
     kailiaoshishanchu: boolean;
     变化方式: string;
     角度范围: number[];
@@ -92,7 +92,7 @@ export abstract class CadLineLike extends CadEntity {
             }
         }
         this.zhankaixiaoshuchuli = data.zhankaixiaoshuchuli ?? "不处理";
-        this.suanliaosanxiaoshuchuli = data.suanliaosanxiaoshuchuli ?? "不处理";
+        this.suanliaosanxiaoshuchuli = data.suanliaosanxiaoshuchuli ?? "默认";
         this.kailiaoshishanchu = !!data.kailiaoshishanchu;
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
