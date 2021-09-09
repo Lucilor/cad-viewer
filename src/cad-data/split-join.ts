@@ -1,7 +1,7 @@
 import {CadData, CadZhankai} from "./cad-data";
 import {sortLines} from "./cad-lines";
 import {Line, ObjectOf, Point, Rectangle} from "@utils";
-import {CadArc, CadCircle, CadLine, CadMtext} from "./cad-entity";
+import {CadArc, CadCircle, CadDimension, CadLine, CadMtext} from "./cad-entity";
 
 export const splitCad = (data: CadData) => {
     const lines = data.entities.line.filter((v) => v.color.rgbNumber() === 0x00ff00);
@@ -42,6 +42,11 @@ export const splitCad = (data: CadData) => {
                 if (rect.contains(new Rectangle(min, max))) {
                     result[i].entities.add(e);
                 }
+            } else if (e instanceof CadDimension) {
+                const pts = data.getDimensionPoints(e);
+                if (pts.every((p) => rect.contains(p))) {
+                    result[i].entities.add(e);
+                }
             }
         });
     });
@@ -49,7 +54,7 @@ export const splitCad = (data: CadData) => {
     const fields: ObjectOf<keyof CadData> = {
         名字: "name",
         分类: "type",
-        条件: "conditions",
+        分类2: "type2",
         模板放大: "mubanfangda",
         开料时刨坑: "kailiaoshibaokeng",
         变形方式: "baseLines",
@@ -59,25 +64,36 @@ export const splitCad = (data: CadData) => {
         算料处理: "suanliaochuli",
         显示宽度标注: "showKuandubiaozhu"
     };
+    const infoKeys = ["唯一码", "修改包边正面宽规则", "锁边自动绑定可搭配铰边"];
     result.forEach((v) => {
         let toRemove = -1;
         v.entities.mtext.some((e, i) => {
-            if (e.text.startsWith("CAD信息")) {
+            if (e.text.startsWith("唯一码")) {
                 toRemove = i;
-                const arr = e.text.split("\n").slice(1);
-                const obj: ObjectOf<any> = {};
-                arr.forEach((str) => {
-                    const [key, value] = str.split(/:|：/);
+                const obj: ObjectOf<string> = {};
+                const text = e.text.replaceAll("：", ":").replaceAll("；", ";");
+                const strs = text.split(":");
+                const keyValuePairs: [string, string][] = [];
+                strs.forEach((str, j) => {
+                    if (j === 0) {
+                        keyValuePairs[j] = [str.trim(), ""];
+                    } else if (j === strs.length - 1) {
+                        keyValuePairs[j - 1][1] = str.trim();
+                    } else {
+                        const arr = str.split("\n");
+                        keyValuePairs[j - 1][1] = arr.slice(0, -1).join("\n").trim();
+                        keyValuePairs[j] = [arr[arr.length - 1].trim(), ""];
+                    }
+                });
+                keyValuePairs.forEach(([key, value]) => {
                     obj[key] = value;
                     const key2 = fields[key];
                     if (key2) {
-                        if (typeof v[key2] === "string") {
-                            (v[key2] as string) = value;
-                        } else if (Array.isArray(v[key2])) {
-                            (v[key2] as string[]) = value.split(/,|，/);
-                        } else {
-                            throw Error("CAD信息有错");
-                        }
+                        (v[key2] as string) = value;
+                    } else if (infoKeys.includes(key)) {
+                        v.info[key] = value;
+                    } else if (key === "条件") {
+                        v.conditions = value.split(";");
                     } else {
                         v.options[key] = value;
                     }

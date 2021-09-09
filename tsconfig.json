@@ -10,7 +10,7 @@
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "declaration": true,
-        "lib": ["ES2020", "DOM"],
+        "lib": ["esnext", "dom"],
         "esModuleInterop": true,
         "paths": {
             "@utils": ["src/utils/src"]

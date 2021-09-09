@@ -7,6 +7,13 @@ import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
+export interface CadDataInfo {
+    [key: string]: any;
+    唯一码?: string;
+    修改包边正面宽规则?: string;
+    锁边自动绑定可搭配铰边?: string;
+}
+
 export class CadData {
     entities = new CadEntities();
     layers: CadLayer[] = [];
@@ -35,7 +42,7 @@ export class CadData {
     gudingkailiaobancai = "";
     suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料" = "算料+显示展开+开料";
     showKuandubiaozhu = false;
-    info: ObjectOf<any> = {};
+    info: CadDataInfo = {};
     attributes: ObjectOf<string> = {};
     bancaihoudufangxiang: "none" | "gt0" | "lt0" = "none";
     zhankai: CadZhankai[] = [];
