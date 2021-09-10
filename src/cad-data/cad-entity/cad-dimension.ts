@@ -26,6 +26,7 @@ export class CadDimension extends CadEntity {
     ref?: "entity1" | "entity2" | "minX" | "maxX" | "minY" | "maxY" | "minLength" | "maxLength";
     quzhifanwei: string;
     xianshigongshiwenben: string;
+    xiaoshuchuli: "四舍五入" | "舍去小数" | "小数进一" | "保留一位" | "保留两位";
 
     private _renderStyle = 1;
     get renderStyle() {
@@ -86,6 +87,7 @@ export class CadDimension extends CadEntity {
         this.renderStyle = data.renderStyle ?? 1;
         this.hideDimLines = data.hideDimLines === true;
         this.xianshigongshiwenben = data.xianshigongshiwenben ?? "";
+        this.xiaoshuchuli = data.xiaoshuchuli ?? "四舍五入";
     }
 
     transform(matrix: Matrix, alter = false, parent?: CadEntity) {
@@ -110,7 +112,8 @@ export class CadDimension extends CadEntity {
             quzhifanwei: this.quzhifanwei,
             renderStyle: this.renderStyle,
             hideDimLines: this.hideDimLines,
-            xianshigongshiwenben: this.xianshigongshiwenben
+            xianshigongshiwenben: this.xianshigongshiwenben,
+            xiaoshuchuli: this.xiaoshuchuli
         });
     }
 
