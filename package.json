@@ -9,7 +9,7 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lib": "webpack --config webpack.lib.js",
 		"dist": "webpack --config webpack.dist.js",
-		"build": "yarn lib && yarn dist"
+		"build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js"
 	},
 	"repository": {
 		"type": "git",
@@ -41,9 +41,9 @@
 		"webpack-node-externals": "^3.0.0"
 	},
 	"dependencies": {
-		"@svgdotjs/svg.js": "3.0.16",
+		"@svgdotjs/svg.js": "3.1.1",
+		"events": "^3.3.0",
 		"lodash": "^4.17.21",
 		"uuid": "^8.3.2"
-	},
-	"packageManager": "yarn@3.0.2"
+	}
 }

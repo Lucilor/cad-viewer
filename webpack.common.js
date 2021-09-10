@@ -14,7 +14,8 @@ module.exports = {
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
-        alias: {"@utils": path.resolve(__dirname, "src/utils/src")}
+        alias: {"@utils": path.resolve(__dirname, "src/utils/src")},
+        fallback:{"events":require.resolve("events/")}
     },
     output: {
         filename: "[name].js" // 输出文件
