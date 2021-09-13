@@ -1,5 +1,5 @@
 import {Point, ObjectOf, Matrix} from "@utils";
-import {getVectorFromArray} from "../../cad-utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -53,7 +53,7 @@ export class CadHatch extends CadEntity {
             path.vertices.forEach((vertice) => vertices.push(vertice.toArray()));
             paths.push({edges, vertices});
         });
-        return {...super.export(), paths};
+        return {...super.export(), ...purgeObject({paths})};
     }
 
     transform(matrix: Matrix, alter = false, parent?: CadEntity) {

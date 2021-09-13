@@ -1,5 +1,5 @@
 import {Matrix, ObjectOf} from "@utils";
-import {cloneDeep} from "lodash";
+import {purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -96,25 +96,27 @@ export class CadDimension extends CadEntity {
     }
 
     export(): ObjectOf<any> {
-        return cloneDeep({
+        return {
             ...super.export(),
-            dimstyle: this.dimstyle,
-            font_size: this.font_size,
-            axis: this.axis,
-            entity1: this.entity1,
-            entity2: this.entity2,
-            distance: this.distance,
-            cad1: this.cad1,
-            cad2: this.cad2,
-            mingzi: this.mingzi,
-            qujian: this.qujian,
-            ref: this.ref,
-            quzhifanwei: this.quzhifanwei,
-            renderStyle: this.renderStyle,
-            hideDimLines: this.hideDimLines,
-            xianshigongshiwenben: this.xianshigongshiwenben,
-            xiaoshuchuli: this.xiaoshuchuli
-        });
+            ...purgeObject({
+                dimstyle: this.dimstyle,
+                font_size: this.font_size,
+                axis: this.axis,
+                entity1: this.entity1,
+                entity2: this.entity2,
+                distance: this.distance,
+                cad1: this.cad1,
+                cad2: this.cad2,
+                mingzi: this.mingzi,
+                qujian: this.qujian,
+                ref: this.ref,
+                quzhifanwei: this.quzhifanwei,
+                renderStyle: this.renderStyle,
+                hideDimLines: this.hideDimLines,
+                xianshigongshiwenben: this.xianshigongshiwenben,
+                xiaoshuchuli: this.xiaoshuchuli
+            })
+        };
     }
 
     clone(resetId = false) {

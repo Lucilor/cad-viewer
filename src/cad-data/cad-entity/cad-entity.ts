@@ -3,7 +3,7 @@ import {Angle, index2RGB, Matrix, MatrixLike, ObjectOf, Point, RGB2Index} from "
 import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
-import {lineweight2linewidth, linewidth2lineweight} from "../../cad-utils";
+import {lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -215,7 +215,7 @@ export abstract class CadEntity {
     export(): ObjectOf<any> {
         this._indexColor = RGB2Index(this.color.hex());
         this.update();
-        return cloneDeep({
+        return purgeObject({
             id: this.id,
             layer: this.layer,
             type: this.type,

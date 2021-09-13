@@ -118,3 +118,29 @@ export const toFixedTrim = (num: number, fractionDigits?: number | undefined) =>
     const str = num.toFixed(fractionDigits);
     return str.replace(/\.[1-9]*0+/, "");
 };
+
+const purgeObject2 = (obj: ObjectOf<any>) => {
+    const isEmpty = (val: any) => val === undefined || val === null;
+    Object.keys(obj).forEach((key) => {
+        let value = obj[key];
+        if (isEmpty(value)) {
+            delete obj[key];
+        } else if (Array.isArray(value)) {
+            value = value.filter((v) => !isEmpty(v));
+            if (value.length < 1) {
+                delete obj[key];
+            }
+        } else if (typeof value === "object") {
+            purgeObject2(value);
+            if (Object.keys(value).length < 1) {
+                delete obj[key];
+            }
+        }
+    });
+};
+
+export const purgeObject = (obj: ObjectOf<any>): ObjectOf<any> => {
+    const result = cloneDeep(obj);
+    purgeObject2(result);
+    return result;
+};

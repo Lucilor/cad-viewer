@@ -1,5 +1,5 @@
 import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
-import {getVectorFromArray} from "../../cad-utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -65,11 +65,13 @@ export class CadArc extends CadLineLike {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            center: this.center.toArray(),
-            radius: this.radius,
-            start_angle: this.start_angle,
-            end_angle: this.end_angle,
-            clockwise: this.clockwise
+            ...purgeObject({
+                center: this.center.toArray(),
+                radius: this.radius,
+                start_angle: this.start_angle,
+                end_angle: this.end_angle,
+                clockwise: this.clockwise
+            })
         };
     }
 

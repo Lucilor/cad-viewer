@@ -1,7 +1,7 @@
 import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
-import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray} from "../cad-utils";
+import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, purgeObject} from "../cad-utils";
 import {CadEntities} from "./cad-entities";
 import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
@@ -166,7 +166,7 @@ export class CadData {
                 delete options[k];
             }
         });
-        return cloneDeep({
+        return purgeObject({
             layers: exLayers,
             entities: this.entities.export(),
             id: this.id,
@@ -845,7 +845,7 @@ export class CadConnection {
     }
 
     export(): ObjectOf<any> {
-        return {
+        return purgeObject({
             ids: this.ids,
             names: this.names,
             lines: this.lines,
@@ -853,7 +853,7 @@ export class CadConnection {
             position: this.position,
             axis: this.axis,
             value: this.value
-        };
+        });
     }
 }
 export class CadComponents {
@@ -895,7 +895,7 @@ export class CadComponents {
         const connections: any[] = [];
         this.data.forEach((v) => data.push(v.export()));
         this.connections.forEach((v) => connections.push(v.export()));
-        return {data, connections};
+        return purgeObject({data, connections});
     }
 }
 
