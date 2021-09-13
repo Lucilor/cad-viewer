@@ -1,5 +1,5 @@
 import {Matrix, ObjectOf, Point} from "@utils";
-import {getVectorFromArray} from "../../cad-utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -49,11 +49,7 @@ export class CadMtext extends CadEntity {
         const anchor = this.anchor.toArray();
         return {
             ...super.export(),
-            insert: this.insert.toArray(),
-            font_size: this.font_size,
-            text: this.text,
-            anchor,
-            fontFamily: this.fontFamily
+            ...purgeObject({insert: this.insert.toArray(), font_size: this.font_size, text: this.text, anchor, fontFamily: this.fontFamily})
         };
     }
 

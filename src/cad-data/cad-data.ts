@@ -1,11 +1,18 @@
 import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
-import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray} from "../cad-utils";
+import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, purgeObject} from "../cad-utils";
 import {CadEntities} from "./cad-entities";
 import {CadCircle, CadDimension, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
+
+export interface CadDataInfo {
+    [key: string]: any;
+    唯一码?: string;
+    修改包边正面宽规则?: string;
+    锁边自动绑定可搭配铰边?: string;
+}
 
 export class CadData {
     entities = new CadEntities();
@@ -35,7 +42,7 @@ export class CadData {
     gudingkailiaobancai = "";
     suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料" = "算料+显示展开+开料";
     showKuandubiaozhu = false;
-    info: ObjectOf<any> = {};
+    info: CadDataInfo = {};
     attributes: ObjectOf<string> = {};
     bancaihoudufangxiang: "none" | "gt0" | "lt0" = "none";
     zhankai: CadZhankai[] = [];
@@ -159,7 +166,7 @@ export class CadData {
                 delete options[k];
             }
         });
-        return cloneDeep({
+        return purgeObject({
             layers: exLayers,
             entities: this.entities.export(),
             id: this.id,
@@ -838,7 +845,7 @@ export class CadConnection {
     }
 
     export(): ObjectOf<any> {
-        return {
+        return purgeObject({
             ids: this.ids,
             names: this.names,
             lines: this.lines,
@@ -846,7 +853,7 @@ export class CadConnection {
             position: this.position,
             axis: this.axis,
             value: this.value
-        };
+        });
     }
 }
 export class CadComponents {
@@ -888,7 +895,7 @@ export class CadComponents {
         const connections: any[] = [];
         this.data.forEach((v) => data.push(v.export()));
         this.connections.forEach((v) => connections.push(v.export()));
-        return {data, connections};
+        return purgeObject({data, connections});
     }
 }
 

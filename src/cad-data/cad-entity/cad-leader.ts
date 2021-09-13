@@ -1,6 +1,5 @@
 import {MatrixLike, ObjectOf, Point} from "@utils";
-import {cloneDeep} from "lodash";
-import {getVectorFromArray} from "../../cad-utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -24,8 +23,7 @@ export class CadLeader extends CadEntity {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            vertices: cloneDeep(this.vertices),
-            size: this.size
+            ...purgeObject({vertices: this.vertices, size: this.size})
         };
     }
 

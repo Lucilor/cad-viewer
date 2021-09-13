@@ -421,7 +421,7 @@ export class CadViewer extends EventEmitter {
 
                 if (entity.el && entity.el.width()) {
                     // * 计算文字尺寸
-                    const size = new Point(entity.el.width(), entity.el.height());
+                    const size = new Point(entity.el.width() as number, entity.el.height()as number);
                     entity.info.size = size.toArray();
 
                     // * 重新计算锚点

@@ -1,5 +1,5 @@
 import {Point, Arc, Angle, Matrix, ObjectOf} from "@utils";
-import {getVectorFromArray} from "../../cad-utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -41,8 +41,7 @@ export class CadCircle extends CadEntity {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            center: this.center.toArray(),
-            radius: this.radius
+            ...purgeObject({center: this.center.toArray(), radius: this.radius})
         };
     }
 

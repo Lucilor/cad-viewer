@@ -1,5 +1,6 @@
 import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
+import {purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadEntity} from "./cad-entity";
@@ -104,32 +105,29 @@ export abstract class CadLineLike extends CadEntity {
     }
 
     export(): ObjectOf<any> {
-        const result: ObjectOf<any> = {
-            mingzi: this.mingzi,
-            qujian: this.qujian,
-            gongshi: this.gongshi,
-            hideLength: this.hideLength,
-            lengthTextSize: this.lengthTextSize,
-            nextZhewan: this.nextZhewan,
-            betweenZhewan: this.betweenZhewan,
-            zhewanOffset: this.zhewanOffset,
-            zhewanValue: this.zhewanValue,
-            zidingzhankaichang: this.zidingzhankaichang,
-            zhankaifangshi: this.zhankaifangshi,
-            zhankaixiaoshuchuli: this.zhankaixiaoshuchuli,
-            suanliaosanxiaoshuchuli: this.suanliaosanxiaoshuchuli,
-            kailiaoshishanchu: this.kailiaoshishanchu,
-            变化方式: this.变化方式,
-            角度范围: this.角度范围,
-            可输入修改: this.可输入修改,
-            圆弧显示: this.圆弧显示
-        };
-        if (this.dashArray && this.dashArray.length > 0) {
-            result.dashArray = cloneDeep(this.dashArray);
-        }
         return {
             ...super.export(),
-            ...result
+            ...purgeObject({
+                mingzi: this.mingzi,
+                qujian: this.qujian,
+                gongshi: this.gongshi,
+                hideLength: this.hideLength,
+                lengthTextSize: this.lengthTextSize,
+                nextZhewan: this.nextZhewan,
+                betweenZhewan: this.betweenZhewan,
+                zhewanOffset: this.zhewanOffset,
+                zhewanValue: this.zhewanValue,
+                zidingzhankaichang: this.zidingzhankaichang,
+                zhankaifangshi: this.zhankaifangshi,
+                zhankaixiaoshuchuli: this.zhankaixiaoshuchuli,
+                suanliaosanxiaoshuchuli: this.suanliaosanxiaoshuchuli,
+                kailiaoshishanchu: this.kailiaoshishanchu,
+                变化方式: this.变化方式,
+                角度范围: this.角度范围,
+                可输入修改: this.可输入修改,
+                圆弧显示: this.圆弧显示,
+                dashArray: this.dashArray
+            })
         };
     }
 }
