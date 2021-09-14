@@ -41,7 +41,7 @@ export const drawLine = (draw: Container, start: Point, end: Point, style?: Line
         el = draw.line(x1, y1, x2, y2).addClass("stroke").fill("none");
     }
     if (dashArray && dashArray.length > 0) {
-        el.css("stroke-dasharray", dashArray.join(", "));
+        el.css("stroke-dasharray" as any, dashArray.join(", "));
     }
     return [el];
 };
@@ -98,19 +98,19 @@ export const drawText = (draw: Container, text: string, style: FontStyle, positi
         el.text(text).font({size});
     } else {
         el = draw.text(text).addClass("fill").stroke("none");
-        el.css("transform-box", "fill-box");
-        el.css("white-space", "pre");
+        el.css("transform-box" as any, "fill-box");
+        el.css("white-space" as any, "pre");
         el.font({size}).leading(1);
     }
     if (vertical) {
-        el.css("writing-mode", "vertical-lr");
+        el.css("writing-mode" as any, "vertical-lr");
         el.css("transform", `translate(${-anchor.x * 100}%, ${(1 - anchor.y) * 100}%) scale(-1, 1) rotate(180deg)`);
     } else {
-        el.css("writing-mode", "");
+        el.css("writing-mode" as any, "");
         el.css("transform", `translate(${-anchor.x * 100}%, ${anchor.y * 100}%) scale(1, -1)`);
     }
-    el.css("font-family", family);
-    el.css("font-weight", weight);
+    el.css("font-family" as any, family);
+    el.css("font-weight" as any, weight);
     el.move(position.x, position.y);
     return [el];
 };
