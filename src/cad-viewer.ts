@@ -298,7 +298,7 @@ export class CadViewer extends EventEmitter {
         } else {
             this._config.backgroundColor = color;
         }
-        this.draw.css("background-color", color.toString());
+        this.draw.css("background-color" as any, color.toString());
     }
 
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
