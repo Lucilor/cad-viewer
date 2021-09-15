@@ -5,7 +5,6 @@ import {lineweight2linewidth, linewidth2lineweight} from "../cad-utils";
 
 export class CadLayer {
     id: string;
-    originalId: string;
     color: Color;
     name: string;
     linewidth: number;
@@ -15,7 +14,6 @@ export class CadLayer {
     constructor(data: any = {}) {
         this.name = data.name || "";
         this.id = data.id ?? v4();
-        this.originalId = data.originalId ?? this.id;
         this.color = new Color();
         if (typeof data.color === "number") {
             this._indexColor = data.color;
@@ -42,7 +40,6 @@ export class CadLayer {
             id: this.id,
             color: this._indexColor,
             name: this.name,
-            originalId: this.originalId,
             lineweight: linewidth2lineweight(this.linewidth)
         };
     }

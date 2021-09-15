@@ -319,7 +319,7 @@ export class CadData {
         return this;
     }
 
-    transform(matrix: MatrixLike, alter = false) {
+    transform(matrix: MatrixLike, alter: boolean) {
         this.entities.transform(matrix, alter);
         this.partners.forEach((v) => v.transform(matrix, alter));
         this.components.transform(matrix, alter);
@@ -392,7 +392,7 @@ export class CadData {
                 translate = new Point();
             }
         }
-        partner.transform({translate});
+        partner.transform({translate}, false);
         const data = this.partners;
         const prev = data.findIndex((v) => v.id === partner.id);
         if (prev > -1) {
