@@ -1,5 +1,5 @@
 import {DEFAULT_TOLERANCE, isBetween, Point} from "@utils";
-import {CadArc, CadLine, CadLineLike, CadMtext, CadViewer} from "..";
+import {CadArc, CadLine, CadLineLike, CadMtext, CadViewer, DEFAULT_LENGTH_TEXT_SIZE} from "..";
 import {getVectorFromArray} from "../cad-utils";
 import {CadData} from "./cad-data";
 import {CadEntities} from "./cad-entities";
@@ -325,6 +325,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 } else if (anchor.y === 1) {
                     lengthText.info.offset[1] += textOffset;
                 }
+                line.lengthTextSize = line.length < 10 ? 22 : DEFAULT_LENGTH_TEXT_SIZE;
             }
             lengthText.calcBoundingPoints = false;
             const offset = getVectorFromArray(lengthText.info.offset);
