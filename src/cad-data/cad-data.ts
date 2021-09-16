@@ -62,6 +62,7 @@ export class CadData {
     算料单线长显示的最小长度: number | null = null;
     检查企料厚度 = true;
     对应门扇厚度 = 0;
+    跟随CAD开料板材: string | null = null;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -146,6 +147,7 @@ export class CadData {
         this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? null;
         this.检查企料厚度 = data.检查企料厚度 ?? true;
         this.对应门扇厚度 = data.对应门扇厚度 ?? 0;
+        this.跟随CAD开料板材 = data.跟随CAD开料板材 ?? null;
         this.updateDimensions();
         return this;
     }
@@ -213,7 +215,8 @@ export class CadData {
             板材绑定选项: this.板材绑定选项,
             算料单线长显示的最小长度: this.算料单线长显示的最小长度,
             检查企料厚度: this.检查企料厚度,
-            对应门扇厚度: this.对应门扇厚度
+            对应门扇厚度: this.对应门扇厚度,
+            跟随CAD开料板材: this.跟随CAD开料板材
         });
     }
 
@@ -319,7 +322,7 @@ export class CadData {
         return this;
     }
 
-    transform(matrix: MatrixLike, alter = false) {
+    transform(matrix: MatrixLike, alter: boolean) {
         this.entities.transform(matrix, alter);
         this.partners.forEach((v) => v.transform(matrix, alter));
         this.components.transform(matrix, alter);
@@ -392,7 +395,7 @@ export class CadData {
                 translate = new Point();
             }
         }
-        partner.transform({translate});
+        partner.transform({translate}, false);
         const data = this.partners;
         const prev = data.findIndex((v) => v.id === partner.id);
         if (prev > -1) {
