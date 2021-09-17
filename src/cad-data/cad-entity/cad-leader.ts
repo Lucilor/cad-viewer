@@ -23,7 +23,7 @@ export class CadLeader extends CadEntity {
     export(): ObjectOf<any> {
         return {
             ...super.export(),
-            ...purgeObject({vertices: this.vertices, size: this.size})
+            ...purgeObject({vertices: this.vertices.map((v) => v.toArray()), size: this.size})
         };
     }
 
