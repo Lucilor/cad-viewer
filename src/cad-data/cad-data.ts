@@ -420,12 +420,11 @@ export class CadData {
         if (rect1.width && rect1.height) {
             const rect2 = component.getBoundingRect();
             const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
-            const matrix = new Matrix({scale: component.suanliaodanZoom, origin: [rect2.x, rect2.y]});
             if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
                 translate.x += (rect1.width + rect2.width) / 2 + 15;
-                matrix.transform({translate});
+                component.transform({translate}, true);
             }
-            component.transform(matrix, true);
+            component.transform({scale: component.suanliaodanZoom, origin: [rect2.x, rect2.y]}, false);
         }
         const data = this.components.data;
         const prev = data.findIndex((v) => v.id === component.id);
