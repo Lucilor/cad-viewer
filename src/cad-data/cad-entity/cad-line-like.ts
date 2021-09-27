@@ -20,6 +20,7 @@ export const 变化方式 = [
 export interface CadLineLikeInfo {
     [key: string]: any;
     ignorePointsMap?: boolean;
+    varName?: string;
 }
 
 export abstract class CadLineLike extends CadEntity {
@@ -130,4 +131,6 @@ export abstract class CadLineLike extends CadEntity {
             })
         };
     }
+
+    abstract clone(resetId?: boolean): CadLineLike;
 }

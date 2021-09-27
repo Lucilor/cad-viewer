@@ -11,6 +11,7 @@ import {
     CadHatch,
     CadLeader,
     CadLine,
+    CadLineLike,
     CadMtext,
     CadSpline
 } from "./cad-entity";
@@ -265,9 +266,9 @@ export class CadEntities {
     getDimensionPoints(dimension: CadDimension) {
         const {entity1, entity2, distance, axis, distance2, ref} = dimension;
         let entity: CadDimensionEntity | undefined;
-        const line1 = this.find(entity1.id) as CadLine;
-        const line2 = this.find(entity2.id) as CadLine;
-        if (!(line1 instanceof CadLine) || !(line2 instanceof CadLine)) {
+        const line1 = this.find(entity1.id) as CadLineLike;
+        const line2 = this.find(entity2.id) as CadLineLike;
+        if (!(line1 instanceof CadLineLike) || !(line2 instanceof CadLineLike)) {
             return [];
         }
         switch (ref) {
@@ -298,7 +299,7 @@ export class CadEntities {
             default:
                 throw new Error("Invalid ref: " + ref);
         }
-        const getPoint = (e: CadLine, location: CadDimensionEntity["location"]) => {
+        const getPoint = (e: CadLineLike, location: CadDimensionEntity["location"]) => {
             const {start, end, middle, swapped} = e.clone();
             if (location === "start") {
                 return swapped ? end : start;
