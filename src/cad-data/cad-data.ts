@@ -421,11 +421,11 @@ export class CadData {
             const rect2 = component.getBoundingRect();
             const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
             const matrix = new Matrix();
-            const lastSuanliaodanZoom = component.info.lastSuanliaodanZoom ?? 1;
-            if (lastSuanliaodanZoom !== component.suanliaodanZoom) {
-                matrix.scale(component.suanliaodanZoom / lastSuanliaodanZoom);
-                component.info.lastSuanliaodanZoom = component.suanliaodanZoom;
-            }
+            // const lastSuanliaodanZoom = component.info.lastSuanliaodanZoom ?? 1;
+            // if (lastSuanliaodanZoom !== component.suanliaodanZoom) {
+            //     matrix.scale(component.suanliaodanZoom / lastSuanliaodanZoom);
+            //     component.info.lastSuanliaodanZoom = component.suanliaodanZoom;
+            // }
             if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
                 translate.x += (rect1.width + rect2.width) / 2 + 15;
                 matrix.transform({translate});

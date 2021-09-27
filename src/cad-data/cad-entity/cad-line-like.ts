@@ -131,4 +131,6 @@ export abstract class CadLineLike extends CadEntity {
             })
         };
     }
+
+    abstract clone(resetId?: boolean): CadLineLike;
 }
