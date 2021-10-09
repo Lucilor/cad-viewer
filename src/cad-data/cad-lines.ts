@@ -207,7 +207,7 @@ export const validateLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
             const dy = Math.abs(start.y - end.y);
             if (isBetween(dx, min, max) || isBetween(dy, min, max)) {
                 vv.info.errors = ["斜率不符合要求"];
-                result.errMsg.push(`线${vv.id}斜率不符合要求`);
+                result.errMsg.push(`线段斜率不符合要求(线长: ${vv.length.toFixed(2)})`);
             } else {
                 vv.info.errors = [];
             }
@@ -216,7 +216,7 @@ export const validateLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     if (lines.length < 1) {
         result.valid = false;
         result.errMsg.push("没有线");
-    } else if (lines.length > 1) {
+    } else if (lines.length > 1 && !data.shuangxiangzhewan) {
         result.valid = false;
         result.errMsg.push("CAD分成了多段");
         for (let i = 0; i < lines.length - 1; i++) {

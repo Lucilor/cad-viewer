@@ -1,5 +1,5 @@
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
-import {loadImage, ObjectOf, Point, SessionStorage} from "@utils";
+import {calc, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -7,9 +7,9 @@ import {CadEntities} from "./cad-data/cad-entities";
 import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
+import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
 import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
-import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 
 export interface CadViewerFont {
     name: string;
@@ -379,7 +379,14 @@ export class CadViewer extends EventEmitter {
                         el.remove();
                         entity.el = null;
                     } else {
-                        entity.text = toFixedTrim(parent.length);
+                        let length = parent.length;
+                        if (parent.显示线长) {
+                            const length2 = calc(parent.显示线长, {线长: length});
+                            if (!isNaN(length2)) {
+                                length = length2;
+                            }
+                        }
+                        entity.text = toFixedTrim(length);
                         entity.font_size = parent.lengthTextSize;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
@@ -421,7 +428,7 @@ export class CadViewer extends EventEmitter {
 
                 if (entity.el && entity.el.width()) {
                     // * 计算文字尺寸
-                    const size = new Point(entity.el.width() as number, entity.el.height()as number);
+                    const size = new Point(entity.el.width() as number, entity.el.height() as number);
                     entity.info.size = size.toArray();
 
                     // * 重新计算锚点

@@ -1,6 +1,6 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "3.9.12",
+	"version": "3.10.0",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
@@ -9,7 +9,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lib": "webpack --config webpack.lib.js",
 		"dist": "webpack --config webpack.dist.js",
-		"build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js"
+		"build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js",
+		"prepublish": "pnpm build"
 	},
 	"repository": {
 		"type": "git",

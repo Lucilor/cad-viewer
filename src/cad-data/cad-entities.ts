@@ -228,9 +228,14 @@ export class CadEntities {
         return this;
     }
 
-    toArray() {
+    toArray(filter?: (e: CadEntity) => boolean) {
         const result: CadEntity[] = [];
-        this.forEach((e) => result.push(e));
+        this.forEach((e) => {
+            if (typeof filter === "function" && !filter(e)) {
+                return;
+            }
+            result.push(e);
+        });
         return result;
     }
 

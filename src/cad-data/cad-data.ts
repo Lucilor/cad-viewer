@@ -63,6 +63,9 @@ export class CadData {
     检查企料厚度 = true;
     对应门扇厚度 = 0;
     跟随CAD开料板材: string | null = null;
+    算料特殊要求: string | null = null;
+    正面宽差值 = 0;
+    墙厚差值 = 0;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -148,6 +151,9 @@ export class CadData {
         this.检查企料厚度 = data.检查企料厚度 ?? true;
         this.对应门扇厚度 = data.对应门扇厚度 ?? 0;
         this.跟随CAD开料板材 = data.跟随CAD开料板材 ?? null;
+        this.算料特殊要求 = data.算料特殊要求 ?? null;
+        this.正面宽差值 = data.正面宽差值 ?? 0;
+        this.墙厚差值 = data.墙厚差值 ?? 0;
         this.updateDimensions();
         return this;
     }
@@ -216,7 +222,10 @@ export class CadData {
             算料单线长显示的最小长度: this.算料单线长显示的最小长度,
             检查企料厚度: this.检查企料厚度,
             对应门扇厚度: this.对应门扇厚度,
-            跟随CAD开料板材: this.跟随CAD开料板材
+            跟随CAD开料板材: this.跟随CAD开料板材,
+            算料特殊要求: this.算料特殊要求,
+            正面宽差值: this.正面宽差值,
+            墙厚差值: this.墙厚差值
         });
     }
 
