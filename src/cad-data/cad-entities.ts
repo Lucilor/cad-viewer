@@ -150,6 +150,12 @@ export class CadEntities {
     }
 
     export() {
+        let i = 0;
+        this.dimension.forEach((e) => {
+            if (!e.mingzi) {
+                e.mingzi = "活动标注" + ++i;
+            }
+        });
         const result: ObjectOf<any> = {};
         for (const key of cadTypesKey) {
             result[key] = {};
