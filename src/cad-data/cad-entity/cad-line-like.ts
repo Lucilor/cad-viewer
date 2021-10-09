@@ -50,6 +50,7 @@ export abstract class CadLineLike extends CadEntity {
     mingzi: string;
     qujian: string;
     gongshi: string;
+    guanlianbianhuagongshi: string;
     hideLength: boolean;
     lengthTextSize: number;
     nextZhewan: string;
@@ -67,6 +68,7 @@ export abstract class CadLineLike extends CadEntity {
     dashArray?: number[];
     info!: CadLineLikeInfo;
     圆弧显示: "默认" | "半径" | "弧长" = "默认";
+    显示线长?: string;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -74,6 +76,7 @@ export abstract class CadLineLike extends CadEntity {
         this.mingzi = data.mingzi ?? "";
         this.qujian = data.qujian ?? "";
         this.gongshi = data.gongshi ?? "";
+        this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
         this.hideLength = data.hideLength === true;
         this.lengthTextSize = data.lengthTextSize ?? DEFAULT_LENGTH_TEXT_SIZE;
         this.nextZhewan = data.nextZhewan ?? "自动";
@@ -103,15 +106,19 @@ export abstract class CadLineLike extends CadEntity {
             this.dashArray = cloneDeep(data.dashArray);
         }
         this.圆弧显示 = data.圆弧显示 ?? "默认";
+        if (data.显示线长) {
+            this.显示线长 = data.显示线长;
+        }
     }
 
     export(): ObjectOf<any> {
-        return {
+        const result = {
             ...super.export(),
             ...purgeObject({
                 mingzi: this.mingzi,
                 qujian: this.qujian,
                 gongshi: this.gongshi,
+                guanlianbianhuagongshi: this.guanlianbianhuagongshi,
                 hideLength: this.hideLength,
                 lengthTextSize: this.lengthTextSize,
                 nextZhewan: this.nextZhewan,
@@ -130,6 +137,10 @@ export abstract class CadLineLike extends CadEntity {
                 dashArray: this.dashArray
             })
         };
+        if (this.显示线长) {
+            result.显示线长 = this.显示线长;
+        }
+        return result;
     }
 
     abstract clone(resetId?: boolean): CadLineLike;

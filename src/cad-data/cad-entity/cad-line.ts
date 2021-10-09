@@ -9,7 +9,6 @@ export class CadLine extends CadLineLike {
     type: CadType = "LINE";
     start: Point;
     end: Point;
-    guanlianbianhuagongshi: string;
     kongwei: string;
     tiaojianquzhi: {
         key: string;
@@ -47,7 +46,6 @@ export class CadLine extends CadLineLike {
         super(data, layers, resetId);
         this.start = getVectorFromArray(data.start);
         this.end = getVectorFromArray(data.end);
-        this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
         this.kongwei = data.kongwei ?? "";
         this.tiaojianquzhi = data.tiaojianquzhi ?? [];
         this.tiaojianquzhi.forEach((v) => {
@@ -75,7 +73,6 @@ export class CadLine extends CadLineLike {
             ...super.export(),
             start: this.start.toArray(),
             end: this.end.toArray(),
-            guanlianbianhuagongshi: this.guanlianbianhuagongshi,
             kongwei: this.kongwei,
             tiaojianquzhi: this.tiaojianquzhi,
             shiyongchazhi: this.shiyongchazhi
