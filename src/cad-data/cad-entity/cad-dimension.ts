@@ -1,5 +1,5 @@
-import {Matrix, ObjectOf} from "@utils";
-import {purgeObject} from "../../cad-utils";
+import {Matrix, ObjectOf, Point} from "@utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -17,6 +17,7 @@ export class CadDimension extends CadEntity {
     axis: "x" | "y";
     entity1: CadDimensionEntity;
     entity2: CadDimensionEntity;
+    defPoints?: Point[];
     distance: number;
     distance2?: number;
     cad1: string;
@@ -76,6 +77,9 @@ export class CadDimension extends CadEntity {
                 this[field].location = data[field].location ?? "center";
             }
         });
+        if (Array.isArray(data.defPoints)) {
+            this.defPoints = data.defPoints.map((v: number[]) => getVectorFromArray(v));
+        }
         this.axis = data.axis ?? "x";
         this.distance = data.distance ?? 20;
         this.cad1 = data.cad1 ?? "";
@@ -96,7 +100,7 @@ export class CadDimension extends CadEntity {
     }
 
     export(): ObjectOf<any> {
-        return {
+        const result = {
             ...super.export(),
             ...purgeObject({
                 dimstyle: this.dimstyle,
@@ -117,6 +121,10 @@ export class CadDimension extends CadEntity {
                 xiaoshuchuli: this.xiaoshuchuli
             })
         };
+        if (this.defPoints) {
+            result.defPoints = this.defPoints.map((v) => v.toArray());
+        }
+        return result;
     }
 
     clone(resetId = false) {

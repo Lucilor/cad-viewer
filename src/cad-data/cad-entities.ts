@@ -275,7 +275,28 @@ export class CadEntities {
     }
 
     getDimensionPoints(dimension: CadDimension) {
-        const {entity1, entity2, distance, axis, distance2, ref} = dimension;
+        const {entity1, entity2, distance, axis, distance2, ref, defPoints} = dimension;
+        if (defPoints?.length === 3) {
+            const [p0, p1, p2] = defPoints;
+            const p3 = p0.clone();
+            const p4 = p0.clone();
+            if (axis === "x") {
+                if (Math.abs(p0.x - p1.x) < Math.abs(p0.x - p2.x)) {
+                    p4.x += p2.x - p1.x;
+                } else {
+                    p3.x += p1.x - p2.x;
+                }
+            } else if (axis === "y") {
+                if (Math.abs(p0.y - p1.y) < Math.abs(p0.y - p2.y)) {
+                    p4.y += p2.y - p1.y;
+                } else {
+                    p3.y += p1.y - p2.y;
+                }
+            } else {
+                return [];
+            }
+            return [p1, p2, p3, p4];
+        }
         let entity: CadDimensionEntity | undefined;
         const line1 = this.find(entity1.id) as CadLineLike;
         const line2 = this.find(entity2.id) as CadLineLike;
@@ -370,7 +391,6 @@ export class CadEntities {
         if (distance2 !== undefined) {
             [p3, p4].forEach((pn) => (pn.y = distance2));
         }
-
         return [p1, p2, p3, p4];
     }
 
