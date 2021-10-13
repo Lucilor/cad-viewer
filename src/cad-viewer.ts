@@ -380,13 +380,17 @@ export class CadViewer extends EventEmitter {
                         entity.el = null;
                     } else {
                         let length = parent.length;
+                        let prefix = "";
                         if (parent.显示线长) {
                             const length2 = calc(parent.显示线长, {线长: length});
                             if (!isNaN(length2)) {
                                 length = length2;
                             }
+                        } else if (parent instanceof CadArc && parent.圆弧显示 === "半径") {
+                            length = parent.radius;
+                            prefix = "R";
                         }
-                        entity.text = toFixedTrim(length);
+                        entity.text = prefix + toFixedTrim(length);
                         entity.font_size = parent.lengthTextSize;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
