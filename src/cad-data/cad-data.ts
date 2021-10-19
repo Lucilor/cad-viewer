@@ -81,6 +81,7 @@ export class CadData {
     算料特殊要求: string | null = null;
     正面宽差值 = 0;
     墙厚差值 = 0;
+    企料翻转 = false;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -169,6 +170,7 @@ export class CadData {
         this.算料特殊要求 = data.算料特殊要求 ?? null;
         this.正面宽差值 = data.正面宽差值 ?? 0;
         this.墙厚差值 = data.墙厚差值 ?? 0;
+        this.企料翻转 = data.企料翻转 ?? false;
         this.updateDimensions();
         return this;
     }
@@ -240,7 +242,8 @@ export class CadData {
             跟随CAD开料板材: this.跟随CAD开料板材,
             算料特殊要求: this.算料特殊要求,
             正面宽差值: this.正面宽差值,
-            墙厚差值: this.墙厚差值
+            墙厚差值: this.墙厚差值,
+            企料翻转: this.企料翻转
         });
     }
 
