@@ -67,7 +67,7 @@ export const findAllAdjacentLines = (
     point: Point,
     tolerance = DEFAULT_TOLERANCE,
     ids: string[] = []
-) => {
+): {entities: CadLineLike[]; closed: boolean} => {
     const entities: CadLineLike[] = [];
     let closed = false;
     ids.push(entity.id);
@@ -88,7 +88,7 @@ export const findAllAdjacentLines = (
         }
         entities.push(e);
         ids.push(e.id);
-        const result = findAllAdjacentLines(map, e, p, tolerance, ids) as {entities: CadLineLike[]; closed: boolean};
+        const result = findAllAdjacentLines(map, e, p, tolerance, ids);
         closed = result.closed;
         entities.push(...result.entities);
     }
@@ -164,9 +164,56 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
             map = generatePointsMap(entities);
             regen = false;
         }
-        const adjLines = findAllAdjacentLines(map, startLine, startPoint).entities.filter((e) => e.length);
-        const lines = [startLine, ...adjLines];
-        for (let i = 1; i < lines.length; i++) {
+        let adjLines = findAllAdjacentLines(map, startLine, startPoint).entities.filter((e) => e.length);
+        if (startLine instanceof CadLine) {
+            adjLines = adjLines.filter((e) => {
+                if (e instanceof CadLine) {
+                    if (!e.theta.equals(startLine.theta, tolerance)) {
+                        return true;
+                    }
+                    if (e.start.equals(startLine.start, tolerance) && e.end.equals(startLine.end, tolerance)) {
+                        return false;
+                    }
+                    if (e.start.equals(startLine.end, tolerance) && e.end.equals(startLine.start, tolerance)) {
+                        return false;
+                    }
+                    return true;
+                }
+                return true;
+            });
+        }
+        let lines = [startLine, ...adjLines];
+        let count = lines.length;
+        const duplicateLines: Set<number>[] = [];
+        const isPtEq = (p1: Point, p2: Point) => p1.equals(p2, tolerance);
+        for (let i = 0; i < count; i++) {
+            for (let j = i + 1; j < count; j++) {
+                const e1 = lines[i];
+                const e2 = lines[j];
+                if (i === j || !(e1 instanceof CadLine) || !(e2 instanceof CadLine)) {
+                    continue;
+                }
+                const p1 = e1.start;
+                const p2 = e1.end;
+                const p3 = e2.start;
+                const p4 = e2.end;
+                if (e1.theta.equals(e2.theta, tolerance) && ((isPtEq(p1, p3) && isPtEq(p2, p4)) || (isPtEq(p1, p4) && isPtEq(p2, p3)))) {
+                    const group = duplicateLines.find((vv) => vv.has(i) || vv.has(j));
+                    if (group) {
+                        group.add(i);
+                        group.add(j);
+                    } else {
+                        duplicateLines.push(new Set([i, j]));
+                    }
+                }
+            }
+        }
+        const toRemove = new Set(duplicateLines.map((vv) => Array.from(vv).slice(1)).flat());
+        toRemove.forEach((i) => result.push([lines[i]]));
+        exclude.push(...lines.map((e) => e.id));
+        lines = lines.filter((_, i) => !toRemove.has(i));
+        count = lines.length;
+        for (let i = 1; i < count; i++) {
             const prev = lines[i - 1];
             const curr = lines[i];
             if (prev.end.distanceTo(curr.start) > tolerance) {
@@ -174,7 +221,6 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
                 regen = true;
             }
         }
-        exclude.push(...lines.map((e) => e.id));
         result.push(lines);
     }
     return result;
@@ -218,7 +264,7 @@ export const validateLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         result.errMsg.push("没有线");
     } else if (lines.length > 1 && !data.shuangxiangzhewan) {
         result.valid = false;
-        result.errMsg.push("CAD分成了多段");
+        result.errMsg.push("CAD分成了多段或线重叠");
         for (let i = 0; i < lines.length - 1; i++) {
             const currGroup = lines[i];
             const nextGroup = lines[i + 1];
