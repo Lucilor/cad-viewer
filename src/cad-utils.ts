@@ -12,6 +12,15 @@ export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = 
     return new Point(...data);
 };
 
+export const getVectorsFromArray = (data: any, defaultVal = new Point()) => {
+    if (Array.isArray(data)) {
+        const result: Point[] = [];
+        data.forEach((v: any) => result.push(getVectorFromArray(v, defaultVal)));
+        return result;
+    }
+    return null;
+};
+
 export const getArray = <T>(data: any): T[] => {
     if (Array.isArray(data)) {
         return cloneDeep(data);

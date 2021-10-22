@@ -421,7 +421,7 @@ export const autoFixLine = (cad: CadViewer, line: CadLine, tolerance = DEFAULT_T
     }
     const map = generatePointsMap(cad.data.getAllEntities(), tolerance);
     const {entities} = findAllAdjacentLines(map, line, line.end, tolerance);
-    entities.forEach((e) => e.transform({translate}));
+    entities.forEach((e) => e.transform({translate}, true));
     line.end.add(translate);
 };
 

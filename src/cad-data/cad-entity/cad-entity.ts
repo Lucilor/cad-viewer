@@ -180,7 +180,7 @@ export abstract class CadEntity {
         return this;
     }
 
-    abstract transform(matrix: MatrixLike, alter?: boolean, parent?: CadEntity): this;
+    abstract transform(matrix: MatrixLike, alter: boolean, parent?: CadEntity): this;
 
     update() {
         if (this.el) {

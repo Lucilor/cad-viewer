@@ -5,6 +5,7 @@ import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
 import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
@@ -307,7 +308,7 @@ export class CadViewer extends EventEmitter {
         if (!entity.visible) {
             entity.el?.remove();
             entity.el = null;
-            return this;
+            return [];
         }
         entity.update();
         let el = entity.el;
@@ -477,7 +478,7 @@ export class CadViewer extends EventEmitter {
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
             entity.el = null;
-            return this;
+            return drawResult;
         }
         el.attr({id: entity.id, type: entity.type});
         el.children().forEach((c) => {
@@ -491,7 +492,7 @@ export class CadViewer extends EventEmitter {
         });
         entity.update();
         entity.children.forEach((c) => this.drawEntity(c, style), true);
-        return this;
+        return drawResult;
     }
 
     render(entities?: CadEntity | CadEntities | CadEntity[], style: Partial<CadStyle> = {}) {
@@ -506,7 +507,15 @@ export class CadViewer extends EventEmitter {
         }
         if (entities.length) {
             entities.dimension.forEach((e) => (e.visible = !this._config.hideDimensions));
-            entities.forEach((e) => this.drawEntity(e, style), true);
+            entities.forEach((entity) => {
+                if (entity instanceof CadInsert) {
+                    // const block = this.data.blocks[entity.name];
+                    // block?.forEach((v) => console.log(this.drawEntity(v.clone().transform({translate: entity.insert}, true), style)));
+                    // TODO: draw blocks
+                } else {
+                    this.drawEntity(entity, style);
+                }
+            }, true);
             this.emit("render", entities);
         }
         return this;

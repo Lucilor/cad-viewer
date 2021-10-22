@@ -1,5 +1,5 @@
 import {MatrixLike, ObjectOf, Point} from "@utils";
-import {getVectorFromArray, purgeObject} from "../../cad-utils";
+import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -15,12 +15,8 @@ export class CadSpline extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        if (Array.isArray(data.fitPoints)) {
-            data.fitPoints.forEach((v: any) => this.fitPoints.push(getVectorFromArray(v)));
-        }
-        if (Array.isArray(data.controlPoints)) {
-            data.controlPoints.forEach((v: any) => this.controlPoints.push(getVectorFromArray(v)));
-        }
+        this.fitPoints = getVectorsFromArray(data.fitPoints) ?? [];
+        this.controlPoints = getVectorsFromArray(data.controlPoints) ?? [];
         if (typeof data.degree === "number") {
             this.degree = data.degree;
         }

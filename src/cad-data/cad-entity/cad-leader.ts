@@ -1,5 +1,5 @@
 import {MatrixLike, ObjectOf, Point} from "@utils";
-import {getVectorFromArray, purgeObject} from "../../cad-utils";
+import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -14,9 +14,7 @@ export class CadLeader extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        if (Array.isArray(data.vertices)) {
-            data.vertices.forEach((v: any) => this.vertices.push(getVectorFromArray(v)));
-        }
+        this.vertices = getVectorsFromArray(data.vertices) ?? [];
         this.size = data.size ?? 5;
     }
 
@@ -28,7 +26,7 @@ export class CadLeader extends CadEntity {
     }
 
     clone(resetId = false) {
-        return new CadLeader(resetId);
+        return new CadLeader(this, [], resetId);
     }
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
