@@ -387,7 +387,7 @@ export class CadViewer extends EventEmitter {
                             if (!isNaN(length2)) {
                                 length = length2;
                             }
-                        } else if (parent instanceof CadArc && parent.圆弧显示 === "半径") {
+                        } else if (parent instanceof CadArc && (parent.圆弧显示 === "半径" || parent.圆弧显示 === "R+半径")) {
                             length = parent.radius;
                             prefix = "R";
                         }
