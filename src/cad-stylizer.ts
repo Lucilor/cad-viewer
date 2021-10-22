@@ -28,7 +28,7 @@ export class CadStylizer {
             fontStyle: {size: 16, family: "", weight: ""},
             opacity: 1
         };
-        let color = new Color(params.color || entity?.color || 0);
+        let color = new Color(params.color || entity?.color.rgbNumber() || 0);
         if (params.linewidth && params.linewidth > 0) {
             result.linewidth = params.linewidth;
         } else if (entity.linewidth > 0) {
