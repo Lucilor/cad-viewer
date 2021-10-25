@@ -2,8 +2,8 @@ import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, uniqWith, intersection} from "lodash";
 import {v4} from "uuid";
 import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, purgeObject} from "../cad-utils";
-import {CadEntities} from "./cad-entities";
-import {CadCircle, CadDimension, CadLine} from "./cad-entity";
+import {CadEntities, getCadEntity} from "./cad-entities";
+import {CadCircle, CadDimension, CadEntity, CadLine} from "./cad-entity";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
@@ -12,10 +12,26 @@ export interface CadDataInfo {
     唯一码?: string;
     修改包边正面宽规则?: string;
     锁边自动绑定可搭配铰边?: string;
+    version?: CadVersion;
+}
+
+export enum CadVersion {
+    DXF9 = "AC1004",
+    DXF10 = "AC1006",
+    DXF12 = "AC1009",
+    DXF13 = "AC1012",
+    DXF14 = "AC1014",
+    DXF2000 = "AC1015",
+    DXF2004 = "AC1018",
+    DXF2007 = "AC1021",
+    DXF2010 = "AC1024",
+    DXF2013 = "AC1027",
+    DXF2018 = "AC1032"
 }
 
 export class CadData {
     entities = new CadEntities();
+    blocks: ObjectOf<CadEntity[]> = {};
     layers: CadLayer[] = [];
     id = "";
     numId = 0;
@@ -66,6 +82,7 @@ export class CadData {
     算料特殊要求: string | null = null;
     正面宽差值 = 0;
     墙厚差值 = 0;
+    企料翻转 = false;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -86,8 +103,21 @@ export class CadData {
             for (const id in data.layers) {
                 this.layers.push(new CadLayer(data.layers[id]));
             }
+        } else {
+            this.layers = [];
         }
         this.entities = new CadEntities(data.entities || {}, this.layers);
+        this.entities.root = this;
+        if (typeof data.blocks === "object") {
+            for (const name in data.blocks) {
+                const block = data.blocks[name];
+                if (Array.isArray(block) && block.length > 0) {
+                    this.blocks[name] = block.map((v) => getCadEntity(v, this.layers));
+                }
+            }
+        } else {
+            this.blocks = {};
+        }
         this.conditions = getArray(data.conditions);
         this.options = getObject(data.options);
         this.baseLines = [];
@@ -154,6 +184,7 @@ export class CadData {
         this.算料特殊要求 = data.算料特殊要求 ?? null;
         this.正面宽差值 = data.正面宽差值 ?? 0;
         this.墙厚差值 = data.墙厚差值 ?? 0;
+        this.企料翻转 = data.企料翻转 ?? false;
         this.updateDimensions();
         return this;
     }
@@ -174,9 +205,17 @@ export class CadData {
                 delete options[k];
             }
         });
+        const blocks: ObjectOf<any> = {};
+        for (const name in this.blocks) {
+            const block = this.blocks[name];
+            if (block.length > 0) {
+                blocks[name] = block.map((v) => v.export());
+            }
+        }
         return purgeObject({
             layers: exLayers,
             entities: this.entities.export(),
+            blocks,
             id: this.id,
             numId: this.numId,
             name: this.name,
@@ -225,7 +264,8 @@ export class CadData {
             跟随CAD开料板材: this.跟随CAD开料板材,
             算料特殊要求: this.算料特殊要求,
             正面宽差值: this.正面宽差值,
-            墙厚差值: this.墙厚差值
+            墙厚差值: this.墙厚差值,
+            企料翻转: this.企料翻转
         });
     }
 
@@ -274,11 +314,10 @@ export class CadData {
     clone(resetIds = false) {
         const data = new CadData(this.export());
         if (resetIds) {
-            this.layers = this.layers.map((v) => {
-                const nv = new CadLayer(v.export());
-                nv.id = v4();
-                return nv;
-            });
+            data.layers.forEach((v) => (v.id = v4()));
+            for (const name in data.blocks) {
+                data.blocks[name].forEach((v) => (v.id = v4()));
+            }
             data.entities = data.entities.clone(true);
             data.partners = data.partners.map((v) => v.clone(true));
             data.components.data = data.components.data.map((v) => v.clone(true));
@@ -289,6 +328,10 @@ export class CadData {
     resetIds(entitiesOnly = false) {
         if (!entitiesOnly) {
             this.id = v4();
+        }
+        this.layers.forEach((v) => (v.id = v4()));
+        for (const name in this.blocks) {
+            this.blocks[name].forEach((v) => (v.id = v4()));
         }
         this.entities.resetIds();
         this.partners.forEach((v) => {
@@ -304,6 +347,13 @@ export class CadData {
 
     merge(data: CadData) {
         this.layers = this.layers.concat(data.layers);
+        for (const name in data.blocks) {
+            if (Array.isArray(this.blocks[name])) {
+                this.blocks[name] = this.blocks[name].concat(data.blocks[name]);
+            } else {
+                this.blocks[name] = data.blocks[name];
+            }
+        }
         this.entities.merge(data.entities);
         this.conditions = mergeArray(this.conditions, data.conditions, "value");
         this.options = mergeObject(this.options, data.options);
@@ -318,6 +368,9 @@ export class CadData {
     separate(data: CadData) {
         const layerIds = data.layers.map((v) => v.id);
         this.layers = this.layers.filter((v) => !layerIds.includes(v.id));
+        for (const name in data.blocks) {
+            delete this.blocks[name];
+        }
         this.entities.separate(data.entities);
         this.conditions = separateArray(this.conditions, data.conditions);
         this.options = separateObject(this.options, data.options);
@@ -332,6 +385,9 @@ export class CadData {
     }
 
     transform(matrix: MatrixLike, alter: boolean) {
+        for (const name in this.blocks) {
+            this.blocks[name].forEach((v) => v.transform(matrix, alter));
+        }
         this.entities.transform(matrix, alter);
         this.partners.forEach((v) => v.transform(matrix, alter));
         this.components.transform(matrix, alter);

@@ -60,7 +60,7 @@
                         "classPropertiesAllowed": false
                     }
                 ],
-                "no-shadow": "error",
+                "@typescript-eslint/no-shadow": "error",
                 "no-empty": ["error", {"allowEmptyCatch": true}],
                 "object-curly-spacing": ["error", "never"],
                 "array-bracket-spacing": ["error", "never"],
