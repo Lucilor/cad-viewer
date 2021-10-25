@@ -1,18 +1,14 @@
-import {DEFAULT_TOLERANCE, isBetween, Point} from "@utils";
-import {CadArc, CadLine, CadLineLike, CadMtext, CadViewer, DEFAULT_LENGTH_TEXT_SIZE} from "..";
+import {DEFAULT_TOLERANCE, Point} from "@utils";
+import {CadArc, CadLine, CadLineLike, CadMtext, DEFAULT_LENGTH_TEXT_SIZE} from "..";
 import {getVectorFromArray} from "../cad-utils";
 import {CadData} from "./cad-data";
 import {CadEntities} from "./cad-entities";
-
-export const validColors = ["#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff"];
 
 export type PointsMap = {
     point: Point;
     lines: CadLineLike[];
     selected: boolean;
 }[];
-
-export const LINE_LIMIT = [0.01, 0.7];
 
 export const generatePointsMap = (entities?: CadEntities, tolerance = DEFAULT_TOLERANCE) => {
     const map: PointsMap = [];
@@ -236,66 +232,6 @@ export const getLinesDistance = (l1: CadLineLike, l2: CadLineLike) => {
     return Math.min(d1, d2, d3, d4);
 };
 
-export interface ValidateResult {
-    valid: boolean;
-    errMsg: string[];
-    lines: CadLineLike[][];
-}
-
-export const validateLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
-    const lines = sortLines(data, tolerance);
-    const result: ValidateResult = {valid: true, errMsg: [], lines};
-    const [min, max] = LINE_LIMIT;
-    lines.forEach((v) =>
-        v.forEach((vv) => {
-            const {start, end} = vv;
-            const dx = Math.abs(start.x - end.x);
-            const dy = Math.abs(start.y - end.y);
-            if (isBetween(dx, min, max) || isBetween(dy, min, max)) {
-                vv.info.errors = ["斜率不符合要求"];
-                result.errMsg.push(`线段斜率不符合要求(线长: ${vv.length.toFixed(2)})`);
-            } else {
-                vv.info.errors = [];
-            }
-        })
-    );
-    if (lines.length < 1) {
-        result.valid = false;
-        result.errMsg.push("没有线");
-    } else if (lines.length > 1 && !data.shuangxiangzhewan) {
-        result.valid = false;
-        result.errMsg.push("CAD分成了多段或线重叠");
-        for (let i = 0; i < lines.length - 1; i++) {
-            const currGroup = lines[i];
-            const nextGroup = lines[i + 1];
-            const l1 = currGroup[0];
-            const l2 = currGroup[currGroup.length - 1];
-            const l3 = nextGroup[0];
-            const l4 = nextGroup[nextGroup.length - 1];
-            let minD = Infinity;
-            let errLines: CadLineLike[] = [];
-            [
-                [l1, l3],
-                [l1, l4],
-                [l2, l3],
-                [l2, l4]
-            ].forEach((group) => {
-                const d = getLinesDistance(group[0], group[1]);
-                if (d < minD) {
-                    minD = d;
-                    errLines = group;
-                }
-            });
-            errLines.forEach((l) => {
-                if (!l.info.errors.includes("CAD分成了多段的断裂处")) {
-                    l.info.errors.push("CAD分成了多段的断裂处");
-                }
-            });
-        }
-    }
-    return result;
-};
-
 export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     const lines = sortLines(data, tolerance);
     lines.forEach((group) => {
@@ -405,24 +341,6 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
             bianhuazhiText.anchor.copy(anchor);
         });
     });
-};
-
-export const autoFixLine = (cad: CadViewer, line: CadLine, tolerance = DEFAULT_TOLERANCE) => {
-    const {start, end} = line;
-    const dx = start.x - end.x;
-    const dy = start.y - end.y;
-    const [min, max] = LINE_LIMIT;
-    const translate = new Point();
-    if (isBetween(Math.abs(dx), min, max)) {
-        translate.x = dx;
-    }
-    if (isBetween(Math.abs(dy), min, max)) {
-        translate.y = dy;
-    }
-    const map = generatePointsMap(cad.data.getAllEntities(), tolerance);
-    const {entities} = findAllAdjacentLines(map, line, line.end, tolerance);
-    entities.forEach((e) => e.transform({translate}, true));
-    line.end.add(translate);
 };
 
 export const isLinesParallel = (lines: CadLine[], accurary = 0) => {
