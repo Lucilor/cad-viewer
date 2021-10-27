@@ -8,4 +8,6 @@ export * from "./cad-utils";
 export * from "./cad-stylizer";
 export * from "./cad-viewer";
 export * from "./cad-viewer-controls";
+export * from "./cad-viewer-controls";
+export * from "./color";
 export * from "./draw";

@@ -1,9 +1,10 @@
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
-import {Angle, index2RGB, Matrix, MatrixLike, ObjectOf, Point, RGB2Index} from "@utils";
+import {Angle, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
+import {index2RGB, RGB2Index} from "../../color";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";

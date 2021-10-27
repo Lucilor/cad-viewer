@@ -1,7 +1,7 @@
-import {index2RGB, RGB2Index} from "@utils";
 import Color from "color";
 import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight} from "../cad-utils";
+import {index2RGB, RGB2Index} from "../color";
 
 export class CadLayer {
     id: string;
