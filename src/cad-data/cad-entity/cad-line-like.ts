@@ -109,6 +109,7 @@ export abstract class CadLineLike extends CadEntity {
         if (data.显示线长) {
             this.显示线长 = data.显示线长;
         }
+        this.swapped = data.swapped ?? false;
     }
 
     export(): ObjectOf<any> {
@@ -134,7 +135,8 @@ export abstract class CadLineLike extends CadEntity {
                 角度范围: this.角度范围,
                 可输入修改: this.可输入修改,
                 圆弧显示: this.圆弧显示,
-                dashArray: this.dashArray
+                dashArray: this.dashArray,
+                swapped: this.swapped
             })
         };
         if (this.显示线长) {
