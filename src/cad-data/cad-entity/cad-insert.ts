@@ -9,6 +9,7 @@ export class CadInsert extends CadEntity {
     name: string;
     insert: Point;
     transformMatrix = new Matrix();
+    calcBoundingPoints = false;
     get boundingPoints() {
         const data = this.root?.root;
         if (data) {
