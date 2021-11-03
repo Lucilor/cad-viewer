@@ -486,16 +486,17 @@ export class CadData {
     addComponent(component: CadData) {
         const rect1 = this.getBoundingRect();
         if (rect1.width && rect1.height) {
-            const rect2 = component.getBoundingRect();
-            const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
-            const matrix = new Matrix();
+            let rect2 = component.getBoundingRect();
             const lastSuanliaodanZoom = component.info.lastSuanliaodanZoom ?? 1;
             if (lastSuanliaodanZoom !== component.suanliaodanZoom) {
                 if (!component.info.skipSuanliaodanZoom) {
-                    matrix.scale(component.suanliaodanZoom / lastSuanliaodanZoom);
                     component.info.lastSuanliaodanZoom = component.suanliaodanZoom;
+                    component.transform({scale: component.suanliaodanZoom / lastSuanliaodanZoom, origin: [rect2.x, rect2.y]}, true);
+                    rect2 = component.getBoundingRect();
                 }
             }
+            const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
+            const matrix = new Matrix();
             if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
                 translate.x += (rect1.width + rect2.width) / 2 + 15;
                 matrix.transform({translate});
