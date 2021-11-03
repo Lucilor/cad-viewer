@@ -83,6 +83,7 @@ export class CadData {
     正面宽差值 = 0;
     墙厚差值 = 0;
     企料翻转 = false;
+    装配位置 = "";
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -185,6 +186,7 @@ export class CadData {
         this.正面宽差值 = data.正面宽差值 ?? 0;
         this.墙厚差值 = data.墙厚差值 ?? 0;
         this.企料翻转 = data.企料翻转 ?? false;
+        this.装配位置 = data.装配位置 ?? "";
         this.updateDimensions();
         return this;
     }
@@ -265,7 +267,8 @@ export class CadData {
             算料特殊要求: this.算料特殊要求,
             正面宽差值: this.正面宽差值,
             墙厚差值: this.墙厚差值,
-            企料翻转: this.企料翻转
+            企料翻转: this.企料翻转,
+            装配位置: this.装配位置
         });
     }
 
