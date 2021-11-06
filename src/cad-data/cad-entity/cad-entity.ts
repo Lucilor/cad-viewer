@@ -133,7 +133,7 @@ export abstract class CadEntity {
             }
         } else {
             if (data.color instanceof Color) {
-                this.color = new Color(data.color);
+                this.color = new Color(data.color.toString());
             }
             this._indexColor = RGB2Index(this.color.hex());
         }
