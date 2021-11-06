@@ -91,7 +91,7 @@ export class CadEntities {
                         idMap[e.id] = eNew.id;
                     }
                 });
-            } else if (typeof group === "object") {
+            } else if (group && typeof group === "object") {
                 Object.values(group).forEach((e) => {
                     const eNew = getCadEntity(e, layers, resetIds) as AnyCadEntity;
                     eNew.root = this;

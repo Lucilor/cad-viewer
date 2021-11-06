@@ -58,12 +58,12 @@ export abstract class CadEntity {
         this.children.forEach((c) => (c.selectable = value));
     }
 
-    protected _selected?: boolean;
+    protected _selected = false;
     get selected() {
         if (this.el) {
             return this.el.hasClass("selected") && this.selectable;
         } else {
-            return typeof this._selected === "boolean" ? this._selected : false;
+            return this._selected;
         }
     }
     set selected(value) {
@@ -73,43 +73,40 @@ export abstract class CadEntity {
             } else {
                 this.el.removeClass("selected");
             }
-        } else {
-            this._selected = value;
         }
+        this._selected = value;
         this.children.forEach((c) => (c.selected = value));
     }
 
-    protected _opacity?: number;
+    protected _opacity = 0;
     get opacity() {
         if (this.el) {
             return Number(this.el.css("opacity") ?? 1);
         } else {
-            return typeof this._opacity === "number" ? this._opacity : 0;
+            return this._opacity;
         }
     }
     set opacity(value) {
         if (this.el) {
             this.el.css("opacity", value.toString());
-        } else {
-            this._opacity = value;
         }
+        this._opacity = value;
         this.children.forEach((c) => (c.opacity = value));
     }
 
-    private _visible?: boolean;
+    private _visible = true;
     get visible() {
         if (this.el) {
             return this.el.css("display") !== "none";
         } else {
-            return typeof this._visible === "boolean" ? this._visible : true;
+            return this._visible;
         }
     }
     set visible(value) {
         if (this.el) {
             this.el.css("display", value ? "" : "none");
-        } else {
-            this._visible = value;
         }
+        this._visible = value;
         this.children.forEach((c) => (c.visible = value));
     }
 
@@ -136,7 +133,7 @@ export abstract class CadEntity {
             }
         } else {
             if (data.color instanceof Color) {
-                this.color = new Color(data.color);
+                this.color = new Color(data.color.toString());
             }
             this._indexColor = RGB2Index(this.color.hex());
         }
@@ -191,15 +188,12 @@ export abstract class CadEntity {
             }
             if (typeof this._selected === "boolean") {
                 this.selected = this._selected;
-                delete this._selected;
             }
             if (typeof this._opacity === "number") {
                 this.opacity = this._opacity;
-                delete this._opacity;
             }
             if (typeof this._visible === "boolean") {
                 this.visible = this._visible;
-                delete this._visible;
             }
             if (this.updateInfo.update) {
                 const newMatrix = new Matrix2(this.el.transform()).decompose();

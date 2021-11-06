@@ -69,10 +69,10 @@ export abstract class CadLineLike extends CadEntity {
     info!: CadLineLikeInfo;
     圆弧显示: "默认" | "半径" | "R+半径" | "弧长" = "默认";
     显示线长?: string;
+    线id?: string;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.swapped = data.swapped === true;
         this.mingzi = data.mingzi ?? "";
         this.qujian = data.qujian ?? "";
         this.gongshi = data.gongshi ?? "";
@@ -109,6 +109,9 @@ export abstract class CadLineLike extends CadEntity {
         if (data.显示线长) {
             this.显示线长 = data.显示线长;
         }
+        if (data.线id) {
+            this.线id = data.线id;
+        }
         this.swapped = data.swapped ?? false;
     }
 
@@ -141,6 +144,9 @@ export abstract class CadLineLike extends CadEntity {
         };
         if (this.显示线长) {
             result.显示线长 = this.显示线长;
+        }
+        if (this.线id) {
+            result.线id = this.线id;
         }
         return result;
     }

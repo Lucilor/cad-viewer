@@ -83,6 +83,8 @@ export class CadData {
     正面宽差值 = 0;
     墙厚差值 = 0;
     企料翻转 = false;
+    装配位置 = "";
+    企料包边门框配合位增加值 = 0;
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -185,6 +187,8 @@ export class CadData {
         this.正面宽差值 = data.正面宽差值 ?? 0;
         this.墙厚差值 = data.墙厚差值 ?? 0;
         this.企料翻转 = data.企料翻转 ?? false;
+        this.装配位置 = data.装配位置 ?? "";
+        this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
         this.updateDimensions();
         return this;
     }
@@ -265,7 +269,9 @@ export class CadData {
             算料特殊要求: this.算料特殊要求,
             正面宽差值: this.正面宽差值,
             墙厚差值: this.墙厚差值,
-            企料翻转: this.企料翻转
+            企料翻转: this.企料翻转,
+            装配位置: this.装配位置,
+            企料包边门框配合位增加值: this.企料包边门框配合位增加值
         });
     }
 
@@ -483,14 +489,17 @@ export class CadData {
     addComponent(component: CadData) {
         const rect1 = this.getBoundingRect();
         if (rect1.width && rect1.height) {
-            const rect2 = component.getBoundingRect();
+            let rect2 = component.getBoundingRect();
+            const lastSuanliaodanZoom = component.info.lastSuanliaodanZoom ?? 1;
+            if (lastSuanliaodanZoom !== component.suanliaodanZoom) {
+                if (!component.info.skipSuanliaodanZoom) {
+                    component.info.lastSuanliaodanZoom = component.suanliaodanZoom;
+                    component.transform({scale: component.suanliaodanZoom / lastSuanliaodanZoom, origin: [rect2.x, rect2.y]}, true);
+                    rect2 = component.getBoundingRect();
+                }
+            }
             const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
             const matrix = new Matrix();
-            // const lastSuanliaodanZoom = component.info.lastSuanliaodanZoom ?? 1;
-            // if (lastSuanliaodanZoom !== component.suanliaodanZoom) {
-            //     matrix.scale(component.suanliaodanZoom / lastSuanliaodanZoom);
-            //     component.info.lastSuanliaodanZoom = component.suanliaodanZoom;
-            // }
             if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
                 translate.x += (rect1.width + rect2.width) / 2 + 15;
                 matrix.transform({translate});
