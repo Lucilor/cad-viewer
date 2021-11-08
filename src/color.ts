@@ -1,5 +1,6 @@
 import {ObjectOf} from "@utils";
 import Color from "color";
+import {isEqual} from "lodash";
 
 const list: ObjectOf<number[]> = {
     1: [255, 0, 0],
@@ -259,38 +260,21 @@ const list: ObjectOf<number[]> = {
     255: [255, 255, 255]
 };
 
-export const index2RGB = <K extends keyof ColorMap>(index: number, type: K): ColorMap[K] => {
-    const rgb = list[index] || [0, 0, 0];
-    if (type === "num") {
-        return (rgb[0] * 16 ** 4 + rgb[1] * 16 ** 2 + rgb[2]) as ColorMap[K];
-    } else if (type === "str") {
-        let rgbStr = "#";
-        for (const num of rgb) {
-            rgbStr += num.toString(16).padStart(2, "0");
-        }
-        // 黑色转白色，白色转黑色
-        // if (rgbStr === "#ffffff") {
-        // 	rgbStr = "#000000";
-        // } else {
-        // 	rgbStr = "#ffffff";
-        // }
-        return rgbStr as ColorMap[K];
+export const index2Color = (index: number) => {
+    const rgb = list[index];
+    if (!rgb) {
+        return new Color(index);
     }
-    return "" as ColorMap[K];
+    return new Color(rgb);
 };
 
-export const RGB2Index = (rgb: number | string) => {
-    const color = Color(rgb);
+export const color2Index = (...params: Parameters<typeof Color>) => {
+    const color = new Color(...params);
+    const rgb = color.array();
     for (const index in list) {
-        const rgbArr = list[index];
-        if (color.red() === rgbArr[0] && color.green() === rgbArr[1] && color.blue() === rgbArr[2]) {
+        if (isEqual(list[index], rgb)) {
             return Number(index);
         }
     }
-    return null;
+    return color.rgbNumber();
 };
-
-interface ColorMap {
-    str: string;
-    num: number;
-}
