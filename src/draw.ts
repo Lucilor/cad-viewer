@@ -1,6 +1,6 @@
 import {Angle, Arc, Line, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
-import {toFixedTrim} from "./cad-utils";
+import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {FontStyle} from "./cad-stylizer";
 
 export const DEFAULT_DASH_ARRAY = [20, 7];
@@ -177,6 +177,7 @@ export const drawDimension = (
     text: string,
     fontStyle: FontStyle,
     axis: "x" | "y",
+    xiaoshuchuli: CadDimension["xiaoshuchuli"],
     i = 0
 ) => {
     if (points.length < 4 || !(fontStyle.size > 0)) {
@@ -209,7 +210,34 @@ export const drawDimension = (
             i += arrow.length;
         }
     }
-    text = text.replace("<>", toFixedTrim(p3.distanceTo(p4)));
+    if (text === "") {
+        text = "<>";
+    }
+    if (text.includes("<>")) {
+        const num = p3.distanceTo(p4);
+        let numStr: string;
+        switch (xiaoshuchuli) {
+            case "四舍五入":
+                numStr = Math.round(num).toString();
+                break;
+            case "舍去小数":
+                numStr = Math.floor(num).toString();
+                break;
+            case "小数进一":
+                numStr = Math.ceil(num).toString();
+                break;
+            case "保留一位":
+                numStr = num.toFixed(1);
+                break;
+            case "保留两位":
+                numStr = num.toFixed(2);
+                break;
+            default:
+                numStr = num.toString();
+                break;
+        }
+        text = text.replace(/<>/g, numStr);
+    }
     const middle = p3.clone().add(p4).divide(2);
     let textEl: Text | null = null;
     if (axis === "x") {
