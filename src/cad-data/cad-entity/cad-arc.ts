@@ -1,4 +1,4 @@
-import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
+import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -29,13 +29,12 @@ export class CadArc extends CadLineLike {
     get length() {
         return this.curve.length;
     }
-    get boundingPoints() {
+    get boundingRect() {
         const curve = this.curve;
-        const result: Point[] = [];
         if (curve.radius) {
-            result.push(curve.getPoint(0), curve.getPoint(0.5), curve.getPoint(1));
+            return Rectangle.fromPoints([curve.getPoint(0), curve.getPoint(0.5), curve.getPoint(1)])
         }
-        return result;
+        return Rectangle.min;
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

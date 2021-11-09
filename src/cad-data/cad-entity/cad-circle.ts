@@ -1,4 +1,4 @@
-import {Point, Arc, Angle, Matrix, ObjectOf} from "@utils";
+import {Point, Arc, Angle, Matrix, ObjectOf, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -16,11 +16,9 @@ export class CadCircle extends CadEntity {
     get length() {
         return this.curve.length;
     }
-    get boundingPoints() {
+    get boundingRect() {
         const {center, radius} = this;
-        const p1 = center.clone().add(radius);
-        const p2 = center.clone().sub(radius);
-        return [p1, p2];
+        return Rectangle.fromPoints([center.clone().sub(radius), center.clone().add(radius)]);
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

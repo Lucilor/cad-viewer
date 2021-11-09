@@ -309,7 +309,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 }
                 line.lengthTextSize = line.length < 10 ? 22 : DEFAULT_LENGTH_TEXT_SIZE;
             }
-            lengthText.calcBoundingPoints = false;
+            lengthText.calcBoundingRect = false;
             const offset = getVectorFromArray(lengthText.info.offset);
             lengthText.insert.copy(offset.add(outer));
             if (Array.isArray(lengthText.info.anchorOverwrite)) {
@@ -326,7 +326,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 line.addChild(gongshiText);
                 gongshiText.insert.copy(inner);
             }
-            gongshiText.calcBoundingPoints = false;
+            gongshiText.calcBoundingRect = false;
             gongshiText.anchor.set(1 - anchor.x, 1 - anchor.y);
 
             let bianhuazhiText = line.children.find((c) => c.info.isBianhuazhiText) as CadMtext;
@@ -337,7 +337,7 @@ export const generateLineTexts = (data: CadData, tolerance = DEFAULT_TOLERANCE) 
                 line.addChild(bianhuazhiText);
                 bianhuazhiText.insert.copy(outer);
             }
-            bianhuazhiText.calcBoundingPoints = false;
+            bianhuazhiText.calcBoundingRect = false;
             bianhuazhiText.anchor.copy(anchor);
         });
     });

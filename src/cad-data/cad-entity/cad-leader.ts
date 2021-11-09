@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Point} from "@utils";
+import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -8,8 +8,8 @@ export class CadLeader extends CadEntity {
     type: CadType = "LEADER";
     vertices: Point[] = [];
     size: number;
-    get boundingPoints() {
-        return this.vertices.map((v) => v.clone());
+    get boundingRect() {
+        return Rectangle.fromPoints(this.vertices);
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

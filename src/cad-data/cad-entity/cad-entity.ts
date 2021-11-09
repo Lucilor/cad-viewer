@@ -1,5 +1,5 @@
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
-import {Angle, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
+import {Angle, Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
 import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
@@ -20,8 +20,8 @@ export abstract class CadEntity {
     children: CadEntities;
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
-    calcBoundingPoints = true;
-    abstract get boundingPoints(): Point[];
+    calcBoundingRect = true;
+    abstract get boundingRect(): Rectangle;
     root?: CadEntities;
     linewidth: number;
     _lineweight: number;

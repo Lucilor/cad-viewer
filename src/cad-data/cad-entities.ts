@@ -401,15 +401,12 @@ export class CadEntities {
     }
 
     getBoundingRect() {
-        const rect = new Rectangle(new Point(Infinity, Infinity), new Point(-Infinity, -Infinity));
+        const rect = Rectangle.min;
         this.forEach((e) => {
-            if (e.calcBoundingPoints) {
-                e.boundingPoints.forEach((p) => rect.expand(p));
+            if (e.calcBoundingRect) {
+                rect.expandByRect(e.boundingRect);
             }
         }, true);
-        if (!isFinite(rect.width) || !isFinite(rect.height)) {
-            return new Rectangle();
-        }
         return rect;
     }
 
