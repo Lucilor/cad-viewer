@@ -66,7 +66,7 @@ export class CadDimension extends CadEntity {
                 const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
                 const x = insert.x - anchor.x * width;
                 const y = insert.y - (1 - anchor.y) * height;
-                rect.expandByPoint([x,y]);
+                rect.expandByPoint([x, y]);
                 rect.expandByPoint([x + width, y + height]);
             }
             return rect;

@@ -518,8 +518,12 @@ export class CadViewer extends EventEmitter {
         return this;
     }
 
+    // FIXME: 需要调用两次才能正确居中
     center() {
         let {width, height, x, y} = this.data.getBoundingRect();
+        if (!isFinite(width) || !isFinite(height)) {
+            width = height = x = y = 0;
+        }
         const outerWidth = this.width();
         const outerHeight = this.height();
         const padding = cloneDeep(this._config.padding) as number[];
