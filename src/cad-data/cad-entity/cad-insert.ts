@@ -9,23 +9,20 @@ export class CadInsert extends CadEntity {
     name: string;
     insert: Point;
     transformMatrix = new Matrix();
-    calcBoundingPoints = false;
-    get boundingPoints() {
+    calcBoundingRect = false;
+    get boundingRect() {
+        const rect = new Rectangle();
         const data = this.root?.root;
         if (data) {
             const block = data.blocks[this.name];
             if (block) {
-                const rect = new Rectangle(new Point(Infinity, Infinity), new Point(-Infinity, -Infinity));
+                const rect = Rectangle.min;
                 block.forEach((e) => {
-                    if (e.calcBoundingPoints) {
-                        e.boundingPoints.forEach((p) => rect.expand(p));
-                    }
+                    rect.expandByRect(e.boundingRect.transform({translate: this.insert}));
                 });
-                rect.transform({translate: this.insert});
-                return [rect.min, rect.max];
             }
         }
-        return [];
+        return rect;
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

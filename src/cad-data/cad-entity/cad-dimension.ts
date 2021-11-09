@@ -1,4 +1,4 @@
-import {Matrix, ObjectOf, Point} from "@utils";
+import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -53,11 +53,25 @@ export class CadDimension extends CadEntity {
         this._hideDimLines = value;
     }
 
-    get boundingPoints() {
+    get boundingRect() {
         if (this.root) {
-            return this.root.getDimensionPoints(this);
+            const points = this.root.getDimensionPoints(this);
+            const rect = Rectangle.fromPoints(points);
+            const elRect = this.el?.node?.getBoundingClientRect();
+            const scale = this.scale;
+            if (elRect && !isNaN(scale)) {
+                const width = elRect.width / scale;
+                const height = elRect.height / scale;
+                const insert = points[2].clone().add(points[3]).divide(2);
+                const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
+                const x = insert.x - anchor.x * width;
+                const y = insert.y - (1 - anchor.y) * height;
+                rect.expandByPoint([x,y]);
+                rect.expandByPoint([x + width, y + height]);
+            }
+            return rect;
         }
-        return [];
+        return Rectangle.min;
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

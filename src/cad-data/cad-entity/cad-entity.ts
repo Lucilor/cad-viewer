@@ -1,10 +1,10 @@
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
-import {Angle, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
+import {Angle, Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
 import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
-import {index2RGB, RGB2Index} from "../../color";
+import {color2Index, index2Color} from "../../color";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -15,13 +15,13 @@ export abstract class CadEntity {
     layer: string;
     color: Color;
     info: ObjectOf<any>;
-    _indexColor: number | null;
+    _indexColor: number;
     parent?: CadEntity;
     children: CadEntities;
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
-    calcBoundingPoints = true;
-    abstract get boundingPoints(): Point[];
+    calcBoundingRect = true;
+    abstract get boundingRect(): Rectangle;
     root?: CadEntities;
     linewidth: number;
     _lineweight: number;
@@ -129,13 +129,13 @@ export abstract class CadEntity {
                     this.color = new Color(layer.color);
                 }
             } else {
-                this.color = new Color(index2RGB(data.color, "num"));
+                this.color = index2Color(data.color);
             }
         } else {
             if (data.color instanceof Color) {
                 this.color = new Color(data.color.toString());
             }
-            this._indexColor = RGB2Index(this.color.hex());
+            this._indexColor = color2Index(this.color.hex());
         }
         if (typeof data.info === "object" && !Array.isArray(data.info)) {
             this.info = cloneDeep(data.info);
@@ -208,7 +208,7 @@ export abstract class CadEntity {
     }
 
     export(): ObjectOf<any> {
-        this._indexColor = RGB2Index(this.color.hex());
+        this._indexColor = color2Index(this.color.hex());
         this.update();
         return purgeObject({
             id: this.id,
