@@ -402,6 +402,20 @@ export class CadViewer extends EventEmitter {
                         } else {
                             entity.text = parent.mingzi;
                         }
+                        let varName = "";
+                        const root = parent.root?.root;
+                        if (root && root.info.vars) {
+                            for (const name in root.info.vars) {
+                                if (root.info.vars[name] === parent.id) {
+                                    varName = `可改${name}`;
+                                }
+                            }
+                        }
+                        if (entity.text) {
+                            entity.text += "," + varName;
+                        } else {
+                            entity.text = varName;
+                        }
                         entity.font_size = lineGongshi;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }

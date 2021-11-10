@@ -13,6 +13,7 @@ export interface CadDataInfo {
     修改包边正面宽规则?: string;
     锁边自动绑定可搭配铰边?: string;
     version?: CadVersion;
+    vars?:ObjectOf<string>;
 }
 
 export enum CadVersion {
