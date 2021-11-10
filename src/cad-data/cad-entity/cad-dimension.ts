@@ -1,5 +1,6 @@
+import {Text} from "@svgdotjs/svg.js";
 import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
-import {getVectorsFromArray, purgeObject} from "../../cad-utils";
+import {geteTextElRect, getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -57,17 +58,12 @@ export class CadDimension extends CadEntity {
         if (this.root) {
             const points = this.root.getDimensionPoints(this);
             const rect = Rectangle.fromPoints(points);
-            const elRect = this.el?.node?.getBoundingClientRect();
-            const scale = this.scale;
-            if (elRect && !isNaN(scale)) {
-                const width = elRect.width / scale;
-                const height = elRect.height / scale;
+            if (this.el) {
+                const textEl = this.el.find("text")[0] as Text;
                 const insert = points[2].clone().add(points[3]).divide(2);
                 const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
-                const x = insert.x - anchor.x * width;
-                const y = insert.y - (1 - anchor.y) * height;
-                rect.expandByPoint([x, y]);
-                rect.expandByPoint([x + width, y + height]);
+                const scale = this.scale;
+                rect.expandByRect(geteTextElRect(textEl, insert, anchor, scale));
             }
             return rect;
         }
