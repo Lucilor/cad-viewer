@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {MatrixLike, ObjectOf, Rectangle} from "@utils";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadLayer} from "./cad-layer";
 import {cadTypesKey, CadTypeKey, CadType} from "./cad-types";
@@ -403,7 +403,7 @@ export class CadEntities {
     getBoundingRect() {
         const rect = Rectangle.min;
         this.forEach((e) => {
-            if (e.calcBoundingRect) {
+            if (e.visible && e.calcBoundingRect) {
                 rect.expandByRect(e.boundingRect);
             }
         }, true);
