@@ -11,7 +11,6 @@ export class CadInsert extends CadEntity {
     transformMatrix = new Matrix();
     calcBoundingRect = false;
     get boundingRect() {
-        const rect = new Rectangle();
         const data = this.root?.root;
         if (data) {
             const block = data.blocks[this.name];
@@ -22,7 +21,7 @@ export class CadInsert extends CadEntity {
                 });
             }
         }
-        return rect;
+        return Rectangle.min;
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

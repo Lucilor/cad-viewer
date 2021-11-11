@@ -32,7 +32,7 @@ export class CadArc extends CadLineLike {
     get boundingRect() {
         const curve = this.curve;
         if (curve.radius) {
-            return Rectangle.fromPoints([curve.getPoint(0), curve.getPoint(0.5), curve.getPoint(1)])
+            return Rectangle.fromPoints([curve.getPoint(0), curve.getPoint(0.5), curve.getPoint(1)]);
         }
         return Rectangle.min;
     }
