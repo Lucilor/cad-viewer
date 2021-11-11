@@ -57,15 +57,17 @@ export class CadDimension extends CadEntity {
     get boundingRect() {
         if (this.root) {
             const points = this.root.getDimensionPoints(this);
-            const rect = Rectangle.fromPoints(points);
-            if (this.el) {
-                const textEl = this.el.find("text")[0] as Text;
-                const insert = points[2].clone().add(points[3]).divide(2);
-                const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
-                const scale = this.scale;
-                rect.expandByRect(geteTextElRect(textEl, insert, anchor, scale));
+            if (points.length === 4) {
+                const rect = Rectangle.fromPoints(points);
+                if (this.el) {
+                    const textEl = this.el.find("text")[0] as Text;
+                    const insert = points[2].clone().add(points[3]).divide(2);
+                    const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
+                    const scale = this.scale;
+                    rect.expandByRect(geteTextElRect(textEl, insert, anchor, scale));
+                }
+                return rect;
             }
-            return rect;
         }
         return Rectangle.min;
     }
