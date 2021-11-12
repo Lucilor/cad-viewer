@@ -412,7 +412,9 @@ export class CadViewer extends EventEmitter {
                             }
                         }
                         if (entity.text) {
-                            entity.text += "," + varName;
+                            if (varName) {
+                                entity.text += "," + varName;
+                            }
                         } else {
                             entity.text = varName;
                         }
