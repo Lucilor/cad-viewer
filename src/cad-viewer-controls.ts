@@ -89,7 +89,7 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
         if (this.entitiesCopied) {
             const entities = this.entitiesCopied;
             translate.y = -translate.y;
-            entities.transform({translate});
+            entities.transform({translate}, false);
         } else if ((button === 0 && shiftKey) || button === 1) {
             if (!dragAxis.includes("x")) {
                 translate.x = 0;

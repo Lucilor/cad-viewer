@@ -195,7 +195,7 @@ export class CadEntities {
         });
     }
 
-    transform(matrix: MatrixLike, alter = false) {
+    transform(matrix: MatrixLike, alter: boolean) {
         this.forEach((e) => e.transform(matrix, alter));
     }
 

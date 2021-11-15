@@ -747,10 +747,10 @@ export class CadViewer extends EventEmitter {
     // * call render() after moving
     moveEntities(toMove: CadEntities, notToMove: CadEntities, x: number, y: number) {
         if (toMove.length <= notToMove.length) {
-            toMove.transform({translate: [x, y]});
+            toMove.transform({translate: [x, y]}, false);
         } else {
             this.move(x, y);
-            notToMove.transform({translate: [-x, -y]});
+            notToMove.transform({translate: [-x, -y]}, false);
         }
         this.emit("moveentities", toMove);
     }
