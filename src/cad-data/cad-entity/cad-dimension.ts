@@ -1,6 +1,5 @@
-import {Text} from "@svgdotjs/svg.js";
-import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
-import {geteTextElRect, getVectorsFromArray, purgeObject} from "../../cad-utils";
+import {Matrix, ObjectOf, Point} from "@utils";
+import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
@@ -54,21 +53,23 @@ export class CadDimension extends CadEntity {
         this._hideDimLines = value;
     }
 
-    get boundingRect() {
-        if (this.root) {
-            const points = this.root.getDimensionPoints(this);
-            const rect = Rectangle.fromPoints(points);
-            if (this.el) {
-                const textEl = this.el.find("text")[0] as Text;
-                const insert = points[2].clone().add(points[3]).divide(2);
-                const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
-                const scale = this.scale;
-                rect.expandByRect(geteTextElRect(textEl, insert, anchor, scale));
-            }
-            return rect;
-        }
-        return Rectangle.min;
-    }
+    // get boundingRect() {
+    //     if (this.root) {
+    //         const points = this.root.getDimensionPoints(this);
+    //         if (points.length === 4) {
+    //             const rect = Rectangle.fromPoints(points);
+    //             if (this.el) {
+    //                 const textEl = this.el.find("text")[0] as Text;
+    //                 const insert = points[2].clone().add(points[3]).divide(2);
+    //                 const anchor = this.axis === "x" ? new Point(0.5, 1) : new Point(1, 0.5);
+    //                 const scale = this.scale;
+    //                 rect.expandByRect(geteTextElRect(textEl, insert, anchor, scale));
+    //             }
+    //             return rect;
+    //         }
+    //     }
+    //     return Rectangle.min;
+    // }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);

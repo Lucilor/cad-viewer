@@ -1,4 +1,4 @@
-import {Point, ObjectOf, Matrix, Rectangle} from "@utils";
+import {Point, ObjectOf, Matrix} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -16,9 +16,9 @@ export class CadHatch extends CadEntity {
     }[];
 
     calcBoundingRect = false;
-    get boundingRect() {
-        return Rectangle.min;
-    }
+    // get boundingRect() {
+    //     return Rectangle.min;
+    // }
 
     constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);

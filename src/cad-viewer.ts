@@ -4,7 +4,17 @@ import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
-import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {
+    CadArc,
+    CadCircle,
+    CadDimension,
+    CadEntity,
+    CadHatch,
+    CadLeader,
+    CadLine,
+    CadMtext,
+    CadSpline
+} from "./cad-data/cad-entity";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
@@ -384,9 +394,19 @@ export class CadViewer extends EventEmitter {
                             if (!isNaN(length2)) {
                                 length = length2;
                             }
-                        } else if (parent instanceof CadArc && (parent.圆弧显示 === "半径" || parent.圆弧显示 === "R+半径")) {
-                            length = parent.radius;
-                            prefix = "R";
+                        } else if (parent instanceof CadArc) {
+                            switch (parent.圆弧显示) {
+                                case "半径":
+                                case "R+半径":
+                                    length = parent.radius;
+                                    prefix = "R";
+                                    break;
+                                case "φ+直径":
+                                    length = parent.radius * 2;
+                                    prefix = "φ";
+                                    break;
+                                default:
+                            }
                         }
                         entity.text = prefix + toFixedTrim(length);
                         entity.font_size = parent.lengthTextSize;
@@ -401,6 +421,22 @@ export class CadViewer extends EventEmitter {
                             entity.text = `${parent.mingzi}=${parent.gongshi}`;
                         } else {
                             entity.text = parent.mingzi;
+                        }
+                        let varName = "";
+                        const root = parent.root?.root;
+                        if (root && root.info.vars) {
+                            for (const name in root.info.vars) {
+                                if (root.info.vars[name] === parent.id) {
+                                    varName = `可改${name}`;
+                                }
+                            }
+                        }
+                        if (entity.text) {
+                            if (varName) {
+                                entity.text += "," + varName;
+                            }
+                        } else {
+                            entity.text = varName;
                         }
                         entity.font_size = lineGongshi;
                         foundOffset = getVectorFromArray(entity.info.offset);
@@ -518,7 +554,6 @@ export class CadViewer extends EventEmitter {
         return this;
     }
 
-    // FIXME: 需要调用两次才能正确居中
     center() {
         let {width, height, x, y} = this.data.getBoundingRect();
         if (!isFinite(width) || !isFinite(height)) {
@@ -731,10 +766,10 @@ export class CadViewer extends EventEmitter {
     // * call render() after moving
     moveEntities(toMove: CadEntities, notToMove: CadEntities, x: number, y: number) {
         if (toMove.length <= notToMove.length) {
-            toMove.transform({translate: [x, y]});
+            toMove.transform({translate: [x, y]}, false);
         } else {
             this.move(x, y);
-            notToMove.transform({translate: [-x, -y]});
+            notToMove.transform({translate: [-x, -y]}, false);
         }
         this.emit("moveentities", toMove);
     }

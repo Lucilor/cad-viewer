@@ -1,5 +1,5 @@
-import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
-import {geteTextElRect, getVectorFromArray, purgeObject} from "../../cad-utils";
+import {Matrix, ObjectOf, Point} from "@utils";
+import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -22,13 +22,13 @@ export class CadMtext extends CadEntity {
     fontWeight: string;
     info!: CadMtextInfo;
 
-    get boundingRect() {
-        if (this.el) {
-            const {insert, anchor, scale} = this;
-            return geteTextElRect(this.el, insert, anchor, scale);
-        }
-        return Rectangle.min;
-    }
+    // get boundingRect() {
+    //     if (this.el) {
+    //         const {insert, anchor, scale} = this;
+    //         return geteTextElRect(this.el, insert, anchor, scale);
+    //     }
+    //     return Rectangle.min;
+    // }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
