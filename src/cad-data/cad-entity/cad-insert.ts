@@ -1,4 +1,4 @@
-import {Point, Matrix, ObjectOf, MatrixLike, Rectangle} from "@utils";
+import {Point, Matrix, ObjectOf, MatrixLike} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -10,19 +10,19 @@ export class CadInsert extends CadEntity {
     insert: Point;
     transformMatrix = new Matrix();
     calcBoundingRect = false;
-    get boundingRect() {
-        const data = this.root?.root;
-        if (data) {
-            const block = data.blocks[this.name];
-            if (block) {
-                const rect = Rectangle.min;
-                block.forEach((e) => {
-                    rect.expandByRect(e.boundingRect.transform({translate: this.insert}));
-                });
-            }
-        }
-        return Rectangle.min;
-    }
+    // get boundingRect() {
+    //     const data = this.root?.root;
+    //     if (data) {
+    //         const block = data.blocks[this.name];
+    //         if (block) {
+    //             const rect = Rectangle.min;
+    //             block.forEach((e) => {
+    //                 rect.expandByRect(e.boundingRect.transform({translate: this.insert}));
+    //             });
+    //         }
+    //     }
+    //     return Rectangle.min;
+    // }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
