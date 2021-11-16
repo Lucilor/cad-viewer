@@ -4,7 +4,17 @@ import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
-import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {
+    CadArc,
+    CadCircle,
+    CadDimension,
+    CadEntity,
+    CadHatch,
+    CadLeader,
+    CadLine,
+    CadMtext,
+    CadSpline
+} from "./cad-data/cad-entity";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStyle, CadStylizer} from "./cad-stylizer";
@@ -384,9 +394,19 @@ export class CadViewer extends EventEmitter {
                             if (!isNaN(length2)) {
                                 length = length2;
                             }
-                        } else if (parent instanceof CadArc && (parent.圆弧显示 === "半径" || parent.圆弧显示 === "R+半径")) {
-                            length = parent.radius;
-                            prefix = "R";
+                        } else if (parent instanceof CadArc) {
+                            switch (parent.圆弧显示) {
+                                case "半径":
+                                case "R+半径":
+                                    length = parent.radius;
+                                    prefix = "R";
+                                    break;
+                                case "φ+直径":
+                                    length = parent.radius * 2;
+                                    prefix = "φ";
+                                    break;
+                                default:
+                            }
                         }
                         entity.text = prefix + toFixedTrim(length);
                         entity.font_size = parent.lengthTextSize;

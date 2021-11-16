@@ -67,7 +67,7 @@ export abstract class CadLineLike extends CadEntity {
     可输入修改: boolean;
     dashArray?: number[];
     info!: CadLineLikeInfo;
-    圆弧显示: "默认" | "半径" | "R+半径" | "弧长" = "默认";
+    圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" = "默认";
     显示线长?: string;
     线id?: string;
 
