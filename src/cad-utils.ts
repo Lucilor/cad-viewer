@@ -1,5 +1,4 @@
-import {Element} from "@svgdotjs/svg.js";
-import {ObjectOf, Point, PointLike, Rectangle} from "@utils";
+import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
 
 export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = new Point()) => {
@@ -153,20 +152,4 @@ export const purgeObject = (obj: ObjectOf<any>): ObjectOf<any> => {
     const result = cloneDeep(obj);
     purgeObject2(result);
     return result;
-};
-
-export const geteTextElRect = (el: Element, insert: PointLike, anchor: PointLike, scale: number) => {
-    const elRect = el.node.getBoundingClientRect();
-    const rect = Rectangle.min;
-    insert = new Point(insert);
-    anchor = new Point(anchor);
-    if (elRect && !isNaN(scale)) {
-        const width = elRect.width / scale;
-        const height = elRect.height / scale;
-        const x = insert.x - anchor.x * width;
-        const y = insert.y - (1 - anchor.y) * height;
-        rect.expandByPoint([x, y]);
-        rect.expandByPoint([x + width, y + height]);
-    }
-    return rect;
 };

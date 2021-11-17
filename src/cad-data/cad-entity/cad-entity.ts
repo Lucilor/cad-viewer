@@ -21,7 +21,7 @@ export abstract class CadEntity {
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
     calcBoundingRect = true;
-    // abstract get boundingRect(): Rectangle;
+    protected abstract get _boundingRectCalc(): Rectangle;
     root?: CadEntities;
     linewidth: number;
     _lineweight: number;
@@ -40,7 +40,7 @@ export abstract class CadEntity {
     get boundingRect() {
         const {el, scale, rootEl} = this;
         if (!el || isNaN(scale) || !rootEl) {
-            return Rectangle.min;
+            return this._boundingRectCalc;
         }
         const {x, y, x2, y2} = el.bbox();
         return new Rectangle([x, y], [x2, y2]);
