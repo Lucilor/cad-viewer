@@ -1,4 +1,4 @@
-import {Line, MatrixLike, ObjectOf, Point} from "@utils";
+import {Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -38,9 +38,9 @@ export class CadLine extends CadLineLike {
     get middle() {
         return this.curve.middle;
     }
-    // get boundingRect() {
-    //     return Rectangle.fromPoints([this.start, this.end]);
-    // }
+    get _boundingRectCalc() {
+        return Rectangle.fromPoints([this.start, this.end]);
+    }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);

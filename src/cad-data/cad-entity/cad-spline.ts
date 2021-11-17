@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Point} from "@utils";
+import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -10,9 +10,9 @@ export class CadSpline extends CadEntity {
     controlPoints: Point[] = [];
     degree = 3;
     calcBoundingRect = false;
-    // get boundingRect() {
-    //     return Rectangle.min;
-    // }
+    get _boundingRectCalc() {
+        return Rectangle.min;
+    }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
