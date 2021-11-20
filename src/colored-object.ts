@@ -2,6 +2,55 @@ import {ObjectOf} from "@utils";
 import Color from "color";
 import {isEqual} from "lodash";
 
+export class ColoredObject {
+    private _color: Color;
+    /**
+     * @deprecated
+     * use getColor() or setColor(value) instead
+     */
+    get color() {
+        console.warn("`.color` is depracted and will be removed in future, use `.getColor()` instead.");
+        return this._color;
+    }
+    set color(value) {
+        console.warn("`.color = value` is depracted and will be removed in future, use `.setColor(value)` instead.");
+        this.setColor(value);
+    }
+
+    constructor(...params: Parameters<typeof Color>) {
+        this._color = new Color(...params);
+    }
+
+    getColor() {
+        return this._color;
+    }
+
+    setColor(...params: Parameters<typeof Color>) {
+        this._color = new Color(...params);
+        return this;
+    }
+
+    getIndexColor() {
+        const color = new Color(this._color);
+        const rgb = color.array();
+        for (const index in list) {
+            if (isEqual(list[index], rgb)) {
+                return Number(index);
+            }
+        }
+        return color.rgbNumber();
+    }
+
+    setIndexColor(index: number) {
+        const rgb = list[index];
+        if (!rgb) {
+            return new Color(index);
+        }
+        this._color = new Color(rgb);
+        return this;
+    }
+}
+
 const list: ObjectOf<number[]> = {
     1: [255, 0, 0],
     2: [255, 255, 0],
@@ -258,23 +307,4 @@ const list: ObjectOf<number[]> = {
     253: [173, 173, 173],
     254: [214, 214, 214],
     255: [255, 255, 255]
-};
-
-export const index2Color = (index: number) => {
-    const rgb = list[index];
-    if (!rgb) {
-        return new Color(index);
-    }
-    return new Color(rgb);
-};
-
-export const color2Index = (...params: Parameters<typeof Color>) => {
-    const color = new Color(...params);
-    const rgb = color.array();
-    for (const index in list) {
-        if (isEqual(list[index], rgb)) {
-            return Number(index);
-        }
-    }
-    return color.rgbNumber();
 };

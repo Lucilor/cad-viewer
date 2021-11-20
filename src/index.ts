@@ -9,5 +9,5 @@ export * from "./cad-stylizer";
 export * from "./cad-viewer";
 export * from "./cad-viewer-controls";
 export * from "./cad-viewer-controls";
-export * from "./color";
+export * from "./colored-object";
 export * from "./draw";

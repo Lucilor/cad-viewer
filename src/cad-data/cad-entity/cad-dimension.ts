@@ -137,7 +137,7 @@ export class CadDimension extends CadEntity {
     }
 
     clone(resetId = false) {
-        return new CadDimension(this, [], resetId);
+        return new CadDimension(this.export(), [], resetId);
     }
 
     get selected() {

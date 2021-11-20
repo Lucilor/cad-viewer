@@ -63,7 +63,7 @@ export class CadMtext extends CadEntity {
     }
 
     clone(resetId = false) {
-        return new CadMtext(this, [], resetId);
+        return new CadMtext(this.export(), [], resetId);
     }
 
     equals(entity: CadMtext) {

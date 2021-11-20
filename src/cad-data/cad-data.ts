@@ -13,7 +13,7 @@ export interface CadDataInfo {
     修改包边正面宽规则?: string;
     锁边自动绑定可搭配铰边?: string;
     version?: CadVersion;
-    vars?:ObjectOf<string>;
+    vars?: ObjectOf<string>;
 }
 
 export enum CadVersion {
@@ -86,6 +86,7 @@ export class CadData {
     企料翻转 = false;
     装配位置 = "";
     企料包边门框配合位增加值 = 0;
+    企料包边类型 = "无";
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -190,6 +191,7 @@ export class CadData {
         this.企料翻转 = data.企料翻转 ?? false;
         this.装配位置 = data.装配位置 ?? "";
         this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
+        this.企料包边类型 = data.企料包边类型 ?? "无";
         this.updateDimensions();
         return this;
     }
@@ -272,7 +274,8 @@ export class CadData {
             墙厚差值: this.墙厚差值,
             企料翻转: this.企料翻转,
             装配位置: this.装配位置,
-            企料包边门框配合位增加值: this.企料包边门框配合位增加值
+            企料包边门框配合位增加值: this.企料包边门框配合位增加值,
+            企料包边类型: this.企料包边类型
         });
     }
 

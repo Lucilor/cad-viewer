@@ -26,7 +26,7 @@ export class CadLeader extends CadEntity {
     }
 
     clone(resetId = false) {
-        return new CadLeader(this, [], resetId);
+        return new CadLeader(this.export(), [], resetId);
     }
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {

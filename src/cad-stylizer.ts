@@ -1,6 +1,6 @@
-import Color from "color";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
 import {CadViewer} from "./cad-viewer";
+import {ColoredObject} from "./colored-object";
 
 export interface FontStyle {
     size: number;
@@ -28,7 +28,7 @@ export class CadStylizer {
             fontStyle: {size: 16, family: "", weight: ""},
             opacity: 1
         };
-        let color = new Color(params.color || entity?.color.rgbNumber() || 0);
+        let color = new ColoredObject(params.color || entity?.getColor() || 0);
         if (params.linewidth && params.linewidth > 0) {
             result.linewidth = params.linewidth;
         } else if (entity.linewidth > 0) {
@@ -50,13 +50,13 @@ export class CadStylizer {
         if (validateLines && entity instanceof CadLine) {
             if (entity.info.errors?.length) {
                 result.linewidth *= 10;
-                color = new Color(0xff0000);
+                color.setColor(0xff0000);
             }
         }
         if (reverseSimilarColor) {
             color = this.correctColor(color);
         }
-        result.color = color.hex();
+        result.color = color.getColor().hex();
         if (!(entity instanceof CadHatch)) {
             // ? make lines easier to select
             result.linewidth = Math.max(minLinewidth, result.linewidth);
@@ -80,18 +80,21 @@ export class CadStylizer {
         return result;
     }
 
-    correctColor(color: Color, threshold = 5) {
+    correctColor(color: ColoredObject, threshold = 5) {
         const {reverseSimilarColor, backgroundColor} = this.cad.config();
+        const c1 = color.getColor();
         if (reverseSimilarColor) {
-            if (Math.abs(color.rgbNumber() - new Color(backgroundColor).rgbNumber()) <= threshold) {
-                return color.negate();
+            const c2 = new ColoredObject(backgroundColor).getColor();
+            if (Math.abs(c1.rgbNumber() - c2.rgbNumber()) <= threshold) {
+                return new ColoredObject(c1.negate());
             }
         }
         return color;
     }
 
-    getColorStyle(color: Color, a = 1) {
-        const arr = [color.red(), color.green(), color.blue()].map((v) => v * 255);
+    getColorStyle(color: ColoredObject, a = 1) {
+        const c = color.getColor();
+        const arr = [c.red(), c.green(), c.blue()].map((v) => v * 255);
         if (a > 0 && a < 1) {
             return `rgba(${[...arr, a].join(",")})`;
         } else {

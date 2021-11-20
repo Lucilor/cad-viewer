@@ -35,7 +35,7 @@ export class CadSpline extends CadEntity {
     }
 
     clone(resetId = false) {
-        return new CadSpline(this, [], resetId);
+        return new CadSpline(this.export(), [], resetId);
     }
 
     transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
