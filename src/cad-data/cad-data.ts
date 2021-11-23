@@ -86,7 +86,7 @@ export class CadData {
     企料翻转 = false;
     装配位置 = "";
     企料包边门框配合位增加值 = 0;
-    企料包边类型 = "无";
+    企料包边类型 = "自动判断";
 
     constructor(data?: ObjectOf<any>) {
         this.init(data);
@@ -191,7 +191,7 @@ export class CadData {
         this.企料翻转 = data.企料翻转 ?? false;
         this.装配位置 = data.装配位置 ?? "";
         this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
-        this.企料包边类型 = data.企料包边类型 ?? "无";
+        this.企料包边类型 = data.企料包边类型 ?? "自动判断";
         this.updateDimensions();
         return this;
     }
