@@ -72,7 +72,7 @@ export class CadData {
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
     主CAD = false;
-    算料单展开显示位置: "CAD上面" | "CAD下面" = "CAD下面";
+    算料单展开显示位置 = "CAD下面";
     属于门框门扇: "未区分" | "门框" | "门扇" = "未区分";
     内开做分体 = false;
     板材绑定选项 = "";
