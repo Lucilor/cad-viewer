@@ -102,7 +102,7 @@ export class CadDimension extends CadEntity {
 
     transform(matrix: Matrix, alter = false, parent?: CadEntity) {
         this._transform(matrix, alter, parent);
-        if (this.defPoints) {
+        if (this.defPoints && alter) {
             this.defPoints.forEach((v) => v.transform(matrix));
         }
         return this;
