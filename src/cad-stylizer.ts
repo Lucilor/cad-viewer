@@ -1,18 +1,7 @@
-import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
+import {CadStyle} from "./cad-data/cad-styles";
 import {CadViewer} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
-
-export interface FontStyle {
-    size: number;
-    family: string;
-    weight: string;
-}
-export interface CadStyle {
-    color: string;
-    linewidth: number;
-    fontStyle: FontStyle;
-    opacity: number;
-}
 
 export class CadStylizer {
     cad: CadViewer;
@@ -20,21 +9,24 @@ export class CadStylizer {
         this.cad = cad;
     }
 
-    get(entity: CadEntity, params: Partial<CadStyle> = {}) {
+    get(entity: CadEntity, params: CadStyle = {}) {
         const cad = this.cad;
-        const result: CadStyle = {
+        const defaultStyle: Required<CadStyle> = {
             color: "white",
-            linewidth: 1,
             fontStyle: {size: 16, family: "", weight: ""},
+            lineStyle: {padding: cad.config("dashedLinePadding")},
             opacity: 1
         };
+        const result: Required<CadStyle> = {...defaultStyle, ...params};
+        let linewidth: number;
         let color = new ColoredObject(params.color || entity?.getColor() || 0);
-        if (params.linewidth && params.linewidth > 0) {
-            result.linewidth = params.linewidth;
+        if (params.lineStyle) {
+            result.lineStyle = params.lineStyle;
+            linewidth = params.lineStyle.width || 1;
         } else if (entity.linewidth > 0) {
-            result.linewidth = entity.linewidth;
+            linewidth = entity.linewidth;
         } else {
-            result.linewidth = 1;
+            linewidth = 1;
         }
         let eFontSize: number | undefined;
         if (entity instanceof CadMtext || entity instanceof CadDimension) {
@@ -49,7 +41,7 @@ export class CadStylizer {
         const {validateLines, reverseSimilarColor, minLinewidth} = cad.config();
         if (validateLines && entity instanceof CadLine) {
             if (entity.info.errors?.length) {
-                result.linewidth *= 10;
+                linewidth *= 10;
                 color.setColor(0xff0000);
             }
         }
@@ -59,7 +51,7 @@ export class CadStylizer {
         result.color = color.getColor().hex();
         if (!(entity instanceof CadHatch)) {
             // ? make lines easier to select
-            result.linewidth = Math.max(minLinewidth, result.linewidth);
+            linewidth = Math.max(minLinewidth, linewidth);
         }
 
         result.fontStyle.family = cad.config("fontFamily");
@@ -77,6 +69,13 @@ export class CadStylizer {
                 result.fontStyle.weight = entity.fontWeight;
             }
         }
+        result.fontStyle.color = result.color;
+
+        if (entity instanceof CadLineLike) {
+            result.lineStyle.dashArray = entity.dashArray;
+        }
+        result.lineStyle.width = linewidth;
+        result.lineStyle.color = result.color;
         return result;
     }
 

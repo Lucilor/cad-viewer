@@ -1,14 +1,17 @@
 import {Angle, Arc, Line, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
-import {FontStyle} from "./cad-stylizer";
+import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
 
 export const DEFAULT_DASH_ARRAY = [20, 7];
 
-export interface LineStyle {
-    dashArray?: number[];
-    padding?: number | number[];
-}
+const setLineStyle = (el: Element, style: LineStyle) => {
+    const {color, width, dashArray} = style;
+    el.stroke({width, color});
+    if (dashArray) {
+        el.css("stroke-dasharray" as any, dashArray.join(", "));
+    }
+};
 
 export const drawLine = (draw: Container, start: Point, end: Point, style?: LineStyle, i = 0) => {
     let el = draw.children()[i] as SvgLine;
@@ -40,13 +43,11 @@ export const drawLine = (draw: Container, start: Point, end: Point, style?: Line
     } else {
         el = draw.line(x1, y1, x2, y2).addClass("stroke").fill("none");
     }
-    if (dashArray && dashArray.length > 0) {
-        el.css("stroke-dasharray" as any, dashArray.join(", "));
-    }
+    setLineStyle(el, style || {});
     return [el];
 };
 
-export const drawCircle = (draw: Container, center: Point, radius: number, i = 0) => {
+export const drawCircle = (draw: Container, center: Point, radius: number, style?: LineStyle, i = 0) => {
     let el = draw.children()[i] as SvgCircle;
     if (el instanceof SvgCircle) {
         el.size(radius * 2).center(center.x, center.y);
@@ -54,6 +55,7 @@ export const drawCircle = (draw: Container, center: Point, radius: number, i = 0
         el = draw.circle(radius * 2).center(center.x, center.y);
         el.addClass("stroke").fill("none");
     }
+    setLineStyle(el, style || {});
     return [el];
 };
 
@@ -64,12 +66,13 @@ export const drawArc = (
     startAngle: number,
     endAngle: number,
     clockwise: boolean,
+    style?: LineStyle,
     i = 0
 ) => {
     const l0 = Math.PI * 2 * radius;
     const arc = new Arc(new Point(center.x, center.y), radius, new Angle(startAngle, "deg"), new Angle(endAngle, "deg"), clockwise);
     if (arc.totalAngle.deg === 360) {
-        return drawCircle(draw, center, radius, i);
+        return drawCircle(draw, center, radius, style, i);
     }
     const isLargeArc = arc.length / l0 > 0.5 ? 1 : 0;
     const {x: x0, y: y0} = arc.startPoint;
@@ -84,12 +87,13 @@ export const drawArc = (
     } else {
         el = draw.path(path).addClass("stroke").fill("none");
     }
+    setLineStyle(el, style || {});
     return [el];
 };
 
-export const drawText = (draw: Container, text: string, style: FontStyle, position: Point, anchor: Point, vertical = false, i = 0) => {
-    const {size, family, weight} = style;
-    if (!text || !(size > 0)) {
+export const drawText = (draw: Container, text: string, position: Point, anchor: Point, vertical = false, style?: FontStyle, i = 0) => {
+    const {size, family, weight, color} = style || {};
+    if (!text) {
         draw.remove();
         return [];
     }
@@ -109,13 +113,20 @@ export const drawText = (draw: Container, text: string, style: FontStyle, positi
         el.css("writing-mode" as any, "");
         el.css("transform", `translate(${-anchor.x * 100}%, ${anchor.y * 100}%) scale(1, -1)`);
     }
-    el.css("font-family" as any, family);
-    el.css("font-weight" as any, weight);
+    if (family) {
+        el.css("font-family" as any, family);
+    }
+    if (weight) {
+        el.css("font-weight" as any, weight);
+    }
+    if (color) {
+        el.fill(color);
+    }
     el.move(position.x, position.y);
     return [el];
 };
 
-export const drawShape = (draw: Container, points: Point[], type: "fill" | "stroke", i = 0) => {
+export const drawShape = (draw: Container, points: Point[], color?: string, i = 0) => {
     let el = draw.children()[i] as Path;
     const path = points
         .map((p, j) => {
@@ -132,118 +143,136 @@ export const drawShape = (draw: Container, points: Point[], type: "fill" | "stro
     } else {
         el = draw.path(path).addClass("fill stroke");
     }
+    if (color) {
+        el.stroke(color).fill(color);
+    }
     return [el];
 };
 
-interface ArrowStyle {
-    size?: number;
-    double?: boolean;
-    line?: LineStyle;
-}
-
-export const drawArrow = (draw: Container, start: Point, end: Point, style?: ArrowStyle, i = 0) => {
-    const {size: sizeRaw, double, line: lineStyle} = style || {};
-    let size = Number(sizeRaw);
-    if (isNaN(size)) {
-        size = 1;
-    }
-    const getTriangle = (p: Point, theta: Angle) => {
-        const theta1 = theta.clone().add(new Angle(30, "deg")).rad;
-        const theta2 = theta.clone().sub(new Angle(30, "deg")).rad;
-        const p2 = p.clone().add(size * Math.cos(theta1), size * Math.sin(theta1));
-        const p3 = p.clone().add(size * Math.cos(theta2), size * Math.sin(theta2));
-        return [p, p2, p3];
-    };
-    const result1 = drawLine(draw, start, end, lineStyle, i++);
-    let result2: ReturnType<typeof drawShape> = [];
-    if (double) {
-        const triangle1 = getTriangle(start, new Line(start, end).theta);
-        result2 = drawShape(draw, triangle1, "fill", i++);
-    }
-    const triangle2 = getTriangle(end, new Line(end, start).theta);
-    const result3 = drawShape(draw, triangle2, "fill", i++);
-    return [...result1, ...result2, ...result3];
+export const drawTriangle = (draw: Container, p1: Point, p2: Point, size: number, color?: string, i?: number) => {
+    const theta = new Line(p1, p2).theta.rad;
+    const dTheta = (30 / 180) * Math.PI;
+    const theta1 = theta + dTheta;
+    const theta2 = theta - dTheta;
+    const p3 = p1.clone().add(size * Math.cos(theta1), size * Math.sin(theta1));
+    const p4 = p1.clone().add(size * Math.cos(theta2), size * Math.sin(theta2));
+    return drawShape(draw, [p1, p3, p4], color, i);
 };
-
-export interface DimensionStyle {
-    font: FontStyle;
-    arrow: ArrowStyle;
-}
 
 export const drawDimension = (
     draw: Container,
-    renderStyle = 1,
     points: Point[],
     text: string,
-    fontStyle: FontStyle,
     axis: "x" | "y",
     xiaoshuchuli: CadDimension["xiaoshuchuli"],
+    style?: CadDimensionStyle,
     i = 0
 ) => {
-    if (points.length < 4 || !(fontStyle.size > 0)) {
+    const color = style?.color;
+    if (points.length < 4) {
         draw.remove();
         return [];
     }
     const [p1, p2, p3, p4] = points;
-    let l1: SvgLine | null = null;
-    let l2: SvgLine | null = null;
-    let arrow: ReturnType<typeof drawArrow> = [];
-    const arrowStyle: ArrowStyle = {size: Math.max(1, Math.min(20, p3.distanceTo(p4) / 8)), double: true};
-    const lineStyle: LineStyle = {};
-    if (renderStyle === 1) {
-        l1 = drawLine(draw, p1, p3, lineStyle, i++)?.[0];
-        l2 = drawLine(draw, p2, p4, lineStyle, i++)?.[0];
-        arrow = drawArrow(draw, p3, p4, arrowStyle, i);
-        i += arrow.length;
-    } else if (renderStyle === 2 || renderStyle === 3) {
-        const length = 12;
+
+    const dimLineStyle = style?.dimensionLine || {};
+    let dimLine: ReturnType<typeof drawLine> = [];
+    if (!dimLineStyle?.hidden) {
+        dimLineStyle.color = color;
+        dimLine = drawLine(draw, p3, p4, dimLineStyle, i);
+        dimLine.forEach((el) => el.addClass("dim-line"));
+        i += dimLine.length;
+    }
+    const extLinesStyle = style?.extensionLines || {};
+    let extLine1: ReturnType<typeof drawLine> = [];
+    let extLine2: ReturnType<typeof drawLine> = [];
+    if (!extLinesStyle?.hidden) {
+        const length = extLinesStyle.length;
+        extLinesStyle.color = color;
+        if (typeof length === "number") {
+            if (axis === "x") {
+                extLine1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), extLinesStyle, i);
+                i += extLine1.length;
+                extLine2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), extLinesStyle, i);
+                i += extLine2.length;
+            } else if (axis === "y") {
+                extLine1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), extLinesStyle, i);
+                i += extLine1.length;
+                extLine2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), extLinesStyle, i);
+                i += extLine2.length;
+            }
+        } else {
+            extLine1 = drawLine(draw, p1, p3, extLinesStyle, i);
+            i += extLine1.length;
+            extLine2 = drawLine(draw, p2, p4, extLinesStyle, i);
+            i += extLine2.length;
+        }
+        [...extLine1, ...extLine2].forEach((el) => el.addClass("ext-line"));
+    }
+    const arrowsStyle = style?.arrows || {};
+    let arrow1: ReturnType<typeof drawTriangle> = [];
+    let arrow2: ReturnType<typeof drawTriangle> = [];
+    if (!arrowsStyle?.hidden) {
+        let size = Number(arrowsStyle.size);
+        arrowsStyle.color = color;
+        if (isNaN(size)) {
+            size = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
+        }
+        arrow1 = drawTriangle(draw, p3, p4, size, arrowsStyle?.color, i);
+        i += arrow1.length;
+        arrow2 = drawTriangle(draw, p4, p3, size, arrowsStyle?.color, i);
+        i += arrow2.length;
+        [...arrow1, ...arrow2].forEach((el) => el.addClass("dim-arrow"));
+    }
+    const textStyle = style?.text || {};
+    let textEls: ReturnType<typeof drawText> = [];
+    if (!textStyle?.hidden) {
+        textStyle.color = color;
+        if (text === "") {
+            text = "<>";
+        }
+        if (text.includes("<>")) {
+            const num = p3.distanceTo(p4);
+            let numStr: string;
+            switch (xiaoshuchuli) {
+                case "四舍五入":
+                    numStr = Math.round(num).toString();
+                    break;
+                case "舍去小数":
+                    numStr = Math.floor(num).toString();
+                    break;
+                case "小数进一":
+                    numStr = Math.ceil(num).toString();
+                    break;
+                case "保留一位":
+                    numStr = num.toFixed(1);
+                    break;
+                case "保留两位":
+                    numStr = num.toFixed(2);
+                    break;
+                default:
+                    numStr = num.toString();
+                    break;
+            }
+            text = text.replace(/<>/g, numStr);
+        }
+        const middle = p3.clone().add(p4).divide(2);
         if (axis === "x") {
-            l1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), lineStyle, i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(0, length), p4.clone().add(0, length), lineStyle, i++)[0];
+            textEls = drawText(draw, text, middle, new Point(0.5, 1), false, textStyle, i);
         } else if (axis === "y") {
-            l1 = drawLine(draw, p3.clone().sub(length, 0), p3.clone().add(length, 0), lineStyle, i++)[0];
-            l2 = drawLine(draw, p4.clone().sub(length, 0), p4.clone().add(length, 0), lineStyle, i++)[0];
+            textEls = drawText(draw, text, middle, new Point(1, 0.5), true, textStyle, i);
         }
-        if (renderStyle === 2) {
-            arrowStyle.line = {dashArray: DEFAULT_DASH_ARRAY};
-            arrow = drawArrow(draw, p3, p4, arrowStyle, i);
-            i += arrow.length;
-        }
+        textEls.forEach((el) => el.addClass("dim-text"));
+        i += textEls.length;
     }
-    if (text === "") {
-        text = "<>";
-    }
-    if (text.includes("<>")) {
-        const num = p3.distanceTo(p4);
-        let numStr: string;
-        switch (xiaoshuchuli) {
-            case "四舍五入":
-                numStr = Math.round(num).toString();
-                break;
-            case "舍去小数":
-                numStr = Math.floor(num).toString();
-                break;
-            case "小数进一":
-                numStr = Math.ceil(num).toString();
-                break;
-            case "保留一位":
-                numStr = num.toFixed(1);
-                break;
-            case "保留两位":
-                numStr = num.toFixed(2);
-                break;
-            default:
-                numStr = num.toString();
-                break;
-        }
-        text = text.replace(/<>/g, numStr);
-    }
-    const middle = p3.clone().add(p4).divide(2);
-    let textEl: Text | null = null;
-    if (axis === "x") {
-        textEl = drawText(draw, text, fontStyle, middle, new Point(0.5, 1), false, i++)[0];
-    } else if (axis === "y") {
-        textEl = drawText(draw, text, fontStyle, middle, new Point(1, 0.5), true, i++)[0];
-    }
-    return [l1, l2, ...arrow, textEl].filter((v) => v) as Element[];
+
+    return [...dimLine, ...extLine1, ...extLine2, ...arrow1, ...arrow2, ...textEls].filter((v) => v);
+};
+
+export const drawLeader = (draw: Container, start: Point, end: Point, size: number, color?: string, i = 0) => {
+    const line = drawLine(draw, start, end, {}, i);
+    i += line.length;
+    const triangle = drawTriangle(draw, start, end, size, color, i);
+    i += triangle.length;
+    return [...line, ...triangle];
 };

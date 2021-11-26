@@ -1,6 +1,8 @@
 import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {cloneDeep} from "lodash";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
+import {CadDimensionStyle} from "../cad-styles";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
@@ -14,6 +16,7 @@ export class CadDimension extends CadEntity {
     type: CadType = "DIMENSION";
     font_size: number;
     dimstyle: string;
+    style?: CadDimensionStyle;
     axis: "x" | "y";
     entity1: CadDimensionEntity;
     entity2: CadDimensionEntity;
@@ -29,28 +32,23 @@ export class CadDimension extends CadEntity {
     xianshigongshiwenben: string;
     xiaoshuchuli: "四舍五入" | "舍去小数" | "小数进一" | "保留一位" | "保留两位";
 
-    private _renderStyle = 1;
-    get renderStyle() {
-        return this._renderStyle;
-    }
-    set renderStyle(value) {
-        if (this._renderStyle !== value) {
-            this.el?.remove();
-            this.el = null;
-        }
-        this._renderStyle = value;
-    }
-
-    private _hideDimLines = false;
     get hideDimLines() {
-        return this._hideDimLines;
+        return !!this.style?.extensionLines?.hidden;
     }
     set hideDimLines(value) {
-        if (this._hideDimLines !== value) {
-            this.el?.remove();
-            this.el = null;
+        if (!this.style) {
+            this.style = {};
         }
-        this._hideDimLines = value;
+        if (value) {
+            if (!this.style.extensionLines) {
+                this.style.extensionLines = {};
+            }
+            this.style.extensionLines.hidden = true;
+        } else {
+            if (this.style.extensionLines?.hidden) {
+                delete this.style.extensionLines.hidden;
+            }
+        }
     }
 
     get _boundingRectCalc() {
@@ -70,6 +68,9 @@ export class CadDimension extends CadEntity {
             this.font_size = 36;
         }
         this.dimstyle = data.dimstyle || "";
+        if (data.style) {
+            this.style = data.style;
+        }
         this.entity1 = {id: "", location: "center"};
         this.entity2 = {id: "", location: "center"};
         (["entity1", "entity2"] as ("entity1" | "entity2")[]).forEach((field) => {
@@ -94,7 +95,6 @@ export class CadDimension extends CadEntity {
         this.qujian = data.qujian ?? "";
         this.ref = data.ref ?? "entity1";
         this.quzhifanwei = data.quzhifanwei ?? "";
-        this.renderStyle = data.renderStyle ?? 1;
         this.hideDimLines = data.hideDimLines === true;
         this.xianshigongshiwenben = data.xianshigongshiwenben ?? "";
         this.xiaoshuchuli = data.xiaoshuchuli ?? "四舍五入";
@@ -124,7 +124,6 @@ export class CadDimension extends CadEntity {
                 qujian: this.qujian,
                 ref: this.ref,
                 quzhifanwei: this.quzhifanwei,
-                renderStyle: this.renderStyle,
                 hideDimLines: this.hideDimLines,
                 xianshigongshiwenben: this.xianshigongshiwenben,
                 xiaoshuchuli: this.xiaoshuchuli
@@ -132,6 +131,9 @@ export class CadDimension extends CadEntity {
         };
         if (this.defPoints) {
             result.defPoints = this.defPoints.map((v) => v.toArray());
+        }
+        if (this.style) {
+            result.style = cloneDeep(this.style);
         }
         return result;
     }

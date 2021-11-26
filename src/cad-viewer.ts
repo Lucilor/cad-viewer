@@ -4,23 +4,14 @@ import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
-import {
-    CadArc,
-    CadCircle,
-    CadDimension,
-    CadEntity,
-    CadHatch,
-    CadLeader,
-    CadLine,
-    CadMtext,
-    CadSpline
-} from "./cad-data/cad-entity";
+import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
+import {CadStyle} from "./cad-data/cad-styles";
 import {CadType, cadTypes} from "./cad-data/cad-types";
-import {CadStyle, CadStylizer} from "./cad-stylizer";
+import {CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
-import {drawArc, drawArrow, drawCircle, drawDimension, drawLine, drawShape, drawText} from "./draw";
+import {drawArc, drawCircle, drawDimension, drawLeader, drawLine, drawShape, drawText} from "./draw";
 
 export interface CadViewerFont {
     name: string;
@@ -314,7 +305,7 @@ export class CadViewer extends EventEmitter {
 
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
-        const {color, linewidth, fontStyle} = stylizer.get(entity, style);
+        const {color, fontStyle, lineStyle} = stylizer.get(entity, style);
         if (!entity.visible) {
             entity.el?.remove();
             entity.el = null;
@@ -345,13 +336,12 @@ export class CadViewer extends EventEmitter {
         let drawResult: (Element | null)[] = [];
         if (entity instanceof CadArc) {
             const {center, radius, start_angle, end_angle, clockwise} = entity;
-            drawResult = drawArc(el, center, radius, start_angle, end_angle, clockwise);
+            drawResult = drawArc(el, center, radius, start_angle, end_angle, clockwise, lineStyle);
         } else if (entity instanceof CadCircle) {
             const {center, radius} = entity;
-            drawResult = drawCircle(el, center, radius);
+            drawResult = drawCircle(el, center, radius, lineStyle);
         } else if (entity instanceof CadDimension) {
             const {mingzi, qujian, axis, xiaoshuchuli} = entity;
-            const renderStyle = entity.hideDimLines ? -1 : entity.renderStyle;
             const points = this.data.getDimensionPoints(entity);
             let text = "";
             if (mingzi) {
@@ -360,7 +350,10 @@ export class CadViewer extends EventEmitter {
             if (qujian) {
                 text = qujian;
             }
-            drawResult = drawDimension(el, renderStyle, points, text, fontStyle, axis, xiaoshuchuli);
+            const dimStyle = entity.style || {};
+            dimStyle.color = color;
+            dimStyle.text = {size: fontStyle.size};
+            drawResult = drawDimension(el, points, text, axis, xiaoshuchuli, dimStyle);
         } else if (entity instanceof CadHatch) {
             const {paths} = entity;
             drawResult = [];
@@ -374,8 +367,8 @@ export class CadViewer extends EventEmitter {
                 drawResult = [];
             }
         } else if (entity instanceof CadLine) {
-            const {start, end, dashArray} = entity;
-            drawResult = drawLine(el, start, end, {dashArray, padding: this.config("dashedLinePadding")});
+            const {start, end} = entity;
+            drawResult = drawLine(el, start, end, lineStyle);
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
             const {insert, anchor, text} = entity;
@@ -500,13 +493,13 @@ export class CadViewer extends EventEmitter {
                     }
                 }
             }
-            drawResult = drawText(el, text, fontStyle, insert, anchor);
+            drawResult = drawText(el, text, insert, anchor, false, fontStyle);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
             const start = entity.vertices[1];
             const end = entity.vertices[0];
-            drawResult = drawArrow(el, start, end, {size: entity.size, double: false});
+            drawResult = drawLeader(el, start, end, entity.size, color);
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
@@ -515,11 +508,7 @@ export class CadViewer extends EventEmitter {
         }
         el.attr({id: entity.id, type: entity.type});
         el.children().forEach((c) => {
-            if (c.hasClass("fill")) {
-                c.fill(color);
-            }
             if (c.hasClass("stroke")) {
-                c.stroke({width: linewidth, color});
                 c.attr("vector-effect", "non-scaling-stroke");
             }
         });
