@@ -353,6 +353,7 @@ export class CadViewer extends EventEmitter {
             const dimStyle = entity.style || {};
             dimStyle.color = color;
             dimStyle.text = {size: fontStyle.size};
+            el.clear();
             drawResult = drawDimension(el, points, text, axis, xiaoshuchuli, dimStyle);
         } else if (entity instanceof CadHatch) {
             const {paths} = entity;
