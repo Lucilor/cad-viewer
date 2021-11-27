@@ -44,9 +44,23 @@ export class CadDimension extends CadEntity {
                 this.style.extensionLines = {};
             }
             this.style.extensionLines.hidden = true;
+            if (!this.style.dimensionLine) {
+                this.style.dimensionLine = {};
+            }
+            this.style.dimensionLine.hidden = true;
+            if (!this.style.arrows) {
+                this.style.arrows = {};
+            }
+            this.style.arrows.hidden = true;
         } else {
             if (this.style.extensionLines?.hidden) {
                 delete this.style.extensionLines.hidden;
+            }
+            if (this.style.dimensionLine?.hidden) {
+                delete this.style.dimensionLine.hidden;
+            }
+            if (this.style.arrows?.hidden) {
+                delete this.style.arrows.hidden;
             }
         }
     }
@@ -140,25 +154,5 @@ export class CadDimension extends CadEntity {
 
     clone(resetId = false) {
         return new CadDimension(this.export(), [], resetId);
-    }
-
-    get selected() {
-        if (this.el) {
-            return this.el.hasClass("selected") && this.selectable;
-        } else {
-            return typeof this._selected === "boolean" ? this._selected : false;
-        }
-    }
-    set selected(value: boolean) {
-        if (this.el) {
-            if (value && this.selectable) {
-                this.el.addClass("selected");
-            } else {
-                this.el.removeClass("selected");
-            }
-        } else {
-            this._selected = value;
-        }
-        this.children.forEach((c) => (c.selected = value));
     }
 }
