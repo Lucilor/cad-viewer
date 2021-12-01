@@ -1,5 +1,5 @@
 import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
-import {calc, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
+import {calculate, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -379,6 +379,8 @@ export class CadViewer extends EventEmitter {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
                 if (entity.info.isLengthText) {
+                    let valid = true;
+                    let error = null as any;
                     if (hideLineLength || parent.hideLength) {
                         el.remove();
                         entity.el = null;
@@ -386,9 +388,17 @@ export class CadViewer extends EventEmitter {
                         let length = parent.length;
                         let prefix = "";
                         if (parent.显示线长) {
-                            const length2 = calc(parent.显示线长, {线长: length});
-                            if (!isNaN(length2)) {
-                                length = length2;
+                            const calcReuslt = calculate(parent.显示线长, {线长: length});
+                            if (calcReuslt.error === null) {
+                                if (isNaN(calcReuslt.value)) {
+                                    error = "NaN";
+                                    valid = false;
+                                } else {
+                                    length = calcReuslt.value;
+                                }
+                            } else {
+                                error = calcReuslt.error;
+                                valid = false;
                             }
                         } else if (parent instanceof CadArc) {
                             switch (parent.圆弧显示) {
@@ -404,7 +414,11 @@ export class CadViewer extends EventEmitter {
                                 default:
                             }
                         }
-                        entity.text = prefix + toFixedTrim(length);
+                        if (valid) {
+                            entity.text = prefix + toFixedTrim(length);
+                        } else {
+                            entity.text = String(error);
+                        }
                         entity.font_size = parent.lengthTextSize;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
