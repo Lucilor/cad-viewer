@@ -102,17 +102,19 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
         el.text(text).font({size});
     } else {
         el = draw.text(text).addClass("fill").stroke("none");
-        el.css("transform-box" as any, "fill-box");
-        el.css("white-space" as any, "pre");
         el.font({size}).leading(1);
     }
+    el.css("transform-origin" as any, `${anchor.x * 100}% ${anchor.y * 100}%`);
+    const {width, height} = el.bbox();
+    let tx = -width * anchor.x;
+    let ty = -height * anchor.y;
+    let deg = 0;
     if (vertical) {
-        el.css("writing-mode" as any, "vertical-lr");
-        el.css("transform", `translate(${-anchor.x * 100}%, ${(1 - anchor.y) * 100}%) scale(-1, 1) rotate(180deg)`);
-    } else {
-        el.css("writing-mode" as any, "");
-        el.css("transform", `translate(${-anchor.x * 100}%, ${anchor.y * 100}%) scale(1, -1)`);
+        tx += height / 2;
+        ty -= width / 2;
+        deg = 90;
     }
+    el.css("transform", `translate(${tx}px, ${ty}px) scale(1, -1) rotate(${deg}deg)`);
     if (family) {
         el.css("font-family" as any, family);
     }
@@ -123,6 +125,7 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
         el.fill(color);
     }
     el.move(position.x, position.y);
+    draw.circle(1).move(position.x, position.y).fill("red");
     return [el];
 };
 
