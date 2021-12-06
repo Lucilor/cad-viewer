@@ -1,28 +1,19 @@
-import Color from "color";
 import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight} from "../cad-utils";
-import {color2Index, index2Color} from "../color";
+import {ColoredObject} from "../colored-object";
 
-export class CadLayer {
+export class CadLayer extends ColoredObject {
     id: string;
-    color: Color;
     name: string;
     linewidth: number;
-    _indexColor: number | null;
     _lineweight: number;
 
     constructor(data: any = {}) {
+        super();
         this.name = data.name || "";
         this.id = data.id ?? v4();
-        this.color = new Color();
         if (typeof data.color === "number") {
-            this._indexColor = data.color;
-            this.color = index2Color(data.color);
-        } else {
-            if (data.color instanceof Color) {
-                this.color = data.color;
-            }
-            this._indexColor = color2Index(this.color.hex());
+            this.setIndexColor(data.color);
         }
         this.linewidth = typeof data.lineWidth === "number" ? data.lineWidth : 1;
         this._lineweight = -3;
@@ -35,10 +26,9 @@ export class CadLayer {
     }
 
     export() {
-        this._indexColor = color2Index(this.color.hex());
         return {
             id: this.id,
-            color: this._indexColor,
+            color: this.getIndexColor(),
             name: this.name,
             lineweight: linewidth2lineweight(this.linewidth)
         };

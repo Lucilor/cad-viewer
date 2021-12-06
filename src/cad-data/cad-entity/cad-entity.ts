@@ -1,21 +1,18 @@
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import {Angle, Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
-import Color from "color";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
-import {color2Index, index2Color} from "../../color";
+import {ColoredObject} from "../../colored-object";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 
-export abstract class CadEntity {
+export abstract class CadEntity extends ColoredObject {
     id: string;
     abstract type: CadType;
     layer: string;
-    color: Color;
     info: ObjectOf<any>;
-    _indexColor: number;
     parent?: CadEntity;
     children: CadEntities;
     el?: G | null;
@@ -128,6 +125,7 @@ export abstract class CadEntity {
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+        super();
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
         }
@@ -137,22 +135,15 @@ export abstract class CadEntity {
             this.id = v4();
         }
         this.layer = data.layer ?? "0";
-        this.color = new Color();
         if (typeof data.color === "number") {
-            this._indexColor = data.color;
             if (data.color === 256) {
                 const layer = layers.find((l) => l.name === this.layer);
                 if (layer) {
-                    this.color = new Color(layer.color);
+                    this.setColor(layer.getColor());
                 }
             } else {
-                this.color = index2Color(data.color);
+                this.setIndexColor(data.color);
             }
-        } else {
-            if (data.color instanceof Color) {
-                this.color = new Color(data.color.toString());
-            }
-            this._indexColor = color2Index(this.color.hex());
         }
         if (typeof data.info === "object" && !Array.isArray(data.info)) {
             this.info = cloneDeep(data.info);
@@ -225,13 +216,12 @@ export abstract class CadEntity {
     }
 
     export(): ObjectOf<any> {
-        this._indexColor = color2Index(this.color.hex());
         this.update();
         return purgeObject({
             id: this.id,
             layer: this.layer,
             type: this.type,
-            color: this._indexColor,
+            color: this.getIndexColor(),
             children: this.children.export(),
             info: this.info,
             lineweight: linewidth2lineweight(this.linewidth)

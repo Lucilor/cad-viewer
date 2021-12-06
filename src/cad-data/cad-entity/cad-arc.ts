@@ -75,7 +75,7 @@ export class CadArc extends CadLineLike {
     }
 
     clone(resetId = false) {
-        return new CadArc(this, [], resetId);
+        return new CadArc(this.export(), [], resetId);
     }
 
     equals(entity: CadArc) {

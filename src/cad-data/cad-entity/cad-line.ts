@@ -84,7 +84,7 @@ export class CadLine extends CadLineLike {
     }
 
     clone(resetId = false) {
-        return new CadLine(this, [], resetId);
+        return new CadLine(this.export(), [], resetId);
     }
 
     equals(entity: CadLine) {

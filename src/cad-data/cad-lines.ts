@@ -130,10 +130,12 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
     }
     let map = generatePointsMap(entities);
     let arr: PointsMap = [];
+    const allIds = new Set<string>();
     map.forEach((v) => {
         if (v.lines.length === 1) {
             arr.push(v);
         }
+        v.lines.forEach((l) => allIds.add(l.id));
     });
     if (arr.length < 1) {
         // * 每个点都有不止条线, 说明图形闭合
@@ -206,7 +208,6 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
         }
         const toRemove = new Set(duplicateLines.map((vv) => Array.from(vv).slice(1)).flat());
         toRemove.forEach((i) => result.push([lines[i]]));
-        exclude.push(...lines.map((e) => e.id));
         lines = lines.filter((_, i) => !toRemove.has(i));
         count = lines.length;
         for (let i = 1; i < count; i++) {
@@ -218,6 +219,13 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
             }
         }
         result.push(lines);
+        lines.forEach((l) => {
+            exclude.push(l.id);
+            allIds.delete(l.id);
+        });
+    }
+    if (allIds.size > 0) {
+        result.push(data.entities.filter((e) => allIds.has(e.id)).toArray() as CadLineLike[]);
     }
     return result;
 };
