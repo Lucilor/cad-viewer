@@ -23,11 +23,6 @@
             }
         }
 
-        text {
-            transform-box: fill-box;
-            white-space: pre;
-        }
-
         g {
             &:hover.selectable {
                 line,

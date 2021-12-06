@@ -104,6 +104,8 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
         el = draw.text(text).addClass("fill").stroke("none");
         el.font({size}).leading(1);
     }
+    el.css("transform-box" as any, "fill-box");
+    el.css("white-space" as any, "pre");
     el.css("transform-origin" as any, `${anchor.x * 100}% ${anchor.y * 100}%`);
     const {width, height} = el.bbox();
     let tx = -width * anchor.x;
@@ -125,7 +127,6 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
         el.fill(color);
     }
     el.move(position.x, position.y);
-    draw.circle(1).move(position.x, position.y).fill("red");
     return [el];
 };
 
