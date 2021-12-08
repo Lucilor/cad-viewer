@@ -37,7 +37,7 @@ export type CadEventCallBack<T extends keyof CadEvents> = (...params: CadEvents[
 function onWheel(this: CadViewer, event: WheelEvent) {
     event.preventDefault();
     this.emit("wheel", event);
-    if (!this.config("enableZoom")) {
+    if (!this.getConfig("enableZoom")) {
         return;
     }
     const step = 0.1;
@@ -83,7 +83,7 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
         pointer = {from: point, to: point.clone()};
     }
     if (pointer) {
-        const {selectMode, entityDraggable, dragAxis} = this.config();
+        const {selectMode, entityDraggable, dragAxis} = this.getConfig();
         const {from, to} = pointer;
         const translate = new Point(clientX, clientY).sub(to).divide(this.zoom());
         if (this.entitiesCopied) {
@@ -243,7 +243,7 @@ function onKeyDown(this: CadViewer, event: KeyboardEvent) {
 
 function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
     event.stopImmediatePropagation();
-    const selectMode = this.config("selectMode");
+    const selectMode = this.getConfig("selectMode");
     if (selectMode === "single" || selectMode === "multiple") {
         if (selectMode === "single") {
             this.unselectAll();
@@ -259,7 +259,7 @@ function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
 }
 
 function onEntityPointerDown(this: CadViewer, event: PointerEvent, entity: CadEntity) {
-    if (this.config("entityDraggable")) {
+    if (this.getConfig("entityDraggable")) {
         if (entity instanceof CadDimension) {
             draggingDimension = entity;
         } else {

@@ -100,7 +100,7 @@ export class CadViewer extends EventEmitter {
     private _config: CadViewerConfig;
     private _fonts: CadViewerFont[] = [];
     get fonts() {
-        return cloneDeep(this._fonts);
+        return cloneDeep([...this._fonts]);
     }
 
     constructor(data = new CadData(), config: Partial<CadViewerConfig> = {}) {
@@ -125,35 +125,64 @@ export class CadViewer extends EventEmitter {
 
         this._config = getConfigProxy();
         cadTypes.forEach((t) => this.draw.group().attr("group", t));
-        this.config({...this._config, ...config}).center();
+        this.setConfig({...this._config, ...config}).center();
     }
 
+    /**
+     * @deprecated
+     * use getConfig() instead
+     */
     config(): CadViewerConfig;
+    /**
+     * @deprecated
+     * use getConfig(key) instead
+     */
     config<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
+    /**
+     * @deprecated
+     * use setConfig(config) instead
+     */
     config(config: Partial<CadViewerConfig>): this;
+    /**
+     * @deprecated
+     * use setConfig(key, value) instead
+     */
     config<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
     config<T extends keyof CadViewerConfig>(config?: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
+        console.warn("`CadViewer.config()` is deprecated and will be removed in future, use `getConfig()` or `setConfig` instead.");
         if (!config) {
-            const result = cloneDeep(this._config);
-            result["fontFamily"] = this.config("fontFamily");
-            return result;
+            return this.getConfig();
         }
         if (typeof config === "string") {
             if (value === undefined) {
-                if (config === "fontFamily") {
-                    const fontNames = this._fonts.length > 0 ? this._fonts.map((v) => v.name) : [];
-                    const fontFamily = this._config["fontFamily"];
-                    if (fontFamily) {
-                        fontNames.push(fontFamily);
-                    }
-                    return fontNames.join(", ");
-                }
-                return this._config[config];
+                return this.getConfig(config);
             } else {
-                const tmp: Partial<CadViewerConfig> = {};
-                tmp[config] = value;
-                return this.config(tmp);
+                return this.setConfig(config, value);
             }
+        }
+        return this.setConfig(config);
+    }
+
+    getConfig(): CadViewerConfig;
+    getConfig<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
+    getConfig(key?: keyof CadViewerConfig) {
+        if (typeof key === "string") {
+            if (key === "fontFamily") {
+                return this._getFontFamily();
+            }
+            return cloneDeep(this._config[key]);
+        } else {
+            return cloneDeep({...this._config, fontFamily: this._getFontFamily()});
+        }
+    }
+
+    setConfig(config: Partial<CadViewerConfig>): this;
+    setConfig<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
+    setConfig<T extends keyof CadViewerConfig>(config: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
+        if (typeof config === "string") {
+            const tmp: Partial<CadViewerConfig> = {};
+            tmp[config] = value;
+            return this.setConfig(tmp);
         }
         let needsResize = false;
         let needsSetBg = false;
@@ -179,7 +208,7 @@ export class CadViewer extends EventEmitter {
                         needsRender = true;
                         break;
                     case "fontFamily":
-                        this.dom.style.fontFamily = this.config("fontFamily");
+                        this._updateFontFamily();
                         break;
                     case "selectMode":
                         if (config.selectMode === "none") {
@@ -780,6 +809,17 @@ export class CadViewer extends EventEmitter {
         this.emit("moveentities", toMove);
     }
 
+    private _getFontFamily() {
+        const names1 = this._fonts.map((v) => v.name);
+        const names2 = this._config.fontFamily.split(",").map((v) => v.trim());
+        const names = new Set([...names1, ...names2]);
+        return Array.from(names).join(", ");
+    }
+
+    private _updateFontFamily() {
+        this.draw.css("font-family" as any, this._getFontFamily());
+    }
+
     async loadFont(font: CadViewerFont) {
         const {name, url} = font;
         const loadedFont = this._fonts.find((v) => v.name === name);
@@ -821,5 +861,6 @@ export class CadViewer extends EventEmitter {
         this.draw.defs().node.append(style);
         this._fonts.push(cloneDeep(font));
         fontCache[name] = dataUrl;
+        this._updateFontFamily();
     }
 }
