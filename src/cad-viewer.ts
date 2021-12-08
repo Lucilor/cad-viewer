@@ -335,7 +335,7 @@ export class CadViewer extends EventEmitter {
     drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
         const {color, fontStyle, lineStyle} = stylizer.get(entity, style);
-        if (!entity.visible) {
+        if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
             entity.el?.remove();
             entity.el = null;
             return [];
@@ -574,7 +574,6 @@ export class CadViewer extends EventEmitter {
             entities = new CadEntities().fromArray(entities);
         }
         if (entities.length) {
-            entities.dimension.forEach((e) => (e.visible = !this._config.hideDimensions));
             entities.forEach((entity) => {
                 if (entity instanceof CadInsert) {
                     // const block = this.data.blocks[entity.name];
