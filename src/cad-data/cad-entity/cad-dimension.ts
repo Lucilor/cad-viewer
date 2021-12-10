@@ -155,4 +155,59 @@ export class CadDimension extends CadEntity {
     clone(resetId = false) {
         return new CadDimension(this.export(), [], resetId);
     }
+
+    getDistance() {
+        if (this.defPoints) {
+            if (this.axis === "x") {
+                return this.defPoints[0].y - this.defPoints[2].y;
+            } else if (this.axis === "y") {
+                return this.defPoints[0].x - this.defPoints[2].x;
+            }
+            return NaN;
+        } else {
+            return this.distance;
+        }
+    }
+
+    setDistance(value: number) {
+        if (this.defPoints) {
+            if (this.axis === "x") {
+                this.defPoints[0].y = this.defPoints[2].y + value;
+            } else if (this.axis === "y") {
+                this.defPoints[0].x = this.defPoints[2].x + value;
+            }
+        } else {
+            this.distance = value;
+        }
+        return this;
+    }
+
+    switchAxis() {
+        if (this.defPoints) {
+            const distance = this.getDistance();
+            const [p0, p1, p2] = this.defPoints;
+            if (this.axis === "x") {
+                this.axis = "y";
+                const dy = p1.y - p2.y;
+                this.defPoints = [p1, p0, p2];
+                p1.y = p2.y;
+                p0.x = p2.x + dy;
+                this.setDistance(distance);
+            } else if (this.axis === "y") {
+                this.axis = "x";
+                const dx = p1.x - p2.x;
+                this.defPoints = [p1, p0, p2];
+                p1.x = p2.x;
+                p0.y = p2.y + dx;
+                this.setDistance(distance);
+            }
+        } else {
+            if (this.axis === "x") {
+                this.axis = "y";
+            } else if (this.axis === "y") {
+                this.axis = "x";
+            }
+        }
+        return this;
+    }
 }

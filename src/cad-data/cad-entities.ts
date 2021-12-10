@@ -257,6 +257,7 @@ export class CadEntities {
                 this.forEachType((array, type, TYPE) => {
                     if (TYPE === entity.type) {
                         array.push(entity);
+                        entity.root = this;
                     }
                 });
             }
@@ -268,6 +269,7 @@ export class CadEntities {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
                 const id = entity.id;
+                delete entity.root;
                 this.forEachType((array) => {
                     const index = array.findIndex((e) => e.id === id);
                     if (index > -1) {
