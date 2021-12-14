@@ -5,13 +5,14 @@ import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
 import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {CadImage} from "./cad-data/cad-entity/cad-image";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadStyle} from "./cad-data/cad-styles";
 import {CadType, cadTypes} from "./cad-data/cad-types";
 import {CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
-import {drawArc, drawCircle, drawDimension, drawLeader, drawLine, drawShape, drawText} from "./draw";
+import {drawArc, drawCircle, drawDimension, drawImage, drawLeader, drawLine, drawShape, drawText} from "./draw";
 
 export interface CadViewerFont {
     name: string;
@@ -97,10 +98,11 @@ export class CadViewer extends EventEmitter {
     draw: Svg;
     stylizer: CadStylizer;
     entitiesCopied?: CadEntities;
+    entitiesClickLock = false;
     private _config: CadViewerConfig;
     private _fonts: CadViewerFont[] = [];
     get fonts() {
-        return cloneDeep(this._fonts);
+        return cloneDeep([...this._fonts]);
     }
 
     constructor(data = new CadData(), config: Partial<CadViewerConfig> = {}) {
@@ -125,35 +127,64 @@ export class CadViewer extends EventEmitter {
 
         this._config = getConfigProxy();
         cadTypes.forEach((t) => this.draw.group().attr("group", t));
-        this.config({...this._config, ...config}).center();
+        this.setConfig({...this._config, ...config}).center();
     }
 
+    /**
+     * @deprecated
+     * use getConfig() instead
+     */
     config(): CadViewerConfig;
+    /**
+     * @deprecated
+     * use getConfig(key) instead
+     */
     config<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
+    /**
+     * @deprecated
+     * use setConfig(config) instead
+     */
     config(config: Partial<CadViewerConfig>): this;
+    /**
+     * @deprecated
+     * use setConfig(key, value) instead
+     */
     config<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
     config<T extends keyof CadViewerConfig>(config?: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
+        console.warn("`CadViewer.config()` is deprecated and will be removed in future, use `getConfig()` or `setConfig` instead.");
         if (!config) {
-            const result = cloneDeep(this._config);
-            result["fontFamily"] = this.config("fontFamily");
-            return result;
+            return this.getConfig();
         }
         if (typeof config === "string") {
             if (value === undefined) {
-                if (config === "fontFamily") {
-                    const fontNames = this._fonts.length > 0 ? this._fonts.map((v) => v.name) : [];
-                    const fontFamily = this._config["fontFamily"];
-                    if (fontFamily) {
-                        fontNames.push(fontFamily);
-                    }
-                    return fontNames.join(", ");
-                }
-                return this._config[config];
+                return this.getConfig(config);
             } else {
-                const tmp: Partial<CadViewerConfig> = {};
-                tmp[config] = value;
-                return this.config(tmp);
+                return this.setConfig(config, value);
             }
+        }
+        return this.setConfig(config);
+    }
+
+    getConfig(): CadViewerConfig;
+    getConfig<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
+    getConfig(key?: keyof CadViewerConfig) {
+        if (typeof key === "string") {
+            if (key === "fontFamily") {
+                return this._getFontFamily();
+            }
+            return cloneDeep(this._config[key]);
+        } else {
+            return cloneDeep({...this._config, fontFamily: this._getFontFamily()});
+        }
+    }
+
+    setConfig(config: Partial<CadViewerConfig>): this;
+    setConfig<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
+    setConfig<T extends keyof CadViewerConfig>(config: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
+        if (typeof config === "string") {
+            const tmp: Partial<CadViewerConfig> = {};
+            tmp[config] = value;
+            return this.setConfig(tmp);
         }
         let needsResize = false;
         let needsSetBg = false;
@@ -179,7 +210,7 @@ export class CadViewer extends EventEmitter {
                         needsRender = true;
                         break;
                     case "fontFamily":
-                        this.dom.style.fontFamily = this.config("fontFamily");
+                        this._updateFontFamily();
                         break;
                     case "selectMode":
                         if (config.selectMode === "none") {
@@ -303,10 +334,10 @@ export class CadViewer extends EventEmitter {
         this.draw.css("background-color" as any, color.toString());
     }
 
-    drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
+    async drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
         const {color, fontStyle, lineStyle} = stylizer.get(entity, style);
-        if (!entity.visible) {
+        if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
             entity.el?.remove();
             entity.el = null;
             return [];
@@ -320,10 +351,17 @@ export class CadViewer extends EventEmitter {
             }
             el = typeLayer.group().addClass("selectable");
             entity.el = el;
+            let startX = 0;
+            let startY = 0;
             el.node.onclick = (event) => {
+                if (new Point(startX, startY).distanceTo(new Point(event.clientX, event.clientY)) > 1) {
+                    return;
+                }
                 controls.onEntityClick.call(this, event, entity);
             };
             el.node.onpointerdown = (event) => {
+                startX = event.clientX;
+                startY = event.clientY;
                 controls.onEntityPointerDown.call(this, event, entity);
             };
             el.node.onpointermove = (event) => {
@@ -517,6 +555,9 @@ export class CadViewer extends EventEmitter {
             const start = entity.vertices[1];
             const end = entity.vertices[0];
             drawResult = drawLeader(el, start, end, entity.size, color);
+        } else if (entity instanceof CadImage) {
+            const {url, transformation, anchor, sourceSize, targetSize, objectFit} = entity;
+            drawResult = await drawImage(el, url, transformation, anchor, sourceSize, targetSize, objectFit);
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();
@@ -534,7 +575,7 @@ export class CadViewer extends EventEmitter {
         return drawResult;
     }
 
-    render(entities?: CadEntity | CadEntities | CadEntity[], style: Partial<CadStyle> = {}) {
+    async render(entities?: CadEntity | CadEntities | CadEntity[], style: Partial<CadStyle> = {}) {
         if (!entities) {
             entities = this.data.getAllEntities();
         }
@@ -545,19 +586,18 @@ export class CadViewer extends EventEmitter {
             entities = new CadEntities().fromArray(entities);
         }
         if (entities.length) {
-            entities.dimension.forEach((e) => (e.visible = !this._config.hideDimensions));
-            entities.forEach((entity) => {
+            const arr = entities.toArray();
+            for (const entity of arr) {
                 if (entity instanceof CadInsert) {
                     // const block = this.data.blocks[entity.name];
                     // block?.forEach((v) => console.log(this.drawEntity(v.clone().transform({translate: entity.insert}, true), style)));
                     // TODO: draw blocks
                 } else {
-                    this.drawEntity(entity, style);
+                    await this.drawEntity(entity, style);
                 }
-            }, true);
+            }
             this.emit("render", entities);
         }
-        return this;
     }
 
     center() {
@@ -727,6 +767,7 @@ export class CadViewer extends EventEmitter {
 
     toBase64() {
         let str = new XMLSerializer().serializeToString(this.draw.node);
+        // FIXME: window.unescape is deprecated
         str = unescape(encodeURIComponent(str));
         return "data:image/svg+xml;base64," + window.btoa(str);
     }
@@ -739,6 +780,11 @@ export class CadViewer extends EventEmitter {
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(img, 0, 0);
         return canvas;
+    }
+
+    async toDataURL() {
+        const canvas = await this.toCanvas();
+        return canvas.toDataURL();
     }
 
     traverse(callback: (e: CadEntity) => void, recursive = false) {
@@ -778,6 +824,17 @@ export class CadViewer extends EventEmitter {
             notToMove.transform({translate: [-x, -y]}, false);
         }
         this.emit("moveentities", toMove);
+    }
+
+    private _getFontFamily() {
+        const names1 = this._fonts.map((v) => v.name);
+        const names2 = this._config.fontFamily.split(",").map((v) => v.trim());
+        const names = new Set([...names1, ...names2]);
+        return Array.from(names).join(", ");
+    }
+
+    private _updateFontFamily() {
+        this.draw.css("font-family" as any, this._getFontFamily());
     }
 
     async loadFont(font: CadViewerFont) {
@@ -821,5 +878,6 @@ export class CadViewer extends EventEmitter {
         this.draw.defs().node.append(style);
         this._fonts.push(cloneDeep(font));
         fontCache[name] = dataUrl;
+        this._updateFontFamily();
     }
 }

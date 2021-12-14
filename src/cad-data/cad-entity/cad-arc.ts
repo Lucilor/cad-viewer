@@ -46,19 +46,15 @@ export class CadArc extends CadLineLike {
         this.clockwise = data.clockwise ?? false;
     }
 
-    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
         matrix = new Matrix(matrix);
-        this._transform(matrix, alter, parent);
-        if (alter) {
-            const curve = this.curve;
-            curve.transform(matrix);
-            this.center = curve.center;
-            this.radius = curve.radius;
-            this.start_angle = curve.startAngle.deg;
-            this.end_angle = curve.endAngle.deg;
-            this.clockwise = curve.clockwise;
-        }
-        return this;
+        const curve = this.curve;
+        curve.transform(matrix);
+        this.center = curve.center;
+        this.radius = curve.radius;
+        this.start_angle = curve.startAngle.deg;
+        this.end_angle = curve.endAngle.deg;
+        this.clockwise = curve.clockwise;
     }
 
     export(): ObjectOf<any> {

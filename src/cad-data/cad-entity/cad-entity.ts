@@ -174,8 +174,10 @@ export abstract class CadEntity extends ColoredObject {
         }
     }
 
-    protected _transform(matrix: MatrixLike, alter = false, parent: CadEntity | undefined) {
-        if (!alter) {
+    transform(matrix: MatrixLike, alter: boolean, parent?: CadEntity | undefined): CadEntity {
+        if (alter) {
+            this._transform(matrix, parent);
+        } else {
             if (this.el) {
                 const oldMatrix = new Matrix2(this.el.transform());
                 this.el.transform(oldMatrix.transform(new Matrix(matrix)));
@@ -186,7 +188,7 @@ export abstract class CadEntity extends ColoredObject {
         return this;
     }
 
-    abstract transform(matrix: MatrixLike, alter: boolean, parent?: CadEntity): this;
+    protected abstract _transform(matrix: MatrixLike, parent?: CadEntity): void;
 
     update() {
         if (this.el) {

@@ -14,7 +14,7 @@ export class CadStylizer {
         const defaultStyle: Required<CadStyle> = {
             color: "white",
             fontStyle: {size: 16, family: "", weight: ""},
-            lineStyle: {padding: cad.config("dashedLinePadding")},
+            lineStyle: {padding: cad.getConfig("dashedLinePadding")},
             opacity: 1
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
@@ -38,7 +38,7 @@ export class CadStylizer {
             result.opacity = params.opacity;
         }
 
-        const {validateLines, reverseSimilarColor, minLinewidth} = cad.config();
+        const {validateLines, reverseSimilarColor, minLinewidth} = cad.getConfig();
         if (validateLines && entity instanceof CadLine) {
             if (entity.info.errors?.length) {
                 linewidth *= 10;
@@ -54,8 +54,6 @@ export class CadStylizer {
             linewidth = Math.max(minLinewidth, linewidth);
         }
 
-        result.fontStyle.family = cad.config("fontFamily");
-        result.fontStyle.weight = cad.config("fontWeight");
         if (entity instanceof CadMtext) {
             if (entity.fontFamily) {
                 if (result.fontStyle.family) {
@@ -80,7 +78,7 @@ export class CadStylizer {
     }
 
     correctColor(color: ColoredObject, threshold = 5) {
-        const {reverseSimilarColor, backgroundColor} = this.cad.config();
+        const {reverseSimilarColor, backgroundColor} = this.cad.getConfig();
         const c1 = color.getColor();
         if (reverseSimilarColor) {
             const c2 = new ColoredObject(backgroundColor).getColor();

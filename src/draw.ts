@@ -1,7 +1,7 @@
-import {Angle, Arc, Line, Point} from "@utils";
-import {Circle as SvgCircle, Container, Element, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
+import {Angle, Arc, Line, Matrix, Point} from "@utils";
+import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
-import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
+import {CadDimensionStyle, FontStyle, LineStyle, ObjectFit} from "./cad-data/cad-styles";
 
 export const DEFAULT_DASH_ARRAY = [20, 7];
 
@@ -279,4 +279,102 @@ export const drawLeader = (draw: Container, start: Point, end: Point, size: numb
     const triangle = drawTriangle(draw, start, end, size, color, i);
     i += triangle.length;
     return [...line, ...triangle];
+};
+
+const loadImageEl = async (el: Image, url: string) => {
+    if (el.attr("href") === url) {
+        return;
+    }
+    return new Promise<void>((resolve, reject) => {
+        el.load(url, (event) => {
+            resolve();
+        });
+    });
+};
+
+export const drawImage = async (
+    draw: Container,
+    url: string,
+    transformation: Matrix,
+    anchor: Point,
+    sourceSize: Point,
+    targetSize: Point | null,
+    objectFit: ObjectFit,
+    i = 0
+) => {
+    let imageContainer = draw.children()[i] as Container;
+    let imageEl: Image;
+    if (imageContainer) {
+        imageEl = imageContainer.findOne("image") as Image;
+    } else {
+        imageContainer = draw.group();
+        imageContainer.css({
+            transform: "scale(1, -1)",
+            "transform-origin": "50% 50%",
+            "transform-box": "fill-box"
+        } as any);
+        imageEl = imageContainer.image();
+        imageEl.css({
+            "transform-origin": `${anchor.x * 100}% ${100 - anchor.y * 100}%`,
+            "transform-box": "fill-box"
+        } as any);
+    }
+    await loadImageEl(imageEl, url);
+    const sw = imageEl.node.width.baseVal.value;
+    const sh = imageEl.node.height.baseVal.value;
+    let tw: number;
+    let th: number;
+    sourceSize.set(sw, sh);
+    if (targetSize) {
+        tw = targetSize.x;
+        th = targetSize.y;
+    } else {
+        tw = sw;
+        th = sh;
+    }
+    const translate = transformation.translate();
+    const translateX = translate[0] - anchor.x * sw;
+    const translateY = translate[1] - (1 - anchor.y) * sh;
+    let [scaleX, scaleY] = transformation.scale();
+    const sourceRatio = sw / sh;
+    const targetRatio = tw / th;
+    switch (objectFit) {
+        case "contain":
+            if (sourceRatio >= targetRatio) {
+                scaleY = scaleX *= tw / sw;
+            } else {
+                scaleX = scaleY *= th / sh;
+            }
+            break;
+        case "cover":
+            if (sourceRatio >= targetRatio) {
+                scaleX = scaleY *= th / sh;
+            } else {
+                scaleY = scaleX *= tw / sw;
+            }
+            break;
+        case "fill":
+            scaleX *= tw / sw;
+            scaleY *= th / sh;
+            break;
+        case "scale-down": {
+            let scaleX2 = scaleX;
+            let scaleY2 = scaleY;
+            if (sourceRatio >= targetRatio) {
+                scaleY2 = scaleX2 *= tw / sw;
+            } else {
+                scaleX2 = scaleY2 *= th / sh;
+            }
+            if (scaleX > scaleX2) {
+                scaleX = scaleX2;
+                scaleY = scaleY2;
+            }
+            break;
+        }
+        case "none":
+        default:
+            break;
+    }
+    imageEl.transform(new Matrix({translate: [translateX, translateY], scale: [scaleX, scaleY]}));
+    return [imageContainer];
 };

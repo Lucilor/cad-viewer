@@ -8,7 +8,7 @@ export class CadInsert extends CadEntity {
     type: CadType = "INSERT";
     name: string;
     insert: Point;
-    transformMatrix = new Matrix();
+    transformation = new Matrix();
     calcBoundingRect = false;
     get _boundingRectCalc() {
         const data = this.root?.root;
@@ -35,7 +35,7 @@ export class CadInsert extends CadEntity {
             ...super.export(),
             name: this.name,
             insert: this.insert.toArray()
-            // transformMatrix: this.transformMatrix.decompose()
+            // transformation: this.transformation.decompose()
         };
     }
 
@@ -43,11 +43,7 @@ export class CadInsert extends CadEntity {
         return new CadInsert(this.export(), [], resetId);
     }
 
-    transform(matrix: MatrixLike, alter = false, parent?: CadEntity) {
-        this._transform(matrix, alter, parent);
-        if (alter) {
-            this.transformMatrix.transform(matrix);
-        }
-        return this;
+    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
+        this.transformation.transform(matrix);
     }
 }

@@ -18,6 +18,7 @@ import {
 import {v4} from "uuid";
 import {CadInsert} from "./cad-entity/cad-insert";
 import {CadData} from "./cad-data";
+import {CadImage} from "./cad-entity/cad-image";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 
@@ -42,13 +43,15 @@ export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLay
         entity = new CadLeader(data, layers, resetId);
     } else if (type === "INSERT") {
         entity = new CadInsert(data, layers, resetId);
+    } else if (type === "IMAGE") {
+        entity = new CadImage(data, layers, resetId);
     } else {
         throw new Error(`unsupported entity type: ${type}`);
     }
     return entity as T;
 };
 
-export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch & CadSpline & CadLeader & CadInsert;
+export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch & CadSpline & CadLeader & CadInsert & CadImage;
 export class CadEntities {
     root?: CadData;
     line: CadLine[] = [];
@@ -60,6 +63,7 @@ export class CadEntities {
     spline: CadSpline[] = [];
     leader: CadLeader[] = [];
     insert: CadInsert[] = [];
+    image: CadImage[] = [];
 
     get length() {
         let result = 0;
@@ -257,6 +261,7 @@ export class CadEntities {
                 this.forEachType((array, type, TYPE) => {
                     if (TYPE === entity.type) {
                         array.push(entity);
+                        entity.root = this;
                     }
                 });
             }
@@ -268,6 +273,7 @@ export class CadEntities {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
                 const id = entity.id;
+                delete entity.root;
                 this.forEachType((array) => {
                     const index = array.findIndex((e) => e.id === id);
                     if (index > -1) {

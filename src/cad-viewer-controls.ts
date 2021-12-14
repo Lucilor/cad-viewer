@@ -37,7 +37,7 @@ export type CadEventCallBack<T extends keyof CadEvents> = (...params: CadEvents[
 function onWheel(this: CadViewer, event: WheelEvent) {
     event.preventDefault();
     this.emit("wheel", event);
-    if (!this.config("enableZoom")) {
+    if (!this.getConfig("enableZoom")) {
         return;
     }
     const step = 0.1;
@@ -83,7 +83,7 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
         pointer = {from: point, to: point.clone()};
     }
     if (pointer) {
-        const {selectMode, entityDraggable, dragAxis} = this.config();
+        const {selectMode, entityDraggable, dragAxis} = this.getConfig();
         const {from, to} = pointer;
         const translate = new Point(clientX, clientY).sub(to).divide(this.zoom());
         if (this.entitiesCopied) {
@@ -121,33 +121,33 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
                     const right = Math.max(p1.x, p2.x);
                     const top = Math.max(p1.y, p2.y);
                     const bottom = Math.min(p1.y, p2.y);
+                    const distance = draggingDimension.getDistance();
                     if (draggingDimension.axis === "x") {
                         if (clientX >= left && clientX <= right) {
-                            draggingDimension.distance -= translate.y;
+                            draggingDimension.setDistance(distance - translate.y);
                         } else if (clientY >= bottom && clientY <= top) {
-                            draggingDimension.axis = "y";
+                            draggingDimension.switchAxis();
                             if (clientX <= left) {
-                                draggingDimension.distance = clientX - left;
+                                draggingDimension.setDistance(clientX - left);
                             } else {
-                                draggingDimension.distance = clientX - right;
+                                draggingDimension.setDistance(clientX - right);
                             }
-                            draggingDimension.distance = clientX - left;
                         } else {
-                            draggingDimension.distance -= translate.y;
+                            draggingDimension.setDistance(distance - translate.y);
                         }
                     }
                     if (draggingDimension.axis === "y") {
                         if (clientY >= bottom && clientY <= top) {
-                            draggingDimension.distance += translate.x;
+                            draggingDimension.setDistance(distance + translate.x);
                         } else if (clientX >= left && clientX <= right) {
-                            draggingDimension.axis = "x";
+                            draggingDimension.switchAxis();
                             if (clientY >= top) {
-                                draggingDimension.distance = top - clientY;
+                                draggingDimension.setDistance(top - clientY);
                             } else {
-                                draggingDimension.distance = bottom - clientY;
+                                draggingDimension.setDistance(bottom - clientY);
                             }
                         } else {
-                            draggingDimension.distance += translate.x;
+                            draggingDimension.setDistance(distance + translate.x);
                         }
                     }
                     this.render(draggingDimension);
@@ -243,7 +243,7 @@ function onKeyDown(this: CadViewer, event: KeyboardEvent) {
 
 function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
     event.stopImmediatePropagation();
-    const selectMode = this.config("selectMode");
+    const selectMode = this.getConfig("selectMode");
     if (selectMode === "single" || selectMode === "multiple") {
         if (selectMode === "single") {
             this.unselectAll();
@@ -259,7 +259,7 @@ function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
 }
 
 function onEntityPointerDown(this: CadViewer, event: PointerEvent, entity: CadEntity) {
-    if (this.config("entityDraggable")) {
+    if (this.getConfig("entityDraggable")) {
         if (entity instanceof CadDimension) {
             draggingDimension = entity;
         } else {

@@ -44,22 +44,18 @@ export class CadMtext extends CadEntity {
         };
     }
 
-    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        this._transform(matrix, alter, parent);
-        if (alter) {
-            this.insert.transform(matrix);
-            const m = new Matrix(matrix);
-            if (this.info.isLengthText || this.info.isGongshiText) {
-                if (!Array.isArray(this.info.offset)) {
-                    this.info.offset = [0, 0];
-                }
-                if (!parent) {
-                    this.info.offset[0] += m.e;
-                    this.info.offset[1] += m.f;
-                }
+    protected _transform(matrix: Matrix, parent?: CadEntity) {
+        this.insert.transform(matrix);
+        const m = new Matrix(matrix);
+        if (this.info.isLengthText || this.info.isGongshiText) {
+            if (!Array.isArray(this.info.offset)) {
+                this.info.offset = [0, 0];
+            }
+            if (!parent) {
+                this.info.offset[0] += m.e;
+                this.info.offset[1] += m.f;
             }
         }
-        return this;
     }
 
     clone(resetId = false) {
