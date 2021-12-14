@@ -114,12 +114,10 @@ export class CadDimension extends CadEntity {
         this.xiaoshuchuli = data.xiaoshuchuli ?? "四舍五入";
     }
 
-    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        this._transform(matrix, alter, parent);
-        if (this.defPoints && alter) {
+    protected _transform(matrix: Matrix, parent?: CadEntity) {
+        if (this.defPoints) {
             this.defPoints.forEach((v) => v.transform(matrix));
         }
-        return this;
     }
 
     export(): ObjectOf<any> {

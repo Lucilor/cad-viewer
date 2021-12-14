@@ -12,6 +12,9 @@
     }
 }
 
+$selected-color: #ffca1c;
+$hover-color: cyan;
+
 .cad-viewer {
     svg {
         box-sizing: border-box;
@@ -28,11 +31,11 @@
                 line,
                 circle,
                 path {
-                    @include stroke-color(cyan);
+                    @include stroke-color($hover-color);
                 }
 
                 text {
-                    @include fill-color(cyan);
+                    @include fill-color($hover-color);
                 }
             }
 
@@ -40,11 +43,15 @@
                 line,
                 circle,
                 path {
-                    @include stroke-color(#ffca1c);
+                    @include stroke-color($selected-color);
                 }
 
                 text {
-                    @include fill-color(#ffca1c);
+                    @include fill-color($selected-color);
+                }
+
+                image {
+                    filter: drop-shadow(2px 4px 6px black);
                 }
             }
         }

@@ -28,12 +28,8 @@ export class CadCircle extends CadEntity {
         this.radius = data.radius ?? 0;
     }
 
-    transform(matrix: Matrix, alter = false, parent?: CadEntity) {
-        this._transform(matrix, alter, parent);
-        if (alter) {
-            this.center.transform(matrix);
-        }
-        return this;
+    protected _transform(matrix: Matrix, parent?: CadEntity) {
+        this.center.transform(matrix);
     }
 
     export(): ObjectOf<any> {
