@@ -244,14 +244,9 @@ export class CadEntities {
         return this;
     }
 
-    toArray(filter?: (e: CadEntity) => boolean) {
+    toArray(recursive = false) {
         const result: CadEntity[] = [];
-        this.forEach((e) => {
-            if (typeof filter === "function" && !filter(e)) {
-                return;
-            }
-            result.push(e);
-        });
+        this.forEach((e) => result.push(e), recursive);
         return result;
     }
 

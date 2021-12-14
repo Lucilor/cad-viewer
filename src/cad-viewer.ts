@@ -412,7 +412,7 @@ export class CadViewer extends EventEmitter {
             drawResult = drawLine(el, start, end, lineStyle);
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
-            const {insert, anchor, text} = entity;
+            const {insert, anchor} = entity;
             if (parent instanceof CadLine || parent instanceof CadArc) {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
@@ -548,7 +548,7 @@ export class CadViewer extends EventEmitter {
                     }
                 }
             }
-            drawResult = drawText(el, text, insert, anchor, false, fontStyle);
+            drawResult = drawText(el, entity.text, insert, anchor, false, fontStyle);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
@@ -571,7 +571,9 @@ export class CadViewer extends EventEmitter {
             }
         });
         entity.update();
-        entity.children.forEach((c) => this.drawEntity(c, style), true);
+        for (const child of entity.children.toArray(true)) {
+            await this.drawEntity(child, style);
+        }
         return drawResult;
     }
 
