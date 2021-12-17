@@ -274,7 +274,7 @@ export const drawDimension = (
 };
 
 export const drawLeader = (draw: Container, start: Point, end: Point, size: number, color?: string, i = 0) => {
-    const line = drawLine(draw, start, end, {}, i);
+    const line = drawLine(draw, start, end, {color}, i);
     i += line.length;
     const triangle = drawTriangle(draw, start, end, size, color, i);
     i += triangle.length;

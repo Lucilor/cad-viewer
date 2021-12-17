@@ -552,8 +552,8 @@ export class CadViewer extends EventEmitter {
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
-            const start = entity.vertices[1];
-            const end = entity.vertices[0];
+            const start = entity.vertices[0];
+            const end = entity.vertices[1];
             drawResult = drawLeader(el, start, end, entity.size, color);
         } else if (entity instanceof CadImage) {
             const {url, transformation, anchor, sourceSize, targetSize, objectFit} = entity;
