@@ -39,8 +39,8 @@ export class CadInsert extends CadEntity {
         };
     }
 
-    clone(resetId = false) {
-        return new CadInsert(this.export(), [], resetId);
+    clone(resetId = false): CadInsert {
+        return this._afterClone(new CadInsert(this.export(), [], resetId));
     }
 
     protected _transform(matrix: MatrixLike, parent?: CadEntity) {

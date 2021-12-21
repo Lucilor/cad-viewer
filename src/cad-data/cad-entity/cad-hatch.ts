@@ -67,7 +67,7 @@ export class CadHatch extends CadEntity {
         });
     }
 
-    clone(resetId = false) {
-        return new CadHatch(this.export(), [], resetId);
+    clone(resetId = false): CadHatch {
+        return this._afterClone(new CadHatch(this.export(), [], resetId));
     }
 }

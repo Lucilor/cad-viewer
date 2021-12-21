@@ -9,7 +9,7 @@ let multiSelector: HTMLDivElement | null = null;
 let entitiesToDrag: CadEntities | null = null;
 let entitiesNotToDrag: CadEntities | null = null;
 let draggingDimension: CadDimension | null = null;
-let needsRender = false;
+let toRender: CadEntities | null = null;
 
 export interface CadEvents {
     pointerdown: [PointerEvent];
@@ -112,8 +112,7 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
                         entitiesNotToDrag.add(e);
                     }
                 }
-                this.moveEntities(entitiesToDrag, entitiesNotToDrag, translate.x, -translate.y);
-                needsRender = true;
+                toRender = this.moveEntities(entitiesToDrag, entitiesNotToDrag, translate.x, -translate.y);
             } else if (draggingDimension) {
                 const [p1, p2] = this.data.getDimensionPoints(draggingDimension).map((v) => this.getScreenPoint(v.x, v.y));
                 if (p1 && p2) {
@@ -200,9 +199,9 @@ function onPointerUp(this: CadViewer, event: PointerEvent) {
     }
     pointer = null;
     button = null;
-    if (needsRender) {
-        needsRender = false;
-        this.render();
+    if (toRender) {
+        this.render(toRender);
+        toRender = null;
     }
     entitiesToDrag = entitiesNotToDrag = draggingDimension = null;
     this.emit("pointerup", event);

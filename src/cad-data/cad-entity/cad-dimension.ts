@@ -150,8 +150,8 @@ export class CadDimension extends CadEntity {
         return result;
     }
 
-    clone(resetId = false) {
-        return new CadDimension(this.export(), [], resetId);
+    clone(resetId = false): CadDimension {
+        return this._afterClone(new CadDimension(this.export(), [], resetId));
     }
 
     getDistance() {

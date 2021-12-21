@@ -31,7 +31,15 @@ export enum CadVersion {
 }
 
 export class CadData {
-    entities = new CadEntities();
+    private _entities: CadEntities;
+    get entities() {
+        return this._entities;
+    }
+    set entities(value) {
+        this._entities.root = null;
+        value.root = this;
+        this._entities = value;
+    }
     blocks: ObjectOf<CadEntity[]> = {};
     layers: CadLayer[] = [];
     id = "";
@@ -90,6 +98,8 @@ export class CadData {
     指定封口厚度 = "";
 
     constructor(data?: ObjectOf<any>) {
+        this._entities = new CadEntities();
+        this._entities.root = this;
         this.init(data);
     }
 
@@ -112,7 +122,6 @@ export class CadData {
             this.layers = [];
         }
         this.entities = new CadEntities(data.entities || {}, this.layers);
-        this.entities.root = this;
         if (typeof data.blocks === "object") {
             for (const name in data.blocks) {
                 const block = data.blocks[name];

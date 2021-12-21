@@ -39,8 +39,8 @@ export class CadCircle extends CadEntity {
         };
     }
 
-    clone(resetId = false) {
-        return new CadCircle(this.export(), [], resetId);
+    clone(resetId = false): CadCircle {
+        return this._afterClone(new CadCircle(this.export(), [], resetId));
     }
 
     equals(entity: CadCircle) {

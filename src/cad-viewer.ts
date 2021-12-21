@@ -636,7 +636,7 @@ export class CadViewer extends EventEmitter {
     }
 
     selected() {
-        return this.data.getAllEntities().filter((e) => !!e.selected, true);
+        return this.data.getAllEntities().filter((e) => e.selected, true);
     }
 
     unselected() {
@@ -819,13 +819,15 @@ export class CadViewer extends EventEmitter {
     // ? move entities efficiently
     // * call render() after moving
     moveEntities(toMove: CadEntities, notToMove: CadEntities, x: number, y: number) {
+        let entities: CadEntities;
         if (toMove.length <= notToMove.length) {
-            toMove.transform({translate: [x, y]}, false);
+            entities = toMove.transform({translate: [x, y]}, false);
         } else {
             this.move(x, y);
-            notToMove.transform({translate: [-x, -y]}, false);
+            entities = notToMove.transform({translate: [-x, -y]}, false);
         }
         this.emit("moveentities", toMove);
+        return entities;
     }
 
     private _getFontFamily() {

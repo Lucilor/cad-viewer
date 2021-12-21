@@ -44,8 +44,8 @@ export class CadImage extends CadEntity {
         this.transformation.transform(matrix);
     }
 
-    clone(resetId?: boolean) {
-        return new CadImage(this.export(), [], resetId);
+    clone(resetId?: boolean): CadImage {
+        return this._afterClone(new CadImage(this.export(), [], resetId));
     }
 
     equals(entity: CadImage) {

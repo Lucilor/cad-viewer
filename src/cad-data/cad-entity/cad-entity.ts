@@ -13,13 +13,23 @@ export abstract class CadEntity extends ColoredObject {
     abstract type: CadType;
     layer: string;
     info: ObjectOf<any>;
-    parent?: CadEntity;
+    parent: CadEntity | null = null;
     children: CadEntities;
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
     calcBoundingRect = true;
     protected abstract get _boundingRectCalc(): Rectangle;
-    root?: CadEntities;
+    private _root: CadEntities | null = null;
+    get root() {
+        if (this.parent) {
+            return this.parent._root;
+        }
+        return this._root;
+    }
+    set root(value) {
+        this._root = value;
+        this.children.root = value?.root ?? null;
+    }
     linewidth: number;
     _lineweight: number;
 
@@ -243,6 +253,7 @@ export abstract class CadEntity extends ColoredObject {
     removeChild(...children: CadEntity[]) {
         children.forEach((e) => {
             if (e instanceof CadEntity) {
+                e.parent = null;
                 this.children.remove(e);
             }
         });
@@ -253,10 +264,15 @@ export abstract class CadEntity extends ColoredObject {
         this.el?.remove();
         this.el = null;
         this.parent?.removeChild(this);
+        this.root?.remove(this);
         return this;
     }
 
     abstract clone(resetId?: boolean): CadEntity;
+    protected _afterClone<T extends CadEntity>(e: T) {
+        e.root = this.root;
+        return e;
+    }
 
     equals(entity: CadEntity) {
         const info1 = this.export();
