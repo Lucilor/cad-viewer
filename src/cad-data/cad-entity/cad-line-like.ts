@@ -17,6 +17,8 @@ export const 变化方式 = [
     "不可改变"
 ];
 
+export const 企料位置识别 = ["无", "靠近胶条位", "远离胶条位", "企料正面", "企料背面"];
+
 export interface CadLineLikeInfo {
     [key: string]: any;
     ignorePointsMap?: boolean;
@@ -70,6 +72,7 @@ export abstract class CadLineLike extends CadEntity {
     圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" = "默认";
     显示线长?: string;
     线id?: string;
+    企料位置识别: string;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -113,6 +116,7 @@ export abstract class CadLineLike extends CadEntity {
             this.线id = data.线id;
         }
         this.swapped = data.swapped ?? false;
+        this.企料位置识别 = data.企料位置识别 ?? 企料位置识别[0];
     }
 
     export(): ObjectOf<any> {
@@ -139,7 +143,8 @@ export abstract class CadLineLike extends CadEntity {
                 可输入修改: this.可输入修改,
                 圆弧显示: this.圆弧显示,
                 dashArray: this.dashArray,
-                swapped: this.swapped
+                swapped: this.swapped,
+                企料位置识别: this.企料位置识别
             })
         };
         if (this.显示线长) {
