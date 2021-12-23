@@ -97,6 +97,7 @@ export class CadData {
     企料包边门框配合位增加值 = 0;
     企料包边类型 = "自动判断";
     指定封口厚度 = "";
+    显示厚度 = "";
 
     constructor(data?: ObjectOf<any>) {
         this._entities = new CadEntities();
@@ -205,6 +206,7 @@ export class CadData {
         this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
         this.企料包边类型 = data.企料包边类型 ?? "自动判断";
         this.指定封口厚度 = data.指定封口厚度 ?? "";
+        this.显示厚度 = data.显示厚度 ?? "";
         this.updateDimensions();
         return this;
     }
@@ -290,7 +292,8 @@ export class CadData {
             装配位置: this.装配位置,
             企料包边门框配合位增加值: this.企料包边门框配合位增加值,
             企料包边类型: this.企料包边类型,
-            指定封口厚度: this.指定封口厚度
+            指定封口厚度: this.指定封口厚度,
+            显示厚度: this.显示厚度
         });
     }
 
