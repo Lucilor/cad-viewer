@@ -32,7 +32,7 @@ export class CadStylizer {
         if (entity instanceof CadMtext || entity instanceof CadDimension) {
             eFontSize = entity.font_size;
         }
-        result.fontStyle.size = params.fontStyle?.size || eFontSize || 16;
+        result.fontStyle.size = params.fontStyle?.size || eFontSize || 0;
         result.opacity = entity.opacity;
         if (typeof params.opacity === "number") {
             result.opacity = params.opacity;

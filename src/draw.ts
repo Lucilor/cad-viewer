@@ -93,7 +93,7 @@ export const drawArc = (
 
 export const drawText = (draw: Container, text: string, position: Point, anchor: Point, vertical = false, style?: FontStyle, i = 0) => {
     const {size, family, weight, color} = style || {};
-    if (!text) {
+    if (!text || !size || !(size > 0)) {
         draw.remove();
         return [];
     }
