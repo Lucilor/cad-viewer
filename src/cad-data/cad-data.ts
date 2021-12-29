@@ -862,19 +862,17 @@ export class CadData {
     }
 
     directAssemble(component: CadData, accuracy = 1) {
+        const rect1 = this.entities.getBoundingRect();
+        const rect2 = component.getBoundingRect();
         ["x", "y"].forEach((axis) => {
             const conn = new CadConnection({axis, position: "absolute"});
             conn.ids = [this.id, component.id];
             conn.names = [this.name, component.name];
-            const rect1 = this.entities.getBoundingRect();
-            const rect2 = component.getBoundingRect();
-            const p1 = [rect1.left, rect1.top];
-            const p2 = [rect2.left, rect2.top];
             if (axis === "x") {
-                conn.value = p1[0] - p2[0];
+                conn.value = rect1.left - rect2.left;
             }
             if (axis === "y") {
-                conn.value = p1[1] - p2[1];
+                conn.value = rect1.top - rect2.top;
             }
             this.assembleComponents(conn, accuracy);
         });
