@@ -277,11 +277,12 @@ export class CadViewer extends EventEmitter {
         return this;
     }
 
-    move(dx: number, dy: number) {
+    move(dx: number, dy: number, entities?: CadEntities) {
         const box = this.draw.viewbox();
         box.x -= dx;
         box.y -= dy;
         this.draw.viewbox(box);
+        this.emit("moveentities", entities ?? this.data.entities);
         return this;
     }
 
@@ -822,11 +823,11 @@ export class CadViewer extends EventEmitter {
         let entities: CadEntities;
         if (toMove.length <= notToMove.length) {
             entities = toMove.transform({translate: [x, y]}, false);
+            this.emit("moveentities", toMove);
         } else {
-            this.move(x, y);
+            this.move(x, y, toMove);
             entities = notToMove.transform({translate: [-x, -y]}, false);
         }
-        this.emit("moveentities", toMove);
         return entities;
     }
 
