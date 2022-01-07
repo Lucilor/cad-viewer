@@ -79,7 +79,7 @@ export class CadLine extends CadLineLike {
         return result;
     }
 
-    clone(resetId = false):CadLine {
+    clone(resetId = false): CadLine {
         return this._afterClone(new CadLine(this.export(), [], resetId));
     }
 
