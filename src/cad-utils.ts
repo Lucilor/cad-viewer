@@ -1,6 +1,12 @@
 import {ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
 
+export class Defaults {
+    static get DASH_ARRAY() {
+        return [20, 7];
+    }
+}
+
 export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = new Point()) => {
     if (data instanceof Point) {
         return data.clone();

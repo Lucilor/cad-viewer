@@ -1,5 +1,4 @@
 import {ObjectOf, Point} from "@utils";
-import {cloneDeep} from "lodash";
 import {purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
@@ -67,7 +66,6 @@ export abstract class CadLineLike extends CadEntity {
     变化方式: string;
     角度范围: number[];
     可输入修改: boolean;
-    dashArray?: number[];
     info!: CadLineLikeInfo;
     圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" = "默认";
     显示线长?: string;
@@ -106,9 +104,6 @@ export abstract class CadLineLike extends CadEntity {
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
         this.可输入修改 = typeof data.可输入修改 === "boolean" ? data.可输入修改 : true;
-        if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
-            this.dashArray = cloneDeep(data.dashArray);
-        }
         this.圆弧显示 = data.圆弧显示 ?? "默认";
         if (data.显示线长) {
             this.显示线长 = data.显示线长;
@@ -144,7 +139,6 @@ export abstract class CadLineLike extends CadEntity {
                 角度范围: this.角度范围,
                 可输入修改: this.可输入修改,
                 圆弧显示: this.圆弧显示,
-                dashArray: this.dashArray,
                 swapped: this.swapped,
                 企料位置识别: this.企料位置识别,
                 算料不要: this.算料不要

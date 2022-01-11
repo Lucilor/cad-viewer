@@ -1,4 +1,4 @@
-import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
 import {CadStyle} from "./cad-data/cad-styles";
 import {CadViewer} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
@@ -14,7 +14,7 @@ export class CadStylizer {
         const defaultStyle: Required<CadStyle> = {
             color: "white",
             fontStyle: {size: 16, family: "", weight: ""},
-            lineStyle: {padding: cad.getConfig("dashedLinePadding")},
+            lineStyle: {padding: cad.getConfig("dashedLinePadding"), dashArray: entity.dashArray},
             opacity: 1
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
@@ -69,9 +69,6 @@ export class CadStylizer {
         }
         result.fontStyle.color = result.color;
 
-        if (entity instanceof CadLineLike) {
-            result.lineStyle.dashArray = entity.dashArray;
-        }
         result.lineStyle.width = linewidth;
         result.lineStyle.color = result.color;
         return result;

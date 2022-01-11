@@ -3,8 +3,6 @@ import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, P
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadDimensionStyle, FontStyle, LineStyle, ObjectFit} from "./cad-data/cad-styles";
 
-export const DEFAULT_DASH_ARRAY = [20, 7];
-
 const setLineStyle = (el: Element, style: LineStyle) => {
     const {color, width, dashArray} = style;
     el.stroke({width, color});
