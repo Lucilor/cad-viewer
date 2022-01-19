@@ -98,6 +98,7 @@ export class CadData {
     企料包边类型 = "自动判断";
     指定封口厚度 = "";
     显示厚度 = "";
+    拼接料拼接时垂直翻转 = false;
 
     constructor(data?: ObjectOf<any>) {
         this._entities = new CadEntities();
@@ -207,6 +208,7 @@ export class CadData {
         this.企料包边类型 = data.企料包边类型 ?? "自动判断";
         this.指定封口厚度 = data.指定封口厚度 ?? "";
         this.显示厚度 = data.显示厚度 ?? "";
+        this.拼接料拼接时垂直翻转 = data.拼接料拼接时垂直翻转 ?? false;
         this.updateDimensions();
         return this;
     }
@@ -293,7 +295,8 @@ export class CadData {
             企料包边门框配合位增加值: this.企料包边门框配合位增加值,
             企料包边类型: this.企料包边类型,
             指定封口厚度: this.指定封口厚度,
-            显示厚度: this.显示厚度
+            显示厚度: this.显示厚度,
+            拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转
         });
     }
 
