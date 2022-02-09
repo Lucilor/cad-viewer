@@ -1,4 +1,4 @@
-import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
+import {CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
 import {calculate, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
@@ -289,13 +289,16 @@ export class CadViewer extends EventEmitter {
     zoom(): number;
     zoom(level: number, point?: CoordinateXY): this;
     zoom(level?: number, point?: CoordinateXY) {
-        // ? .zoom() method is somehow hidden
+        let point2: SvgPoint | undefined;
+        if (point) {
+            point2 = new SvgPoint(point);
+        }
         if (typeof level === "number") {
-            (this.draw as any).zoom(level, point);
+            this.draw.zoom(level, point2);
             this.emit("zoom");
             return this;
         } else {
-            return (this.draw as any).zoom(level, point) as number;
+            return this.draw.zoom();
         }
     }
 
@@ -725,13 +728,12 @@ export class CadViewer extends EventEmitter {
         } else if (entities instanceof CadEntity) {
             return this.add(new CadEntities().add(entities));
         }
-        if (Array.isArray(entities)) {
-            return this.add(new CadEntities().fromArray(entities));
-        }
+        entities.forEach((e) => this.data.entities.add(e));
+        this.render(entities);
         if (entities instanceof CadEntities) {
             this.emit("entitiesadd", entities);
-            entities.forEach((e) => this.data.entities.add(e));
-            this.render(entities);
+        } else {
+            this.emit("entitiesadd", new CadEntities().fromArray(entities));
         }
         return this;
     }
