@@ -1,4 +1,4 @@
-import {Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
@@ -87,11 +87,11 @@ export class CadLine extends CadLineLike {
         return this.curve.equals(entity.curve);
     }
 
-    isVertical(accuracy = 0) {
+    isVertical(accuracy = DEFAULT_TOLERANCE) {
         return Math.abs(this.start.x - this.end.x) <= accuracy;
     }
 
-    isHorizontal(accuracy = 0) {
+    isHorizontal(accuracy = DEFAULT_TOLERANCE) {
         return Math.abs(this.start.y - this.end.y) <= accuracy;
     }
 }
