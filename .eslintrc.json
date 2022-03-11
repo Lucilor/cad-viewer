@@ -13,13 +13,13 @@
             "extends": ["eslint:recommended", "plugin:@typescript-eslint/eslint-recommended", "plugin:@typescript-eslint/recommended"],
             "plugins": ["prefer-arrow"],
             "rules": {
-                "@typescript-eslint/indent": [
-                    "error",
-                    4,
-                    {
-                        "SwitchCase": 1
-                    }
-                ],
+                // "@typescript-eslint/indent": [
+                //     "error",
+                //     4,
+                //     {
+                //         "SwitchCase": 1
+                //     }
+                // ],
                 "@typescript-eslint/naming-convention": [
                     "error",
                     {
@@ -64,7 +64,8 @@
                 "no-empty": ["error", {"allowEmptyCatch": true}],
                 "object-curly-spacing": ["error", "never"],
                 "array-bracket-spacing": ["error", "never"],
-                "object-shorthand": ["error", "always"]
+                "object-shorthand": ["error", "always"],
+                "comma-dangle": ["error", "never"]
             }
         }
     ]

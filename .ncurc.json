@@ -1,3 +1,4 @@
 {
-    "peer": true
+    "peer": true,
+    "reject": ["typescript"]
 }
