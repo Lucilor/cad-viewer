@@ -72,6 +72,7 @@ export abstract class CadLineLike extends CadEntity {
     线id?: string;
     企料位置识别: string;
     算料不要: boolean;
+    分体线长公式: string;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
@@ -114,6 +115,7 @@ export abstract class CadLineLike extends CadEntity {
         this.swapped = data.swapped ?? false;
         this.企料位置识别 = data.企料位置识别 ?? 企料位置识别[0];
         this.算料不要 = data.算料不要 ?? false;
+        this.分体线长公式 = data.分体线长公式 ?? "";
     }
 
     export(): ObjectOf<any> {
@@ -141,7 +143,8 @@ export abstract class CadLineLike extends CadEntity {
                 圆弧显示: this.圆弧显示,
                 swapped: this.swapped,
                 企料位置识别: this.企料位置识别,
-                算料不要: this.算料不要
+                算料不要: this.算料不要,
+                分体线长公式: this.分体线长公式
             })
         };
         if (this.显示线长) {
