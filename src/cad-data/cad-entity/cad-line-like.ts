@@ -49,6 +49,7 @@ export abstract class CadLineLike extends CadEntity {
     }
     swapped: boolean;
     mingzi: string;
+    mingzi2: string;
     qujian: string;
     gongshi: string;
     guanlianbianhuagongshi: string;
@@ -77,6 +78,7 @@ export abstract class CadLineLike extends CadEntity {
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
         this.mingzi = data.mingzi ?? "";
+        this.mingzi2 = data.mingzi2 ?? "";
         this.qujian = data.qujian ?? "";
         this.gongshi = data.gongshi ?? "";
         this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
@@ -123,6 +125,7 @@ export abstract class CadLineLike extends CadEntity {
             ...super.export(),
             ...purgeObject({
                 mingzi: this.mingzi,
+                mingzi2: this.mingzi2,
                 qujian: this.qujian,
                 gongshi: this.gongshi,
                 guanlianbianhuagongshi: this.guanlianbianhuagongshi,
