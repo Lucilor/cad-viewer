@@ -1,4 +1,4 @@
-import {CadDimension, CadEntity, CadHatch, CadLine, CadMtext} from "./cad-data/cad-entity";
+import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadStyle} from "./cad-data/cad-styles";
 import {CadViewer} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
@@ -31,6 +31,9 @@ export class CadStylizer {
         let eFontSize: number | undefined;
         if (entity instanceof CadMtext || entity instanceof CadDimension) {
             eFontSize = entity.font_size;
+        }
+        if (entity instanceof CadLineLike && entity.开料不要) {
+            color.setColor(0xff4081);
         }
         result.fontStyle.size = params.fontStyle?.size || eFontSize || 0;
         result.opacity = entity.opacity;
