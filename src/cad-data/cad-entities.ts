@@ -53,7 +53,7 @@ export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLay
 
 export type AnyCadEntity = CadLine & CadMtext & CadDimension & CadArc & CadCircle & CadHatch & CadSpline & CadLeader & CadInsert & CadImage;
 export class CadEntities {
-    root?: CadData;
+    root: CadData | null = null;
     line: CadLine[] = [];
     circle: CadCircle[] = [];
     arc: CadArc[] = [];
@@ -123,6 +123,7 @@ export class CadEntities {
     merge(entities: CadEntities) {
         cadTypesKey.forEach((key) => {
             this[key] = mergeArray<any>(this[key] as any, entities[key] as any, "id");
+            this[key].forEach((e) => this._setEntityRootToThis(e));
         });
         return this;
     }
@@ -130,6 +131,7 @@ export class CadEntities {
     separate(entities: CadEntities) {
         cadTypesKey.forEach((key) => {
             this[key] = separateArray<any>(this[key] as any, entities[key] as any, "id");
+            entities[key].forEach((e) => this._setEntityRootToNull(e));
         });
         return this;
     }
@@ -177,7 +179,9 @@ export class CadEntities {
     }
 
     clone(resetIds = false) {
-        return new CadEntities(this.export(), [], resetIds);
+        const result = new CadEntities(this.export(), [], resetIds);
+        result.root = this.root;
+        return result;
     }
 
     resetIds() {
@@ -201,6 +205,7 @@ export class CadEntities {
 
     transform(matrix: MatrixLike, alter: boolean) {
         this.forEach((e) => e.transform(matrix, alter));
+        return this;
     }
 
     forEachType(callback: (array: CadEntity[], type: CadTypeKey, TYPE: CadType) => void) {
@@ -250,13 +255,27 @@ export class CadEntities {
         return result;
     }
 
+    private _setEntityRootToThis(entity: CadEntity) {
+        if (entity.root?.root && !this.root) {
+            return;
+        }
+        entity.root = this;
+    }
+
+    private _setEntityRootToNull(entity: CadEntity) {
+        if (entity.root?.root && !this.root) {
+            return;
+        }
+        entity.root = null;
+    }
+
     add(...entities: CadEntity[]) {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
                 this.forEachType((array, type, TYPE) => {
                     if (TYPE === entity.type) {
                         array.push(entity);
-                        entity.root = this;
+                        this._setEntityRootToThis(entity);
                     }
                 });
             }
@@ -268,7 +287,7 @@ export class CadEntities {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
                 const id = entity.id;
-                delete entity.root;
+                this._setEntityRootToNull(entity);
                 this.forEachType((array) => {
                     const index = array.findIndex((e) => e.id === id);
                     if (index > -1) {

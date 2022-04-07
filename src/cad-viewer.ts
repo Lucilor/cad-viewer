@@ -1,4 +1,4 @@
-import {CoordinateXY, Element, G, SVG, Svg} from "@svgdotjs/svg.js";
+import {CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
 import {calculate, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
@@ -277,24 +277,28 @@ export class CadViewer extends EventEmitter {
         return this;
     }
 
-    move(dx: number, dy: number) {
+    move(dx: number, dy: number, entities?: CadEntities) {
         const box = this.draw.viewbox();
         box.x -= dx;
         box.y -= dy;
         this.draw.viewbox(box);
+        this.emit("moveentities", entities ?? this.data.entities);
         return this;
     }
 
     zoom(): number;
     zoom(level: number, point?: CoordinateXY): this;
     zoom(level?: number, point?: CoordinateXY) {
-        // ? .zoom() method is somehow hidden
+        let point2: SvgPoint | undefined;
+        if (point) {
+            point2 = new SvgPoint(point);
+        }
         if (typeof level === "number") {
-            (this.draw as any).zoom(level, point);
+            this.draw.zoom(level, point2);
             this.emit("zoom");
             return this;
         } else {
-            return (this.draw as any).zoom(level, point) as number;
+            return this.draw.zoom();
         }
     }
 
@@ -552,8 +556,8 @@ export class CadViewer extends EventEmitter {
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
-            const start = entity.vertices[1];
-            const end = entity.vertices[0];
+            const start = entity.vertices[0];
+            const end = entity.vertices[1];
             drawResult = drawLeader(el, start, end, entity.size, color);
         } else if (entity instanceof CadImage) {
             const {url, transformation, anchor, sourceSize, targetSize, objectFit} = entity;
@@ -636,7 +640,7 @@ export class CadViewer extends EventEmitter {
     }
 
     selected() {
-        return this.data.getAllEntities().filter((e) => !!e.selected, true);
+        return this.data.getAllEntities().filter((e) => e.selected, true);
     }
 
     unselected() {
@@ -724,13 +728,12 @@ export class CadViewer extends EventEmitter {
         } else if (entities instanceof CadEntity) {
             return this.add(new CadEntities().add(entities));
         }
-        if (Array.isArray(entities)) {
-            return this.add(new CadEntities().fromArray(entities));
-        }
+        entities.forEach((e) => this.data.entities.add(e));
+        this.render(entities);
         if (entities instanceof CadEntities) {
             this.emit("entitiesadd", entities);
-            entities.forEach((e) => this.data.entities.add(e));
-            this.render(entities);
+        } else {
+            this.emit("entitiesadd", new CadEntities().fromArray(entities));
         }
         return this;
     }
@@ -819,13 +822,15 @@ export class CadViewer extends EventEmitter {
     // ? move entities efficiently
     // * call render() after moving
     moveEntities(toMove: CadEntities, notToMove: CadEntities, x: number, y: number) {
+        let entities: CadEntities;
         if (toMove.length <= notToMove.length) {
-            toMove.transform({translate: [x, y]}, false);
+            entities = toMove.transform({translate: [x, y]}, false);
+            this.emit("moveentities", toMove);
         } else {
-            this.move(x, y);
-            notToMove.transform({translate: [-x, -y]}, false);
+            this.move(x, y, toMove);
+            entities = notToMove.transform({translate: [-x, -y]}, false);
         }
-        this.emit("moveentities", toMove);
+        return entities;
     }
 
     private _getFontFamily() {

@@ -3,8 +3,6 @@ import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, P
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadDimensionStyle, FontStyle, LineStyle, ObjectFit} from "./cad-data/cad-styles";
 
-export const DEFAULT_DASH_ARRAY = [20, 7];
-
 const setLineStyle = (el: Element, style: LineStyle) => {
     const {color, width, dashArray} = style;
     el.stroke({width, color});
@@ -93,7 +91,7 @@ export const drawArc = (
 
 export const drawText = (draw: Container, text: string, position: Point, anchor: Point, vertical = false, style?: FontStyle, i = 0) => {
     const {size, family, weight, color} = style || {};
-    if (!text) {
+    if (!text || !size || !(size > 0)) {
         draw.remove();
         return [];
     }
@@ -274,7 +272,7 @@ export const drawDimension = (
 };
 
 export const drawLeader = (draw: Container, start: Point, end: Point, size: number, color?: string, i = 0) => {
-    const line = drawLine(draw, start, end, {}, i);
+    const line = drawLine(draw, start, end, {color}, i);
     i += line.length;
     const triangle = drawTriangle(draw, start, end, size, color, i);
     i += triangle.length;

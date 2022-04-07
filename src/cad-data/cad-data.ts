@@ -31,7 +31,15 @@ export enum CadVersion {
 }
 
 export class CadData {
-    entities = new CadEntities();
+    private _entities: CadEntities;
+    get entities() {
+        return this._entities;
+    }
+    set entities(value) {
+        this._entities.root = null;
+        value.root = this;
+        this._entities = value;
+    }
     blocks: ObjectOf<CadEntity[]> = {};
     layers: CadLayer[] = [];
     id = "";
@@ -69,6 +77,7 @@ export class CadData {
     shuangxiangzhewan = false;
     suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
+    指定分体位置: string[][] = [];
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
     主CAD = false;
@@ -88,8 +97,13 @@ export class CadData {
     企料包边门框配合位增加值 = 0;
     企料包边类型 = "自动判断";
     指定封口厚度 = "";
+    显示厚度 = "";
+    拼接料拼接时垂直翻转 = false;
+    必须选择板材 = false;
 
     constructor(data?: ObjectOf<any>) {
+        this._entities = new CadEntities();
+        this._entities.root = this;
         this.init(data);
     }
 
@@ -112,7 +126,6 @@ export class CadData {
             this.layers = [];
         }
         this.entities = new CadEntities(data.entities || {}, this.layers);
-        this.entities.root = this;
         if (typeof data.blocks === "object") {
             for (const name in data.blocks) {
                 const block = data.blocks[name];
@@ -175,6 +188,7 @@ export class CadData {
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
+        this.指定分体位置 = data.指定分体位置 ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
         this.主CAD = data.主CAD ?? false;
@@ -194,6 +208,9 @@ export class CadData {
         this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
         this.企料包边类型 = data.企料包边类型 ?? "自动判断";
         this.指定封口厚度 = data.指定封口厚度 ?? "";
+        this.显示厚度 = data.显示厚度 ?? "";
+        this.拼接料拼接时垂直翻转 = data.拼接料拼接时垂直翻转 ?? false;
+        this.必须选择板材 = data.必须选择板材 ?? false;
         this.updateDimensions();
         return this;
     }
@@ -260,6 +277,7 @@ export class CadData {
             shuangxiangzhewan: this.shuangxiangzhewan,
             suanliaodanxianshi: this.suanliaodanxianshi,
             zhidingweizhipaokeng: this.zhidingweizhipaokeng,
+            指定分体位置: this.指定分体位置,
             suanliaodanZoom: this.suanliaodanZoom,
             企料前后宽同时改变: this.企料前后宽同时改变,
             主CAD: this.主CAD,
@@ -278,7 +296,10 @@ export class CadData {
             装配位置: this.装配位置,
             企料包边门框配合位增加值: this.企料包边门框配合位增加值,
             企料包边类型: this.企料包边类型,
-            指定封口厚度: this.指定封口厚度
+            指定封口厚度: this.指定封口厚度,
+            显示厚度: this.显示厚度,
+            拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转,
+            必须选择板材: this.必须选择板材
         });
     }
 
@@ -847,19 +868,17 @@ export class CadData {
     }
 
     directAssemble(component: CadData, accuracy = 1) {
+        const rect1 = this.entities.getBoundingRect();
+        const rect2 = component.getBoundingRect();
         ["x", "y"].forEach((axis) => {
             const conn = new CadConnection({axis, position: "absolute"});
             conn.ids = [this.id, component.id];
             conn.names = [this.name, component.name];
-            const rect1 = this.entities.getBoundingRect();
-            const rect2 = component.getBoundingRect();
-            const p1 = [rect1.left, rect1.top];
-            const p2 = [rect2.left, rect2.top];
             if (axis === "x") {
-                conn.value = p1[0] - p2[0];
+                conn.value = rect1.left - rect2.left;
             }
             if (axis === "y") {
-                conn.value = p1[1] - p2[1];
+                conn.value = rect1.top - rect2.top;
             }
             this.assembleComponents(conn, accuracy);
         });

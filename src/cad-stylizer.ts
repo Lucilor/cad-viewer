@@ -14,7 +14,7 @@ export class CadStylizer {
         const defaultStyle: Required<CadStyle> = {
             color: "white",
             fontStyle: {size: 16, family: "", weight: ""},
-            lineStyle: {padding: cad.getConfig("dashedLinePadding")},
+            lineStyle: {padding: cad.getConfig("dashedLinePadding"), dashArray: entity.dashArray},
             opacity: 1
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
@@ -32,7 +32,10 @@ export class CadStylizer {
         if (entity instanceof CadMtext || entity instanceof CadDimension) {
             eFontSize = entity.font_size;
         }
-        result.fontStyle.size = params.fontStyle?.size || eFontSize || 16;
+        if (entity instanceof CadLineLike && entity.开料不要) {
+            color.setColor(0xff4081);
+        }
+        result.fontStyle.size = params.fontStyle?.size || eFontSize || 0;
         result.opacity = entity.opacity;
         if (typeof params.opacity === "number") {
             result.opacity = params.opacity;
@@ -69,9 +72,6 @@ export class CadStylizer {
         }
         result.fontStyle.color = result.color;
 
-        if (entity instanceof CadLineLike) {
-            result.lineStyle.dashArray = entity.dashArray;
-        }
         result.lineStyle.width = linewidth;
         result.lineStyle.color = result.color;
         return result;

@@ -2,7 +2,7 @@ import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import {Angle, Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
-import {lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
+import {Defaults, lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
 import {ColoredObject} from "../../colored-object";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
@@ -13,15 +13,26 @@ export abstract class CadEntity extends ColoredObject {
     abstract type: CadType;
     layer: string;
     info: ObjectOf<any>;
-    parent?: CadEntity;
+    parent: CadEntity | null = null;
     children: CadEntities;
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
     calcBoundingRect = true;
     protected abstract get _boundingRectCalc(): Rectangle;
-    root?: CadEntities;
+    private _root: CadEntities | null = null;
+    get root() {
+        if (this.parent) {
+            return this.parent._root;
+        }
+        return this._root;
+    }
+    set root(value) {
+        this._root = value;
+        this.children.root = value?.root ?? null;
+    }
     linewidth: number;
     _lineweight: number;
+    dashArray?: number[];
 
     get rootEl() {
         if (this.el) {
@@ -172,6 +183,11 @@ export abstract class CadEntity extends ColoredObject {
                 }
             }
         }
+        if (typeof data.linetype === "string" && (data.linetype as string).toLowerCase().includes("dash")) {
+            this.dashArray = Defaults.DASH_ARRAY;
+        } else if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
+            this.dashArray = cloneDeep(data.dashArray);
+        }
     }
 
     transform(matrix: MatrixLike, alter: boolean, parent?: CadEntity | undefined): CadEntity {
@@ -226,7 +242,8 @@ export abstract class CadEntity extends ColoredObject {
             color: this.getIndexColor(),
             children: this.children.export(),
             info: this.info,
-            lineweight: linewidth2lineweight(this.linewidth)
+            lineweight: linewidth2lineweight(this.linewidth),
+            dashArray: this.dashArray
         });
     }
 
@@ -243,6 +260,7 @@ export abstract class CadEntity extends ColoredObject {
     removeChild(...children: CadEntity[]) {
         children.forEach((e) => {
             if (e instanceof CadEntity) {
+                e.parent = null;
                 this.children.remove(e);
             }
         });
@@ -253,10 +271,15 @@ export abstract class CadEntity extends ColoredObject {
         this.el?.remove();
         this.el = null;
         this.parent?.removeChild(this);
+        this.root?.remove(this);
         return this;
     }
 
     abstract clone(resetId?: boolean): CadEntity;
+    protected _afterClone<T extends CadEntity>(e: T) {
+        e.root = this.root;
+        return e;
+    }
 
     equals(entity: CadEntity) {
         const info1 = this.export();

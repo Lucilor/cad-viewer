@@ -3,12 +3,22 @@ import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {CadLineLike} from "./cad-line-like";
 
-export class CadCircle extends CadEntity {
+export class CadCircle extends CadLineLike {
     type: CadType = "CIRCLE";
     center: Point;
     radius: number;
 
+    get start() {
+        return this.curve.getPoint(0);
+    }
+    get end() {
+        return this.curve.getPoint(1);
+    }
+    get middle() {
+        return this.curve.getPoint(0.5);
+    }
     get curve() {
         const {center, radius} = this;
         return new Arc(center, radius, new Angle(0, "deg"), new Angle(360, "deg"), true);
@@ -39,8 +49,8 @@ export class CadCircle extends CadEntity {
         };
     }
 
-    clone(resetId = false) {
-        return new CadCircle(this.export(), [], resetId);
+    clone(resetId = false): CadCircle {
+        return this._afterClone(new CadCircle(this.export(), [], resetId));
     }
 
     equals(entity: CadCircle) {

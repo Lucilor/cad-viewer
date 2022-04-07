@@ -1,5 +1,4 @@
 import {ObjectOf, Point} from "@utils";
-import {cloneDeep} from "lodash";
 import {purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
@@ -16,6 +15,8 @@ export const 变化方式 = [
     "旋转按比例都可以",
     "不可改变"
 ];
+
+export const 企料位置识别 = ["无", "靠近胶条位", "远离胶条位", "企料正面", "企料背面"];
 
 export interface CadLineLikeInfo {
     [key: string]: any;
@@ -48,6 +49,7 @@ export abstract class CadLineLike extends CadEntity {
     }
     swapped: boolean;
     mingzi: string;
+    mingzi2: string;
     qujian: string;
     gongshi: string;
     guanlianbianhuagongshi: string;
@@ -65,15 +67,19 @@ export abstract class CadLineLike extends CadEntity {
     变化方式: string;
     角度范围: number[];
     可输入修改: boolean;
-    dashArray?: number[];
     info!: CadLineLikeInfo;
     圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" = "默认";
     显示线长?: string;
     线id?: string;
+    企料位置识别: string;
+    算料不要: boolean;
+    开料不要: boolean;
+    分体线长公式: string;
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
         this.mingzi = data.mingzi ?? "";
+        this.mingzi2 = data.mingzi2 ?? "";
         this.qujian = data.qujian ?? "";
         this.gongshi = data.gongshi ?? "";
         this.guanlianbianhuagongshi = data.guanlianbianhuagongshi ?? "";
@@ -102,9 +108,6 @@ export abstract class CadLineLike extends CadEntity {
         this.变化方式 = data.变化方式 ?? 变化方式[0];
         this.角度范围 = data.角度范围 ?? [0, 90];
         this.可输入修改 = typeof data.可输入修改 === "boolean" ? data.可输入修改 : true;
-        if (Array.isArray(data.dashArray) && data.dashArray.length > 0) {
-            this.dashArray = cloneDeep(data.dashArray);
-        }
         this.圆弧显示 = data.圆弧显示 ?? "默认";
         if (data.显示线长) {
             this.显示线长 = data.显示线长;
@@ -113,6 +116,10 @@ export abstract class CadLineLike extends CadEntity {
             this.线id = data.线id;
         }
         this.swapped = data.swapped ?? false;
+        this.企料位置识别 = data.企料位置识别 ?? 企料位置识别[0];
+        this.算料不要 = data.算料不要 ?? false;
+        this.开料不要 = data.开料不要 ?? false;
+        this.分体线长公式 = data.分体线长公式 ?? "";
     }
 
     export(): ObjectOf<any> {
@@ -120,6 +127,7 @@ export abstract class CadLineLike extends CadEntity {
             ...super.export(),
             ...purgeObject({
                 mingzi: this.mingzi,
+                mingzi2: this.mingzi2,
                 qujian: this.qujian,
                 gongshi: this.gongshi,
                 guanlianbianhuagongshi: this.guanlianbianhuagongshi,
@@ -138,8 +146,11 @@ export abstract class CadLineLike extends CadEntity {
                 角度范围: this.角度范围,
                 可输入修改: this.可输入修改,
                 圆弧显示: this.圆弧显示,
-                dashArray: this.dashArray,
-                swapped: this.swapped
+                swapped: this.swapped,
+                企料位置识别: this.企料位置识别,
+                算料不要: this.算料不要,
+                开料不要: this.开料不要,
+                分体线长公式: this.分体线长公式
             })
         };
         if (this.显示线长) {
