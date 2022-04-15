@@ -1,4 +1,4 @@
-import {CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
+import {Box, CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
 import {calculate, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
@@ -317,13 +317,20 @@ export class CadViewer extends EventEmitter {
         draw.attr({width, height});
         this.dom.style.width = width + "px";
         this.dom.style.height = height + "px";
-        const viewbox = this.draw.viewbox();
-        const r1 = width / height;
-        const r2 = viewbox.w / viewbox.h;
-        if (r1 > r2) {
-            viewbox.w = viewbox.width = viewbox.h * r1;
+        let viewbox = this.draw.viewbox();
+        if (viewbox.w <= 0 || viewbox.h <= 0) {
+            viewbox = new Box(0, 0, width, height);
         } else {
-            viewbox.h = viewbox.height = viewbox.w / r1;
+            let w = viewbox.w;
+            let h = viewbox.h;
+            const r1 = width / height;
+            const r2 = w / h;
+            if (r1 > r2) {
+                w = h * r1;
+            } else {
+                h = w / r1;
+            }
+            viewbox = new Box(viewbox.x, viewbox.y, w, h);
         }
         this.draw.viewbox(viewbox);
         return this;
@@ -469,10 +476,15 @@ export class CadViewer extends EventEmitter {
                         el.remove();
                         entity.el = null;
                     } else {
-                        if (parent.gongshi) {
-                            entity.text = `${parent.mingzi}=${parent.gongshi}`;
+                        const {mingzi, mingzi2, gongshi} = parent;
+                        const mingzi3 = mingzi || mingzi2;
+                        if (gongshi) {
+                            entity.text = `${mingzi3}=${gongshi}`;
                         } else {
-                            entity.text = parent.mingzi;
+                            entity.text = mingzi3;
+                        }
+                        if (mingzi && mingzi2) {
+                            entity.text += `\n${mingzi2}`;
                         }
                         let varName = "";
                         const root = parent.root?.root;
@@ -632,8 +644,12 @@ export class CadViewer extends EventEmitter {
         }
         x = x - width / 2 - padding[3];
         y = y - height / 2 - padding[2];
-        outerWidth2 = Math.max(0, outerWidth2);
-        outerHeight2 = Math.max(0, outerHeight2);
+        if (outerWidth2 <= 0) {
+            outerWidth2 = outerWidth;
+        }
+        if (outerHeight2 <= 0) {
+            outerHeight2 = outerHeight;
+        }
         this.draw.viewbox(x, y, outerWidth2, outerHeight2);
         this.draw.transform({a: 1, b: 0, c: 0, d: -1, e: 0, f: 0});
         return this;

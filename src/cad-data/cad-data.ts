@@ -78,6 +78,7 @@ export class CadData {
     suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
     指定分体位置: string[][] = [];
+    指定位置不折: string[][] = [];
     suanliaodanZoom = 1.5;
     企料前后宽同时改变 = true;
     主CAD = false;
@@ -189,6 +190,7 @@ export class CadData {
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.指定分体位置 = data.指定分体位置 ?? [];
+        this.指定位置不折 = data.指定位置不折 ?? [];
         this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
         this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
         this.主CAD = data.主CAD ?? false;
@@ -278,6 +280,7 @@ export class CadData {
             suanliaodanxianshi: this.suanliaodanxianshi,
             zhidingweizhipaokeng: this.zhidingweizhipaokeng,
             指定分体位置: this.指定分体位置,
+            指定位置不折: this.指定位置不折,
             suanliaodanZoom: this.suanliaodanZoom,
             企料前后宽同时改变: this.企料前后宽同时改变,
             主CAD: this.主CAD,
