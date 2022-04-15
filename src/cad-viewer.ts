@@ -476,10 +476,15 @@ export class CadViewer extends EventEmitter {
                         el.remove();
                         entity.el = null;
                     } else {
-                        if (parent.gongshi) {
-                            entity.text = `${parent.mingzi}=${parent.gongshi}`;
+                        const {mingzi, mingzi2, gongshi} = parent;
+                        const mingzi3 = mingzi || mingzi2;
+                        if (gongshi) {
+                            entity.text = `${mingzi3}=${gongshi}`;
                         } else {
-                            entity.text = parent.mingzi;
+                            entity.text = mingzi3;
+                        }
+                        if (mingzi && mingzi2) {
+                            entity.text += `\n${mingzi2}`;
                         }
                         let varName = "";
                         const root = parent.root?.root;
