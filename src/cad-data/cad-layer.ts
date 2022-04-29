@@ -6,6 +6,7 @@ export class CadLayer extends ColoredObject {
     id: string;
     name: string;
     linewidth: number;
+    hidden: boolean;
     _lineweight: number;
 
     constructor(data: any = {}) {
@@ -23,6 +24,7 @@ export class CadLayer extends ColoredObject {
                 this.linewidth = lineweight2linewidth(data.lineweight);
             }
         }
+        this.hidden = data.hidden ?? false;
     }
 
     export() {
@@ -30,7 +32,8 @@ export class CadLayer extends ColoredObject {
             id: this.id,
             color: this.getIndexColor(),
             name: this.name,
-            lineweight: linewidth2lineweight(this.linewidth)
+            lineweight: linewidth2lineweight(this.linewidth),
+            hidden: this.hidden
         };
     }
 }

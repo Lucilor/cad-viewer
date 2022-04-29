@@ -383,7 +383,7 @@ export class CadData {
     }
 
     merge(data: CadData) {
-        this.layers = this.layers.concat(data.layers);
+        this.layers = mergeArray(this.layers, data.layers, "name");
         for (const name in data.blocks) {
             if (Array.isArray(this.blocks[name])) {
                 this.blocks[name] = this.blocks[name].concat(data.blocks[name]);
