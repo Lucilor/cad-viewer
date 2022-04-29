@@ -1,11 +1,14 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "3.14.1",
+	"version": "3.14.2",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
 	"types": "lib/src/index.d.ts",
-	"files": ["/lib", "/dist"],
+	"files": [
+		"/lib",
+		"/dist"
+	],
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"lib": "webpack --config webpack.lib.js",
@@ -26,6 +29,7 @@
 		"url": "https://github.com/Lucilor/cad-viewer/issues"
 	},
 	"homepage": "https://github.com/Lucilor/cad-viewer#readme",
+	"packageManager": "yarn@3.2.0",
 	"devDependencies": {
 		"@types/color": "^3.0.3",
 		"@types/lodash": "^4.14.181",

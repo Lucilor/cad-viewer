@@ -113,7 +113,7 @@ export class CadViewer extends EventEmitter {
         dom.classList.add("cad-viewer");
         this.dom = dom;
         this.draw = SVG().addTo(dom).size("100%", "100%");
-        this.stylizer = new CadStylizer(this);
+        this.stylizer = new CadStylizer();
 
         dom.addEventListener("wheel", controls.onWheel.bind(this));
         dom.addEventListener("click", controls.onClick.bind(this));
@@ -347,7 +347,8 @@ export class CadViewer extends EventEmitter {
 
     async drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
         const {draw, stylizer} = this;
-        const {color, fontStyle, lineStyle} = stylizer.get(entity, style);
+        const config = this.getConfig();
+        const {color, fontStyle, lineStyle} = stylizer.get(entity, config, style);
         if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
             entity.el?.remove();
             entity.el = null;

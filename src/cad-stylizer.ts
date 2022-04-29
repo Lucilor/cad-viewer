@@ -1,20 +1,15 @@
 import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadStyle} from "./cad-data/cad-styles";
-import {CadViewer} from "./cad-viewer";
+import {CadViewerConfig} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
 
 export class CadStylizer {
-    cad: CadViewer;
-    constructor(cad: CadViewer) {
-        this.cad = cad;
-    }
-
-    get(entity: CadEntity, params: CadStyle = {}) {
-        const cad = this.cad;
+    get(entity: CadEntity, config: CadViewerConfig, params: CadStyle = {}) {
+        const {dashedLinePadding, minLinewidth, reverseSimilarColor, validateLines} = config;
         const defaultStyle: Required<CadStyle> = {
             color: "white",
             fontStyle: {size: 16, family: "", weight: ""},
-            lineStyle: {padding: cad.getConfig("dashedLinePadding"), dashArray: entity.dashArray},
+            lineStyle: {padding: dashedLinePadding, dashArray: entity.dashArray},
             opacity: 1
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
@@ -41,7 +36,6 @@ export class CadStylizer {
             result.opacity = params.opacity;
         }
 
-        const {validateLines, reverseSimilarColor, minLinewidth} = cad.getConfig();
         if (validateLines && entity instanceof CadLine) {
             if (entity.info.errors?.length) {
                 linewidth *= 10;
@@ -49,7 +43,7 @@ export class CadStylizer {
             }
         }
         if (reverseSimilarColor) {
-            color = this.correctColor(color);
+            color = this.correctColor(color, config);
         }
         result.color = color.getColor().hex();
         if (!(entity instanceof CadHatch)) {
@@ -77,8 +71,8 @@ export class CadStylizer {
         return result;
     }
 
-    correctColor(color: ColoredObject, threshold = 5) {
-        const {reverseSimilarColor, backgroundColor} = this.cad.getConfig();
+    correctColor(color: ColoredObject, config: CadViewerConfig, threshold = 5) {
+        const {reverseSimilarColor, backgroundColor} = config;
         const c1 = color.getColor();
         if (reverseSimilarColor) {
             const c2 = new ColoredObject(backgroundColor).getColor();

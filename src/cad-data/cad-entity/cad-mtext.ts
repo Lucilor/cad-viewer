@@ -23,7 +23,7 @@ export class CadMtext extends CadEntity {
     info!: CadMtextInfo;
 
     get _boundingRectCalc() {
-        return Rectangle.min;
+        return Rectangle.min.expandByPoint(this.insert);
     }
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {

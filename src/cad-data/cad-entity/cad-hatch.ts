@@ -17,7 +17,15 @@ export class CadHatch extends CadEntity {
 
     calcBoundingRect = false;
     get _boundingRectCalc() {
-        return Rectangle.min;
+        const rect = Rectangle.min;
+        this.paths.forEach(({edges, vertices}) => {
+            edges.forEach(({start, end}) => {
+                rect.expandByPoint(start);
+                rect.expandByPoint(end);
+            });
+            vertices.forEach((vertice) => rect.expandByPoint(vertice));
+        });
+        return rect;
     }
 
     constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {

@@ -517,9 +517,9 @@ export class CadData {
         return this;
     }
 
-    addComponent(component: CadData) {
+    addComponent(component: CadData, autoMove = true) {
         const rect1 = this.getBoundingRect();
-        if (rect1.width && rect1.height) {
+        if (autoMove && rect1.width && rect1.height) {
             const rect2 = component.getBoundingRect();
             const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
             const matrix = new Matrix();
@@ -560,7 +560,7 @@ export class CadData {
         });
         this.components.data.length = 0;
         this.components.connections.length = 0;
-        data.forEach((v) => this.addComponent(v));
+        data.forEach((v) => this.addComponent(v, false));
         connections.forEach((c) => {
             try {
                 this.assembleComponents(c);
