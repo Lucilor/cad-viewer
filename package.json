@@ -1,6 +1,6 @@
 {
 	"name": "@lucilor/cad-viewer",
-	"version": "3.14.2",
+	"version": "3.14.3",
 	"description": "cad-viewer",
 	"main": "lib/index.js",
 	"module": "lib/index.js",
@@ -14,7 +14,7 @@
 		"lib": "webpack --config webpack.lib.js",
 		"dist": "webpack --config webpack.dist.js",
 		"build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js",
-		"prepublishOnly": "npm run build"
+		"prepublish": "yarn build"
 	},
 	"repository": {
 		"type": "git",
