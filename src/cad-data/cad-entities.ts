@@ -84,7 +84,11 @@ export class CadEntities {
                         try {
                             e = getCadEntity(e, layers, resetIds);
                         } catch (error) {
-                            console.warn("failed to create entity: \n" + JSON.stringify(e));
+                            if (error instanceof Error) {
+                                console.warn(`${error.message}\n${JSON.stringify(e)}`);
+                            } else {
+                                console.warn(`failed to create entity: \n${JSON.stringify(e)}`);
+                            }
                             return;
                         }
                     }
@@ -424,7 +428,11 @@ export class CadEntities {
         const rect = Rectangle.min;
         this.forEach((e) => {
             if (e.visible && e.calcBoundingRect) {
-                rect.expandByRect(e.boundingRect);
+                const eRect = e.boundingRect;
+                const {isFinite, width, height} = eRect;
+                if (isFinite && (width > 0 || height > 0)) {
+                    rect.expandByRect(eRect);
+                }
             }
         }, true);
         return rect;
