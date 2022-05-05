@@ -1,12 +1,12 @@
 import {Point, Arc, Angle, Matrix, ObjectOf, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadCircle extends CadLineLike {
-    type: CadType = "CIRCLE";
+    type: EntityType = "CIRCLE";
     center: Point;
     radius: number;
 

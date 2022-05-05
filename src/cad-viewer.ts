@@ -8,7 +8,7 @@ import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine
 import {CadImage} from "./cad-data/cad-entity/cad-image";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadStyle} from "./cad-data/cad-styles";
-import {CadType, cadTypes} from "./cad-data/cad-types";
+import {EntityType, entityTypes} from "./cad-data/cad-types";
 import {CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
@@ -28,7 +28,7 @@ export interface CadViewerConfig {
     validateLines: boolean; // 是否验证线段
     selectMode: "none" | "single" | "multiple"; // 实体选取模式
     dragAxis: "" | "x" | "y" | "xy"; // 限制整体内容可向x或y方向拖动
-    entityDraggable: boolean | CadType[]; // 实体是否可拖动
+    entityDraggable: boolean | EntityType[]; // 实体是否可拖动
     hideDimensions: boolean; // 是否隐藏标注
     lineGongshi: number; // 显示线公式的字体大小, ≤0时不显示
     hideLineLength: boolean; // 是否隐藏线长度(即使lineLength>0)
@@ -126,43 +126,8 @@ export class CadViewer extends EventEmitter {
         dom.focus();
 
         this._config = getConfigProxy();
-        cadTypes.forEach((t) => this.draw.group().attr("group", t));
+        entityTypes.forEach((t) => this.draw.group().attr("group", t));
         this.setConfig({...this._config, ...config}).center();
-    }
-
-    /**
-     * @deprecated
-     * use getConfig() instead
-     */
-    config(): CadViewerConfig;
-    /**
-     * @deprecated
-     * use getConfig(key) instead
-     */
-    config<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
-    /**
-     * @deprecated
-     * use setConfig(config) instead
-     */
-    config(config: Partial<CadViewerConfig>): this;
-    /**
-     * @deprecated
-     * use setConfig(key, value) instead
-     */
-    config<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
-    config<T extends keyof CadViewerConfig>(config?: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
-        console.warn("`CadViewer.config()` is deprecated and will be removed in future, use `getConfig()` or `setConfig` instead.");
-        if (!config) {
-            return this.getConfig();
-        }
-        if (typeof config === "string") {
-            if (value === undefined) {
-                return this.getConfig(config);
-            } else {
-                return this.setConfig(config, value);
-            }
-        }
-        return this.setConfig(config);
     }
 
     getConfig(): CadViewerConfig;
@@ -822,7 +787,7 @@ export class CadViewer extends EventEmitter {
 
     reset(data?: CadData) {
         this.draw.find("g").forEach((v) => v.remove());
-        cadTypes.forEach((t) => this.draw.group().attr("group", t));
+        entityTypes.forEach((t) => this.draw.group().attr("group", t));
         if (data instanceof CadData) {
             this.data = data;
         }

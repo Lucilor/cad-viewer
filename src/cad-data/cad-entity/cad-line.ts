@@ -1,12 +1,12 @@
 import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadLine extends CadLineLike {
-    type: CadType = "LINE";
+    type: EntityType = "LINE";
     start: Point;
     end: Point;
     kongwei: string;

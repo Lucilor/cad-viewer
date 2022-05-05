@@ -3,7 +3,7 @@ import {cloneDeep} from "lodash";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimensionStyle} from "../cad-styles";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export interface CadDimensionEntity {
@@ -13,7 +13,7 @@ export interface CadDimensionEntity {
 }
 
 export class CadDimension extends CadEntity {
-    type: CadType = "DIMENSION";
+    type: EntityType = "DIMENSION";
     font_size: number;
     dimstyle: string;
     style?: CadDimensionStyle;

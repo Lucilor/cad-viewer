@@ -2,11 +2,11 @@ import {Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {ObjectFit} from "../cad-styles";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadImage extends CadEntity {
-    type: CadType = "IMAGE";
+    type: EntityType = "IMAGE";
     url: string;
     transformation: Matrix;
     anchor: Point;

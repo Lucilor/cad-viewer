@@ -1,7 +1,7 @@
 import {MatrixLike, ObjectOf, Rectangle} from "@utils";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadLayer} from "./cad-layer";
-import {cadTypesKey, CadTypeKey, CadType} from "./cad-types";
+import {entityTypesKey, EntityTypeKey, EntityType, entityTypesMap} from "./cad-types";
 import {
     CadArc,
     CadCircle,
@@ -22,9 +22,18 @@ import {CadImage} from "./cad-entity/cad-image";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 
-export const getCadEntity = <T extends CadEntity>(data: any = {}, layers: CadLayer[] = [], resetId = false) => {
+export const getCadEntity = <T extends CadEntity = AnyCadEntity>(
+    data: any = {},
+    layers: CadLayer[] = [],
+    resetId = false,
+    type?: EntityType
+) => {
     let entity: CadEntity | undefined;
-    const type = data.type as CadType;
+    if (type === undefined) {
+        type = data.type;
+    } else if (data.type && data.type !== type) {
+        throw new Error(`entity type is not match: ${type} !== ${data.type}`);
+    }
     if (type === "ARC") {
         entity = new CadArc(data, layers, resetId);
     } else if (type === "CIRCLE") {
@@ -76,17 +85,29 @@ export class CadEntities {
             throw new Error("Invalid data.");
         }
         const idMap: ObjectOf<string> = {};
-        cadTypesKey.forEach((key) => {
+        const tryGetCadEntity = (data2: any, type?: EntityType) => {
+            try {
+                return getCadEntity(data2, layers, resetIds, type);
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.warn(`${error.message}\n${JSON.stringify(data2)}`);
+                } else {
+                    console.warn(`failed to create entity: \n${JSON.stringify(data2)}`);
+                }
+                return null;
+            }
+        };
+        entityTypesKey.forEach((key) => {
             const group: CadEntity[] | ObjectOf<any> = data[key];
+            const type = entityTypesMap[key];
             if (Array.isArray(group)) {
                 group.forEach((e) => {
                     if (!(e instanceof CadEntity)) {
-                        try {
-                            e = getCadEntity(e, layers, resetIds);
-                        } catch (error) {
-                            console.warn("failed to create entity: \n" + JSON.stringify(e));
+                        const e2 = tryGetCadEntity(e, type);
+                        if (!e2) {
                             return;
                         }
+                        e = e2;
                     }
                     const eNew = e.clone(resetIds) as AnyCadEntity;
                     eNew.root = this;
@@ -97,7 +118,10 @@ export class CadEntities {
                 });
             } else if (group && typeof group === "object") {
                 Object.values(group).forEach((e) => {
-                    const eNew = getCadEntity(e, layers, resetIds) as AnyCadEntity;
+                    const eNew = tryGetCadEntity(e, type);
+                    if (!eNew) {
+                        return;
+                    }
                     eNew.root = this;
                     this[key].push(eNew);
                     if (resetIds) {
@@ -121,7 +145,7 @@ export class CadEntities {
     }
 
     merge(entities: CadEntities) {
-        cadTypesKey.forEach((key) => {
+        entityTypesKey.forEach((key) => {
             this[key] = mergeArray<any>(this[key] as any, entities[key] as any, "id");
             this[key].forEach((e) => this._setEntityRootToThis(e));
         });
@@ -129,7 +153,7 @@ export class CadEntities {
     }
 
     separate(entities: CadEntities) {
-        cadTypesKey.forEach((key) => {
+        entityTypesKey.forEach((key) => {
             this[key] = separateArray<any>(this[key] as any, entities[key] as any, "id");
             entities[key].forEach((e) => this._setEntityRootToNull(e));
         });
@@ -140,7 +164,7 @@ export class CadEntities {
         if (!callback) {
             return null;
         }
-        for (const key of cadTypesKey) {
+        for (const key of entityTypesKey) {
             for (let i = 0; i < this[key].length; i++) {
                 const e = this[key][i];
                 if (typeof callback === "string") {
@@ -169,7 +193,7 @@ export class CadEntities {
             }
         });
         const result: ObjectOf<any> = {};
-        for (const key of cadTypesKey) {
+        for (const key of entityTypesKey) {
             result[key] = {};
             this[key].forEach((e: CadEntity) => {
                 result[key][e.id] = e.export();
@@ -208,9 +232,9 @@ export class CadEntities {
         return this;
     }
 
-    forEachType(callback: (array: CadEntity[], type: CadTypeKey, TYPE: CadType) => void) {
-        cadTypesKey.forEach((key) => {
-            callback(this[key], key, key.toUpperCase() as CadType);
+    forEachType(callback: (array: CadEntity[], type: EntityTypeKey, TYPE: EntityType) => void) {
+        entityTypesKey.forEach((key) => {
+            callback(this[key], key, entityTypesMap[key]);
         });
     }
 
@@ -424,7 +448,11 @@ export class CadEntities {
         const rect = Rectangle.min;
         this.forEach((e) => {
             if (e.visible && e.calcBoundingRect) {
-                rect.expandByRect(e.boundingRect);
+                const eRect = e.boundingRect;
+                const {isFinite, width, height} = eRect;
+                if (isFinite && (width > 0 || height > 0)) {
+                    rect.expandByRect(eRect);
+                }
             }
         }, true);
         return rect;
