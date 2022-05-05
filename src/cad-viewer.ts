@@ -130,41 +130,6 @@ export class CadViewer extends EventEmitter {
         this.setConfig({...this._config, ...config}).center();
     }
 
-    /**
-     * @deprecated
-     * use getConfig() instead
-     */
-    config(): CadViewerConfig;
-    /**
-     * @deprecated
-     * use getConfig(key) instead
-     */
-    config<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
-    /**
-     * @deprecated
-     * use setConfig(config) instead
-     */
-    config(config: Partial<CadViewerConfig>): this;
-    /**
-     * @deprecated
-     * use setConfig(key, value) instead
-     */
-    config<T extends keyof CadViewerConfig>(key: T, value: CadViewerConfig[T]): this;
-    config<T extends keyof CadViewerConfig>(config?: T | Partial<CadViewerConfig>, value?: CadViewerConfig[T]) {
-        console.warn("`CadViewer.config()` is deprecated and will be removed in future, use `getConfig()` or `setConfig` instead.");
-        if (!config) {
-            return this.getConfig();
-        }
-        if (typeof config === "string") {
-            if (value === undefined) {
-                return this.getConfig(config);
-            } else {
-                return this.setConfig(config, value);
-            }
-        }
-        return this.setConfig(config);
-    }
-
     getConfig(): CadViewerConfig;
     getConfig<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
     getConfig(key?: keyof CadViewerConfig) {

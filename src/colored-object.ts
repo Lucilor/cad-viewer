@@ -4,18 +4,6 @@ import {isEqual} from "lodash";
 
 export class ColoredObject {
     private _color: Color;
-    /**
-     * @deprecated
-     * use getColor() or setColor(value) instead
-     */
-    get color() {
-        console.warn("`.color` is depracted and will be removed in future, use `.getColor()` instead.");
-        return this._color;
-    }
-    set color(value) {
-        console.warn("`.color = value` is depracted and will be removed in future, use `.setColor(value)` instead.");
-        this.setColor(value);
-    }
 
     constructor(...params: Parameters<typeof Color>) {
         this._color = new Color(...params);
