@@ -1,12 +1,12 @@
 import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadArc extends CadLineLike {
-    type: CadType = "ARC";
+    type: EntityType = "ARC";
     center: Point;
     radius: number;
     start_angle: number;

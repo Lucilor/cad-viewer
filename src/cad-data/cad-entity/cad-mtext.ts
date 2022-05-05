@@ -2,7 +2,7 @@ import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export interface CadMtextInfo {
@@ -13,7 +13,7 @@ export interface CadMtextInfo {
 }
 
 export class CadMtext extends CadEntity {
-    type: CadType = "MTEXT";
+    type: EntityType = "MTEXT";
     insert: Point;
     font_size: number;
     text: string;

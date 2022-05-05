@@ -1,11 +1,11 @@
 import {Point, Matrix, ObjectOf, MatrixLike, Rectangle} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadInsert extends CadEntity {
-    type: CadType = "INSERT";
+    type: EntityType = "INSERT";
     name: string;
     insert: Point;
     transformation = new Matrix();

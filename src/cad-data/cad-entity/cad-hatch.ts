@@ -1,11 +1,11 @@
 import {Point, ObjectOf, Matrix, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadHatch extends CadEntity {
-    type: CadType = "HATCH";
+    type: EntityType = "HATCH";
     bgcolor: number[];
     paths: {
         edges: {

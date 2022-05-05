@@ -1,11 +1,11 @@
 import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
 export class CadLeader extends CadEntity {
-    type: CadType = "LEADER";
+    type: EntityType = "LEADER";
     vertices: Point[] = [];
     size: number;
     get _boundingRectCalc() {

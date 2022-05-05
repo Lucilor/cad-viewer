@@ -6,11 +6,11 @@ import {Defaults, lineweight2linewidth, linewidth2lineweight, purgeObject} from 
 import {ColoredObject} from "../../colored-object";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
-import {CadType} from "../cad-types";
+import {EntityType} from "../cad-types";
 
 export abstract class CadEntity extends ColoredObject {
     id: string;
-    abstract type: CadType;
+    abstract type: EntityType;
     layer: string;
     info: ObjectOf<any>;
     parent: CadEntity | null = null;
