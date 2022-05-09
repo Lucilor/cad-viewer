@@ -102,6 +102,11 @@ export class CadData {
     拼接料拼接时垂直翻转 = false;
     必须选择板材 = false;
 
+    get shouldShowIntersection() {
+        const {zhidingweizhipaokeng, 指定分体位置, 指定位置不折} = this;
+        return zhidingweizhipaokeng.length > 0 || 指定分体位置.length > 0 || 指定位置不折.length > 0;
+    }
+
     constructor(data?: ObjectOf<any>) {
         this._entities = new CadEntities();
         this._entities.root = this;
