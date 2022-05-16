@@ -426,6 +426,10 @@ export class CadViewer extends EventEmitter {
                                     length = parent.radius * 2;
                                     prefix = "φ";
                                     break;
+                                case "弧长+线长":
+                                    length = parent.length;
+                                    prefix = "弧长";
+                                    break;
                                 default:
                             }
                         }

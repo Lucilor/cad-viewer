@@ -68,7 +68,7 @@ export abstract class CadLineLike extends CadEntity {
     角度范围: number[];
     可输入修改: boolean;
     info!: CadLineLikeInfo;
-    圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" = "默认";
+    圆弧显示: "默认" | "半径" | "R+半径" | "φ+直径" | "弧长" | "弧长+线长" = "默认";
     显示线长?: string;
     线id?: string;
     企料位置识别: string;
