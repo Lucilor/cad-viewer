@@ -542,8 +542,11 @@ export class CadViewer extends EventEmitter {
             const end = entity.vertices[1];
             drawResult = drawLeader(el, start, end, entity.size, color);
         } else if (entity instanceof CadImage) {
-            const {url, transformation, anchor, sourceSize, targetSize, objectFit} = entity;
-            drawResult = await drawImage(el, url, transformation, anchor, sourceSize, targetSize, objectFit);
+            if (!entity.sourceSize) {
+                entity.sourceSize = new Point(0, 0);
+            }
+            const {url, position, anchor, sourceSize, targetSize, objectFit} = entity;
+            drawResult = await drawImage(el, url, position, anchor, sourceSize, targetSize, objectFit);
         }
         if (!drawResult || drawResult.length < 1) {
             entity.el?.remove();

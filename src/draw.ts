@@ -1,7 +1,8 @@
-import {Angle, Arc, Line, Matrix, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
+import {Angle, Arc, Line, Matrix, Point} from "@utils";
+import {Properties} from "csstype";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
-import {CadDimensionStyle, FontStyle, LineStyle, ObjectFit} from "./cad-data/cad-styles";
+import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
 
 const setLineStyle = (el: Element, style: LineStyle) => {
     const {color, width, dashArray} = style;
@@ -293,11 +294,11 @@ const loadImageEl = async (el: Image, url: string) => {
 export const drawImage = async (
     draw: Container,
     url: string,
-    transformation: Matrix,
+    position: Point,
     anchor: Point,
     sourceSize: Point,
     targetSize: Point | null,
-    objectFit: ObjectFit,
+    objectFit: Properties["objectFit"],
     i = 0
 ) => {
     let imageContainer = draw.children()[i] as Container;
@@ -330,10 +331,10 @@ export const drawImage = async (
         tw = sw;
         th = sh;
     }
-    const translate = transformation.translate();
-    const translateX = translate[0] - anchor.x * sw;
-    const translateY = translate[1] - (1 - anchor.y) * sh;
-    let [scaleX, scaleY] = transformation.scale();
+    const translateX = position.x - anchor.x * sw;
+    const translateY = position.y - (1 - anchor.y) * sh;
+    let scaleX = tw / sw;
+    let scaleY = th / sh;
     const sourceRatio = sw / sh;
     const targetRatio = tw / th;
     switch (objectFit) {

@@ -25,5 +25,3 @@ export interface CadDimensionStyle {
     arrows?: {hidden?: boolean; color?: string; size?: number};
     text?: {hidden?: boolean} & Partial<FontStyle>;
 }
-
-export type ObjectFit = "none" | "contain" | "cover" | "fill" | "scale-down";

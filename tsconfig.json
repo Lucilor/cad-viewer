@@ -2,6 +2,7 @@
     "compilerOptions": {
         "baseUrl": "./",
         "outDir": "./lib/",
+        "forceConsistentCasingInFileNames": true,
         "sourceMap": true,
         "strict": true,
         "module": "commonjs",
