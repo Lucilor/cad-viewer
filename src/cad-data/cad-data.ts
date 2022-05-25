@@ -1025,6 +1025,7 @@ export class CadZhankai {
     flip: {kaiqi: string; chanpinfenlei: string; fanzhuanfangshi: FlipType}[];
     flipChai: ObjectOf<FlipType>;
     neibugongshi: ObjectOf<string>;
+    包边正面按分类拼接?: string;
 
     constructor(data: ObjectOf<any> = {}) {
         if (typeof data !== "object") {
@@ -1060,10 +1061,13 @@ export class CadZhankai {
         }
         this.flipChai = getObject(data.flipChai);
         this.neibugongshi = getObject(data.neibugongshi);
+        if (data.包边正面按分类拼接) {
+            this.包边正面按分类拼接 = data.包边正面按分类拼接;
+        }
     }
 
     export() {
-        return cloneDeep({
+        const result: ObjectOf<any> = cloneDeep({
             zhankaikuan: this.zhankaikuan,
             zhankaigao: this.zhankaigao,
             shuliang: this.shuliang,
@@ -1078,5 +1082,9 @@ export class CadZhankai {
             flipChai: this.flipChai,
             neibugongshi: this.neibugongshi
         });
+        if (this.包边正面按分类拼接) {
+            result.包边正面按分类拼接 = this.包边正面按分类拼接;
+        }
+        return purgeObject(result);
     }
 }
