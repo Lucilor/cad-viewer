@@ -83,7 +83,7 @@ export class CadDimension extends CadEntity {
         }
         this.dimstyle = data.dimstyle || "";
         if (data.style) {
-            this.style = data.style;
+            this.style = cloneDeep(data.style);
         }
         this.entity1 = {id: "", location: "center"};
         this.entity2 = {id: "", location: "center"};

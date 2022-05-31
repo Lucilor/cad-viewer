@@ -171,6 +171,7 @@ export const drawDimension = (
     style?: CadDimensionStyle,
     i = 0
 ) => {
+    text = String(text);
     const color = style?.color;
     if (points.length < 4) {
         draw.remove();
@@ -181,7 +182,9 @@ export const drawDimension = (
     const dimLineStyle = style?.dimensionLine || {};
     let dimLine: ReturnType<typeof drawLine> = [];
     if (!dimLineStyle?.hidden) {
-        dimLineStyle.color = color;
+        if (!dimLineStyle.color) {
+            dimLineStyle.color = color;
+        }
         dimLine = drawLine(draw, p3, p4, dimLineStyle, i);
         dimLine.forEach((el) => el.addClass("dim-line"));
         i += dimLine.length;
@@ -191,7 +194,9 @@ export const drawDimension = (
     let extLine2: ReturnType<typeof drawLine> = [];
     if (!extLinesStyle?.hidden) {
         const length = extLinesStyle.length;
-        extLinesStyle.color = color;
+        if (!extLinesStyle.color) {
+            extLinesStyle.color = color;
+        }
         if (typeof length === "number") {
             if (axis === "x") {
                 extLine1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), extLinesStyle, i);
@@ -217,7 +222,9 @@ export const drawDimension = (
     let arrow2: ReturnType<typeof drawTriangle> = [];
     if (!arrowsStyle?.hidden) {
         let size = Number(arrowsStyle.size);
-        arrowsStyle.color = color;
+        if (!arrowsStyle.color) {
+            arrowsStyle.color = color;
+        }
         if (isNaN(size)) {
             size = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
         }
@@ -230,7 +237,9 @@ export const drawDimension = (
     const textStyle = style?.text || {};
     let textEls: ReturnType<typeof drawText> = [];
     if (!textStyle?.hidden) {
-        textStyle.color = color;
+        if (!textStyle.color) {
+            textStyle.color = color;
+        }
         if (text === "") {
             text = "<>";
         }

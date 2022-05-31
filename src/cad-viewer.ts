@@ -365,7 +365,7 @@ export class CadViewer extends EventEmitter {
             if (qujian) {
                 text = qujian;
             }
-            const dimStyle = entity.style || {};
+            const dimStyle = cloneDeep(entity.style) || {};
             dimStyle.color = color;
             dimStyle.text = {size: fontStyle.size};
             const selected = entity.selected;
