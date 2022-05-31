@@ -1,5 +1,5 @@
 import {Box, CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
-import {calculate, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
+import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -7,7 +7,7 @@ import {CadEntities} from "./cad-data/cad-entities";
 import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
 import {CadImage} from "./cad-data/cad-entity/cad-image";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
-import {CadStyle} from "./cad-data/cad-styles";
+import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";
 import {EntityType, entityTypes} from "./cad-data/cad-types";
 import {CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
@@ -34,8 +34,8 @@ export interface CadViewerConfig {
     hideLineLength: boolean; // 是否隐藏线长度(即使lineLength>0)
     hideLineGongshi: boolean; // 是否隐藏线公式(即使lineGongshi>0)
     minLinewidth: number; // 所有线的最小宽度(调大以便选中)
-    fontFamily: string; // 设置字体,
-    fontWeight: string; // 设置字体粗细
+    fontStyle: FontStyle; // 全局字体样式
+    dimStyle: CadDimensionStyle; // 全局标注样式
     enableZoom: boolean; // 是否启用缩放
     dashedLinePadding: number | number[]; // 虚线前后留白
 }
@@ -56,8 +56,8 @@ const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
         hideLineLength: false,
         hideLineGongshi: false,
         minLinewidth: 1,
-        fontFamily: "",
-        fontWeight: "normal",
+        fontStyle: {},
+        dimStyle: {},
         enableZoom: true,
         dashedLinePadding: 2
     };
@@ -96,7 +96,6 @@ export class CadViewer extends EventEmitter {
     data: CadData;
     dom: HTMLDivElement;
     draw: Svg;
-    stylizer: CadStylizer;
     entitiesCopied?: CadEntities;
     entitiesClickLock = false;
     private _config: CadViewerConfig;
@@ -113,7 +112,6 @@ export class CadViewer extends EventEmitter {
         dom.classList.add("cad-viewer");
         this.dom = dom;
         this.draw = SVG().addTo(dom).size("100%", "100%");
-        this.stylizer = new CadStylizer();
 
         dom.addEventListener("wheel", controls.onWheel.bind(this));
         dom.addEventListener("click", controls.onClick.bind(this));
@@ -134,12 +132,9 @@ export class CadViewer extends EventEmitter {
     getConfig<T extends keyof CadViewerConfig>(key: T): CadViewerConfig[T];
     getConfig(key?: keyof CadViewerConfig) {
         if (typeof key === "string") {
-            if (key === "fontFamily") {
-                return this._getFontFamily();
-            }
             return cloneDeep(this._config[key]);
         } else {
-            return cloneDeep({...this._config, fontFamily: this._getFontFamily()});
+            return cloneDeep({...this._config});
         }
     }
 
@@ -154,11 +149,12 @@ export class CadViewer extends EventEmitter {
         let needsResize = false;
         let needsSetBg = false;
         let needsRender = false;
-        for (const key in config) {
-            const newValue = config[key as keyof CadViewerConfig];
+        for (const key of keysOf(config)) {
+            const newValue = config[key];
+            const oldValue = this._config[key];
             const success = Reflect.set(this._config, key, newValue);
             if (success) {
-                switch (key as keyof CadViewerConfig) {
+                switch (key) {
                     case "width":
                     case "height":
                         needsResize = true;
@@ -174,8 +170,10 @@ export class CadViewer extends EventEmitter {
                     case "validateLines":
                         needsRender = true;
                         break;
-                    case "fontFamily":
-                        this._updateFontFamily();
+                    case "fontStyle":
+                        if ((newValue as FontStyle).family !== (oldValue as FontStyle).family) {
+                            this._updateFontFamily();
+                        }
                         break;
                     case "selectMode":
                         if (config.selectMode === "none") {
@@ -311,9 +309,9 @@ export class CadViewer extends EventEmitter {
     }
 
     async drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
-        const {draw, stylizer} = this;
+        const {draw} = this;
         const config = this.getConfig();
-        const {color, fontStyle, lineStyle} = stylizer.get(entity, config, style);
+        const {color, fontStyle, lineStyle, dimStyle} = CadStylizer.get(entity, config, style);
         if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
             entity.el?.remove();
             entity.el = null;
@@ -365,9 +363,6 @@ export class CadViewer extends EventEmitter {
             if (qujian) {
                 text = qujian;
             }
-            const dimStyle = cloneDeep(entity.style) || {};
-            dimStyle.color = color;
-            dimStyle.text = {size: fontStyle.size};
             const selected = entity.selected;
             el.clear();
             drawResult = drawDimension(el, points, text, axis, xiaoshuchuli, dimStyle);
@@ -438,7 +433,7 @@ export class CadViewer extends EventEmitter {
                         } else {
                             entity.text = String(error);
                         }
-                        entity.font_size = parent.lengthTextSize;
+                        entity.fontStyle.size = parent.lengthTextSize;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
                 } else if (entity.info.isGongshiText) {
@@ -472,7 +467,7 @@ export class CadViewer extends EventEmitter {
                         } else {
                             entity.text = varName;
                         }
-                        entity.font_size = lineGongshi;
+                        entity.fontStyle.size = lineGongshi;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
                 } else if (entity.info.isBianhuazhiText) {
@@ -485,7 +480,7 @@ export class CadViewer extends EventEmitter {
                         } else {
                             entity.text = "";
                         }
-                        entity.font_size = lineGongshi - 3;
+                        entity.fontStyle.size = lineGongshi - 3;
                         foundOffset = getVectorFromArray(entity.info.offset);
                     }
                 }
@@ -824,13 +819,20 @@ export class CadViewer extends EventEmitter {
 
     private _getFontFamily() {
         const names1 = this._fonts.map((v) => v.name);
-        const names2 = this._config.fontFamily.split(",").map((v) => v.trim());
-        const names = new Set([...names1, ...names2]);
+        const names2 = this._config.fontStyle.family?.split(",").map((v) => v.trim());
+        const names = new Set([...names1, ...(names2 || [])]);
         return Array.from(names).join(", ");
     }
 
     private _updateFontFamily() {
-        this.draw.css("font-family" as any, this._getFontFamily());
+        const family = this._getFontFamily();
+        this.draw.css("font-family" as any, family);
+        if (family) {
+            if (!this._config.fontStyle) {
+                this._config.fontStyle = {};
+            }
+            this._config.fontStyle.family = family;
+        }
     }
 
     async loadFont(font: CadViewerFont) {

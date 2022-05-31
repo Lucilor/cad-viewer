@@ -1,16 +1,19 @@
+import {keysOf} from "@utils";
+import {cloneDeep} from "lodash";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
-import {CadStyle} from "./cad-data/cad-styles";
+import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";
 import {CadViewerConfig} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
 
 export class CadStylizer {
-    get(entity: CadEntity, config: CadViewerConfig, params: CadStyle = {}) {
+    static get(entity: CadEntity, config: CadViewerConfig, params: CadStyle = {}) {
         const {dashedLinePadding, minLinewidth, reverseSimilarColor, validateLines} = config;
         const defaultStyle: Required<CadStyle> = {
             color: "white",
-            fontStyle: {size: 16, family: "", weight: ""},
+            fontStyle: {size: 16, family: "", weight: "", ...config.fontStyle, ...params.fontStyle},
             lineStyle: {padding: dashedLinePadding, dashArray: entity.dashArray},
-            opacity: 1
+            opacity: 1,
+            dimStyle: {...config.dimStyle, ...params.dimStyle}
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
         let linewidth: number;
@@ -23,14 +26,9 @@ export class CadStylizer {
         } else {
             linewidth = 1;
         }
-        let eFontSize: number | undefined;
-        if (entity instanceof CadMtext || entity instanceof CadDimension) {
-            eFontSize = entity.font_size;
-        }
         if (entity instanceof CadLineLike && entity.开料不要) {
             color.setColor(0xff4081);
         }
-        result.fontStyle.size = params.fontStyle?.size || eFontSize || 0;
         result.opacity = entity.opacity;
         if (typeof params.opacity === "number") {
             result.opacity = params.opacity;
@@ -52,26 +50,24 @@ export class CadStylizer {
         }
 
         if (entity instanceof CadMtext) {
-            if (entity.fontFamily) {
-                if (result.fontStyle.family) {
-                    result.fontStyle.family = `${result.fontStyle.family}, ${entity.fontFamily}`;
-                } else {
-                    result.fontStyle.family = entity.fontFamily;
-                }
-                result.fontStyle.family = entity.fontFamily;
-            }
-            if (entity.fontWeight) {
-                result.fontStyle.weight = entity.fontWeight;
+            this.mergeFontStyle(result.fontStyle, entity.fontStyle);
+            if (!result.fontStyle.color) {
+                result.fontStyle.color = result.color;
             }
         }
-        result.fontStyle.color = result.color;
+
+        if (entity instanceof CadDimension) {
+            this.mergeDimStyle(result.dimStyle, entity.style);
+            // this.mergeFontStyle(result.dimStyle.text, result.fontStyle, false);
+            result.dimStyle.color = result.color;
+        }
 
         result.lineStyle.width = linewidth;
         result.lineStyle.color = result.color;
         return result;
     }
 
-    correctColor(color: ColoredObject, config: CadViewerConfig, threshold = 5) {
+    static correctColor(color: ColoredObject, config: CadViewerConfig, threshold = 5) {
         const {reverseSimilarColor, backgroundColor} = config;
         const c1 = color.getColor();
         if (reverseSimilarColor) {
@@ -83,7 +79,7 @@ export class CadStylizer {
         return color;
     }
 
-    getColorStyle(color: ColoredObject, a = 1) {
+    static getColorStyle(color: ColoredObject, a = 1) {
         const c = color.getColor();
         const arr = [c.red(), c.green(), c.blue()].map((v) => v * 255);
         if (a > 0 && a < 1) {
@@ -91,5 +87,45 @@ export class CadStylizer {
         } else {
             return `rgb(${arr.join(",")})`;
         }
+    }
+
+    static getFontSize(value: any) {
+        const size = Number(value);
+        if (isNaN(size) || size <= 0) {
+            return null;
+        }
+        return size;
+    }
+
+    static mergeFontStyle(style1: FontStyle, style2: FontStyle) {
+        const {family, size, weight, color} = style2 || {};
+        if (family) {
+            if (style1.family) {
+                style1.family = `${style1.family}, ${family}`;
+            } else {
+                style1.family = family;
+            }
+        }
+        const size2 = this.getFontSize(size);
+        if (size2) {
+            style1.size = size2;
+        }
+        if (weight) {
+            style1.weight = weight;
+        }
+        if (color) {
+            console.log(color);
+            style1.color = color;
+        }
+    }
+
+    static mergeDimStyle(style1: CadDimensionStyle, style2: CadDimensionStyle) {
+        keysOf(style2).forEach((key) => {
+            if (key === "color") {
+                style1[key] = style2[key];
+            } else {
+                style1[key] = {...style1[key], ...cloneDeep(style2[key])};
+            }
+        });
     }
 }

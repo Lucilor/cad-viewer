@@ -1,5 +1,6 @@
 import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
 import {cloneDeep} from "lodash";
+import {CadStylizer} from "../../cad-stylizer";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimensionStyle} from "../cad-styles";
@@ -14,9 +15,8 @@ export interface CadDimensionEntity {
 
 export class CadDimension extends CadEntity {
     type: EntityType = "DIMENSION";
-    font_size: number;
     dimstyle: string;
-    style?: CadDimensionStyle;
+    style: CadDimensionStyle = {};
     axis: "x" | "y";
     entity1: CadDimensionEntity;
     entity2: CadDimensionEntity;
@@ -77,13 +77,10 @@ export class CadDimension extends CadEntity {
 
     constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
         super(data, layers, resetId);
-        this.font_size = data.font_size || 16;
-        if (this.font_size === 2.5) {
-            this.font_size = 36;
-        }
         this.dimstyle = data.dimstyle || "";
-        if (data.style) {
-            this.style = cloneDeep(data.style);
+        this.setStyle(data.style || {});
+        if (data.font_size) {
+            this.setStyle({text: {size: data.font_size}});
         }
         this.entity1 = {id: "", location: "center"};
         this.entity2 = {id: "", location: "center"};
@@ -125,7 +122,7 @@ export class CadDimension extends CadEntity {
             ...super.export(),
             ...purgeObject({
                 dimstyle: this.dimstyle,
-                font_size: this.font_size,
+                style: cloneDeep(this.style),
                 axis: this.axis,
                 entity1: this.entity1,
                 entity2: this.entity2,
@@ -143,9 +140,6 @@ export class CadDimension extends CadEntity {
         };
         if (this.defPoints) {
             result.defPoints = this.defPoints.map((v) => v.toArray());
-        }
-        if (this.style) {
-            result.style = cloneDeep(this.style);
         }
         return result;
     }
@@ -206,6 +200,14 @@ export class CadDimension extends CadEntity {
                 this.axis = "x";
             }
         }
+        return this;
+    }
+
+    setStyle(style: CadDimensionStyle): this {
+        if (!this.style) {
+            this.style = {};
+        }
+        CadStylizer.mergeDimStyle(this.style, style);
         return this;
     }
 }

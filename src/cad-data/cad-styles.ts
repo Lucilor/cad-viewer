@@ -9,6 +9,7 @@ export interface CadStyle {
     fontStyle?: FontStyle;
     lineStyle?: LineStyle;
     opacity?: number;
+    dimStyle?: CadDimensionStyle;
 }
 
 export interface LineStyle {
