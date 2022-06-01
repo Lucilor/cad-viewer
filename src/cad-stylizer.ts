@@ -2,6 +2,7 @@ import {keysOf} from "@utils";
 import {cloneDeep} from "lodash";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";
+import {Defaults} from "./cad-utils";
 import {CadViewerConfig} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
 
@@ -10,7 +11,7 @@ export class CadStylizer {
         const {dashedLinePadding, minLinewidth, reverseSimilarColor, validateLines} = config;
         const defaultStyle: Required<CadStyle> = {
             color: "white",
-            fontStyle: {size: 16, family: "", weight: "", ...config.fontStyle, ...params.fontStyle},
+            fontStyle: {size: Defaults.FONT_SIZE, family: "", weight: "", ...config.fontStyle, ...params.fontStyle},
             lineStyle: {padding: dashedLinePadding, dashArray: entity.dashArray},
             opacity: 1,
             dimStyle: {...config.dimStyle, ...params.dimStyle}
