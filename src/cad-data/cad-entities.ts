@@ -232,9 +232,9 @@ export class CadEntities {
         return this;
     }
 
-    forEachType(callback: (array: CadEntity[], type: EntityTypeKey, TYPE: EntityType) => void) {
+    forEachType(callback: (array: CadEntity[], type: EntityTypeKey) => void) {
         entityTypesKey.forEach((key) => {
-            callback(this[key], key, entityTypesMap[key]);
+            callback(this[key], key);
         });
     }
 
@@ -293,12 +293,14 @@ export class CadEntities {
         entity.root = null;
     }
 
-    add(...entities: CadEntity[]) {
+    add(...entities: CadEntity[]): this {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
-                this.forEachType((array, type, TYPE) => {
-                    if (TYPE === entity.type) {
-                        array.push(entity);
+                this.forEachType((array, type) => {
+                    if (entityTypesMap[type] === entity.type) {
+                        if (!array.find((e) => e.id === entity.id)) {
+                            array.push(entity);
+                        }
                         this._setEntityRootToThis(entity);
                     }
                 });
@@ -307,7 +309,7 @@ export class CadEntities {
         return this;
     }
 
-    remove(...entities: CadEntity[]) {
+    remove(...entities: CadEntity[]): this {
         entities.forEach((entity) => {
             if (entity instanceof CadEntity) {
                 const id = entity.id;
@@ -321,6 +323,11 @@ export class CadEntities {
             }
         });
 
+        return this;
+    }
+
+    empty(): this {
+        this.forEachType((array) => (array.length = 0));
         return this;
     }
 
@@ -447,7 +454,7 @@ export class CadEntities {
     getBoundingRect() {
         const rect = Rectangle.min;
         this.forEach((e) => {
-            if (e.visible && e.calcBoundingRect) {
+            if (e.calcBoundingRectForce || (e.visible && e.calcBoundingRect)) {
                 const eRect = e.boundingRect;
                 const {isFinite, width, height} = eRect;
                 if (isFinite && (width > 0 || height > 0)) {

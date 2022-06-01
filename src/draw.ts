@@ -1,7 +1,8 @@
-import {Angle, Arc, Line, Matrix, Point} from "@utils";
 import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
+import {Angle, Arc, Line, Matrix, Point} from "@utils";
+import {Properties} from "csstype";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
-import {CadDimensionStyle, FontStyle, LineStyle, ObjectFit} from "./cad-data/cad-styles";
+import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
 
 const setLineStyle = (el: Element, style: LineStyle) => {
     const {color, width, dashArray} = style;
@@ -170,6 +171,7 @@ export const drawDimension = (
     style?: CadDimensionStyle,
     i = 0
 ) => {
+    text = String(text);
     const color = style?.color;
     if (points.length < 4) {
         draw.remove();
@@ -180,7 +182,9 @@ export const drawDimension = (
     const dimLineStyle = style?.dimensionLine || {};
     let dimLine: ReturnType<typeof drawLine> = [];
     if (!dimLineStyle?.hidden) {
-        dimLineStyle.color = color;
+        if (!dimLineStyle.color) {
+            dimLineStyle.color = color;
+        }
         dimLine = drawLine(draw, p3, p4, dimLineStyle, i);
         dimLine.forEach((el) => el.addClass("dim-line"));
         i += dimLine.length;
@@ -190,7 +194,9 @@ export const drawDimension = (
     let extLine2: ReturnType<typeof drawLine> = [];
     if (!extLinesStyle?.hidden) {
         const length = extLinesStyle.length;
-        extLinesStyle.color = color;
+        if (!extLinesStyle.color) {
+            extLinesStyle.color = color;
+        }
         if (typeof length === "number") {
             if (axis === "x") {
                 extLine1 = drawLine(draw, p3.clone().sub(0, length), p3.clone().add(0, length), extLinesStyle, i);
@@ -216,7 +222,9 @@ export const drawDimension = (
     let arrow2: ReturnType<typeof drawTriangle> = [];
     if (!arrowsStyle?.hidden) {
         let size = Number(arrowsStyle.size);
-        arrowsStyle.color = color;
+        if (!arrowsStyle.color) {
+            arrowsStyle.color = color;
+        }
         if (isNaN(size)) {
             size = Math.max(1, Math.min(20, p3.distanceTo(p4) / 8));
         }
@@ -229,7 +237,9 @@ export const drawDimension = (
     const textStyle = style?.text || {};
     let textEls: ReturnType<typeof drawText> = [];
     if (!textStyle?.hidden) {
-        textStyle.color = color;
+        if (!textStyle.color) {
+            textStyle.color = color;
+        }
         if (text === "") {
             text = "<>";
         }
@@ -293,11 +303,11 @@ const loadImageEl = async (el: Image, url: string) => {
 export const drawImage = async (
     draw: Container,
     url: string,
-    transformation: Matrix,
+    position: Point,
     anchor: Point,
     sourceSize: Point,
     targetSize: Point | null,
-    objectFit: ObjectFit,
+    objectFit: Properties["objectFit"],
     i = 0
 ) => {
     let imageContainer = draw.children()[i] as Container;
@@ -330,10 +340,10 @@ export const drawImage = async (
         tw = sw;
         th = sh;
     }
-    const translate = transformation.translate();
-    const translateX = translate[0] - anchor.x * sw;
-    const translateY = translate[1] - (1 - anchor.y) * sh;
-    let [scaleX, scaleY] = transformation.scale();
+    const translateX = position.x - anchor.x * sw;
+    const translateY = position.y - (1 - anchor.y) * sh;
+    let scaleX = tw / sw;
+    let scaleY = th / sh;
     const sourceRatio = sw / sh;
     const targetRatio = tw / th;
     switch (objectFit) {

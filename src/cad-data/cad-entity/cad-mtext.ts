@@ -1,7 +1,8 @@
 import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {cloneDeep, isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
-import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
+import {FontStyle} from "../cad-styles";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
 
@@ -15,11 +16,9 @@ export interface CadMtextInfo {
 export class CadMtext extends CadEntity {
     type: EntityType = "MTEXT";
     insert: Point;
-    font_size: number;
     text: string;
     anchor: Point;
-    fontFamily: string;
-    fontWeight: string;
+    fontStyle: FontStyle;
     info!: CadMtextInfo;
 
     get _boundingRectCalc() {
@@ -35,16 +34,17 @@ export class CadMtext extends CadEntity {
         this.insert = getVectorFromArray(data.insert);
         this.text = data.text ?? "";
         this.anchor = getVectorFromArray(data.anchor);
-        this.fontFamily = data.fontFamily ?? "";
-        this.fontWeight = data.fontWeight ?? "normal";
-        this.font_size = data.font_size ?? DEFAULT_LENGTH_TEXT_SIZE;
+        this.fontStyle = data.fontStyle ? cloneDeep(data.fontStyle) : {};
+        if (data.font_size) {
+            this.fontStyle.size = data.font_size;
+        }
     }
 
     export(): ObjectOf<any> {
         const anchor = this.anchor.toArray();
         return {
             ...super.export(),
-            ...purgeObject({insert: this.insert.toArray(), font_size: this.font_size, text: this.text, anchor, fontFamily: this.fontFamily})
+            ...purgeObject({insert: this.insert.toArray(), fontStyle: this.fontStyle, text: this.text, anchor})
         };
     }
 
@@ -69,7 +69,7 @@ export class CadMtext extends CadEntity {
     equals(entity: CadMtext) {
         return (
             this.insert.equals(entity.insert) &&
-            this.font_size === entity.font_size &&
+            isEqual(this.fontStyle, entity.fontStyle) &&
             this.text === entity.text &&
             this.anchor.equals(entity.anchor)
         );

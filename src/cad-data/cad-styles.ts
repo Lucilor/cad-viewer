@@ -9,6 +9,7 @@ export interface CadStyle {
     fontStyle?: FontStyle;
     lineStyle?: LineStyle;
     opacity?: number;
+    dimStyle?: CadDimensionStyle;
 }
 
 export interface LineStyle {
@@ -25,5 +26,3 @@ export interface CadDimensionStyle {
     arrows?: {hidden?: boolean; color?: string; size?: number};
     text?: {hidden?: boolean} & Partial<FontStyle>;
 }
-
-export type ObjectFit = "none" | "contain" | "cover" | "fill" | "scale-down";

@@ -5,6 +5,10 @@ export class Defaults {
     static get DASH_ARRAY() {
         return [20, 7];
     }
+
+    static get FONT_SIZE() {
+        return 16;
+    }
 }
 
 export const getVectorFromArray = (data?: number[] | Point | null, defaultVal = new Point()) => {

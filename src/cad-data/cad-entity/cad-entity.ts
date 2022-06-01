@@ -18,6 +18,7 @@ export abstract class CadEntity extends ColoredObject {
     el?: G | null;
     updateInfo: {parent?: CadEntity; update: boolean} = {update: false};
     calcBoundingRect = true;
+    calcBoundingRectForce = false;
     protected abstract get _boundingRectCalc(): Rectangle;
     private _root: CadEntities | null = null;
     get root() {
@@ -46,8 +47,8 @@ export abstract class CadEntity extends ColoredObject {
     }
 
     get boundingRect() {
-        const {el, scale, rootEl} = this;
-        if (!el || isNaN(scale) || !rootEl) {
+        const {el, rootEl} = this;
+        if (!el || !rootEl || isNaN(this.scale)) {
             return this._boundingRectCalc;
         }
         const {x, y, x2, y2} = el.bbox();
@@ -56,10 +57,7 @@ export abstract class CadEntity extends ColoredObject {
 
     get scale() {
         const rootEl = this.rootEl;
-        if (rootEl) {
-            return (rootEl as any).zoom() as number;
-        }
-        return NaN;
+        return rootEl ? rootEl.zoom() : NaN;
     }
 
     protected _selectable?: boolean;

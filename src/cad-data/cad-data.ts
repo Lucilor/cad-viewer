@@ -102,6 +102,11 @@ export class CadData {
     拼接料拼接时垂直翻转 = false;
     必须选择板材 = false;
 
+    get shouldShowIntersection() {
+        const {zhidingweizhipaokeng, 指定分体位置, 指定位置不折} = this;
+        return zhidingweizhipaokeng.length > 0 || 指定分体位置.length > 0 || 指定位置不折.length > 0;
+    }
+
     constructor(data?: ObjectOf<any>) {
         this._entities = new CadEntities();
         this._entities.root = this;
@@ -1020,6 +1025,7 @@ export class CadZhankai {
     flip: {kaiqi: string; chanpinfenlei: string; fanzhuanfangshi: FlipType}[];
     flipChai: ObjectOf<FlipType>;
     neibugongshi: ObjectOf<string>;
+    包边正面按分类拼接?: string;
 
     constructor(data: ObjectOf<any> = {}) {
         if (typeof data !== "object") {
@@ -1055,10 +1061,13 @@ export class CadZhankai {
         }
         this.flipChai = getObject(data.flipChai);
         this.neibugongshi = getObject(data.neibugongshi);
+        if (data.包边正面按分类拼接) {
+            this.包边正面按分类拼接 = data.包边正面按分类拼接;
+        }
     }
 
     export() {
-        return cloneDeep({
+        const result: ObjectOf<any> = cloneDeep({
             zhankaikuan: this.zhankaikuan,
             zhankaigao: this.zhankaigao,
             shuliang: this.shuliang,
@@ -1073,5 +1082,9 @@ export class CadZhankai {
             flipChai: this.flipChai,
             neibugongshi: this.neibugongshi
         });
+        if (this.包边正面按分类拼接) {
+            result.包边正面按分类拼接 = this.包边正面按分类拼接;
+        }
+        return purgeObject(result);
     }
 }
