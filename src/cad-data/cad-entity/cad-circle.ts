@@ -2,7 +2,6 @@ import {Point, Arc, Angle, Matrix, ObjectOf, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
-import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadCircle extends CadLineLike {
@@ -38,7 +37,7 @@ export class CadCircle extends CadLineLike {
         this.radius = data.radius ?? 0;
     }
 
-    protected _transform(matrix: Matrix, parent?: CadEntity) {
+    protected _transform(matrix: Matrix, isFromParent?: boolean) {
         this.center.transform(matrix);
     }
 

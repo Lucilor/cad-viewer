@@ -2,7 +2,6 @@ import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
-import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadLine extends CadLineLike {
@@ -59,7 +58,7 @@ export class CadLine extends CadLineLike {
         }
     }
 
-    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
         this.start.transform(matrix);
         this.end.transform(matrix);
     }

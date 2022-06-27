@@ -565,7 +565,7 @@ export class CadData {
         });
         this.components.data.length = 0;
         this.components.connections.length = 0;
-        data.forEach((v) => this.addComponent(v, false));
+        data.forEach((v) => this.addComponent(v));
         connections.forEach((c) => {
             try {
                 this.assembleComponents(c);
@@ -824,7 +824,7 @@ export class CadData {
             }
         }
         components.connections = components.connections.filter((v, i) => !toRemove.includes(i));
-        this.moveComponent(c2, translate, c1, true);
+        this.moveComponent(c2, translate, true, c1);
         components.connections.push(cloneDeep(connection));
         return this;
     }
@@ -837,7 +837,7 @@ export class CadData {
         });
     }
 
-    moveComponent(curr: CadData, translate: Point, prev?: CadData, alter = false) {
+    moveComponent(curr: CadData, translate: Point, alter: boolean, prev?: CadData) {
         const map: ObjectOf<any> = {};
         this.components.connections.forEach((conn) => {
             if (conn.ids.includes(curr.id)) {
@@ -870,7 +870,7 @@ export class CadData {
                 if (map[id].y === undefined) {
                     newTranslate.y = 0;
                 }
-                this.moveComponent(next, newTranslate, curr, alter);
+                this.moveComponent(next, newTranslate, alter, curr);
             }
         }
     }
