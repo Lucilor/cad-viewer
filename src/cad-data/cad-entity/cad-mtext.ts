@@ -10,6 +10,7 @@ export interface CadMtextInfo {
     [key: string]: any;
     isLengthText?: boolean;
     isGongshiText?: boolean;
+    isBianhuazhiText?: boolean;
     offset?: number[];
 }
 
@@ -48,14 +49,14 @@ export class CadMtext extends CadEntity {
         };
     }
 
-    protected _transform(matrix: Matrix, parent?: CadEntity) {
+    protected _transform(matrix: Matrix, isFromParent?: boolean) {
         this.insert.transform(matrix);
         const m = new Matrix(matrix);
         if (this.info.isLengthText || this.info.isGongshiText) {
-            if (!Array.isArray(this.info.offset)) {
-                this.info.offset = [0, 0];
-            }
-            if (!parent) {
+            if (!isFromParent) {
+                if (!Array.isArray(this.info.offset)) {
+                    this.info.offset = [0, 0];
+                }
                 this.info.offset[0] += m.e;
                 this.info.offset[1] += m.f;
             }

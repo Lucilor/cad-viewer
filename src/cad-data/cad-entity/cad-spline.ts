@@ -38,7 +38,7 @@ export class CadSpline extends CadEntity {
         return this._afterClone(new CadSpline(this.export(), [], resetId));
     }
 
-    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
         this.fitPoints.forEach((p) => p.transform(matrix));
         this.controlPoints.forEach((p) => p.transform(matrix));
     }

@@ -111,7 +111,7 @@ export class CadDimension extends CadEntity {
         this.xiaoshuchuli = data.xiaoshuchuli ?? "四舍五入";
     }
 
-    protected _transform(matrix: Matrix, parent?: CadEntity) {
+    protected _transform(matrix: Matrix, isFromParent?: boolean) {
         if (this.defPoints) {
             this.defPoints.forEach((v) => v.transform(matrix));
         }

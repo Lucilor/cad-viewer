@@ -4,7 +4,18 @@ import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
-import {CadArc, CadCircle, CadDimension, CadEntity, CadHatch, CadLeader, CadLine, CadMtext, CadSpline} from "./cad-data/cad-entity";
+import {
+    CadArc,
+    CadCircle,
+    CadDimension,
+    CadEntity,
+    CadHatch,
+    CadLeader,
+    CadLine,
+    CadLineLike,
+    CadMtext,
+    CadSpline
+} from "./cad-data/cad-entity";
 import {CadImage} from "./cad-data/cad-entity/cad-image";
 import {CadInsert} from "./cad-data/cad-entity/cad-insert";
 import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";
@@ -81,6 +92,12 @@ const getConfigProxy = (config: Partial<CadViewerConfig> = {}) => {
                     value = [value[0], value[1], value[0], value[2]];
                 }
             }
+            if (key === "fontStyle") {
+                const value2 = value;
+                value = target[key];
+                CadStylizer.mergeFontStyle(value, value2);
+                return true;
+            }
             if (key in target) {
                 (target as any)[key] = value;
                 return true;
@@ -150,7 +167,7 @@ export class CadViewer extends EventEmitter {
         let needsSetBg = false;
         let needsRender = false;
         for (const key of keysOf(config)) {
-            const newValue = config[key];
+            const newValue = cloneDeep(config[key]);
             const oldValue = this._config[key];
             const success = Reflect.set(this._config, key, newValue);
             if (success) {
@@ -308,16 +325,18 @@ export class CadViewer extends EventEmitter {
         this.draw.css("background-color" as any, color.toString());
     }
 
-    async drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}) {
+    async drawEntity(entity: CadEntity, style: Partial<CadStyle> = {}, isFromParent?: boolean) {
         const {draw} = this;
         const config = this.getConfig();
         const {color, fontStyle, lineStyle, dimStyle} = CadStylizer.get(entity, config, style);
         if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
             entity.el?.remove();
             entity.el = null;
+            entity.update(isFromParent);
             return [];
+        } else {
+            entity.update(isFromParent);
         }
-        entity.update();
         let el = entity.el;
         if (!el) {
             let typeLayer = draw.find(`[group="${entity.type}"]`)[0] as G;
@@ -333,6 +352,12 @@ export class CadViewer extends EventEmitter {
                     return;
                 }
                 controls.onEntityClick.call(this, event, entity);
+            };
+            el.node.ondblclick = (event) => {
+                if (new Point(startX, startY).distanceTo(new Point(event.clientX, event.clientY)) > 1) {
+                    return;
+                }
+                controls.onEntityDoubleClick.call(this, event, entity);
             };
             el.node.onpointerdown = (event) => {
                 startX = event.clientX;
@@ -385,7 +410,9 @@ export class CadViewer extends EventEmitter {
         } else if (entity instanceof CadMtext) {
             const parent = entity.parent;
             const {insert, anchor} = entity;
-            if (parent instanceof CadLine || parent instanceof CadArc) {
+            const {isLengthText, isGongshiText, isBianhuazhiText} = entity.info;
+            const isLineText = isLengthText || isGongshiText || isBianhuazhiText;
+            if (parent instanceof CadLineLike && isLineText) {
                 const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
                 let foundOffset: Point | undefined;
                 if (entity.info.isLengthText) {
@@ -554,9 +581,9 @@ export class CadViewer extends EventEmitter {
                 c.attr("vector-effect", "non-scaling-stroke");
             }
         });
-        entity.update();
+        entity.update(isFromParent);
         for (const child of entity.children.toArray(true)) {
-            await this.drawEntity(child, style);
+            await this.drawEntity(child, style, true);
         }
         return drawResult;
     }
@@ -750,8 +777,28 @@ export class CadViewer extends EventEmitter {
         return super.on(type, listener as (...args: any[]) => void);
     }
 
+    once<T extends keyof CadEvents>(type: T, listener: CadEventCallBack<T>) {
+        return super.once(type, listener as (...args: any[]) => void);
+    }
+
     off<T extends keyof CadEvents>(type: T, listener: CadEventCallBack<T>) {
         return super.off(type, listener as (...args: any[]) => void);
+    }
+
+    offAll<T extends keyof CadEvents>(type?: T) {
+        return super.removeAllListeners(type);
+    }
+
+    addListener<T extends keyof CadEvents>(type: T, listener: CadEventCallBack<T>) {
+        return super.addListener(type, listener as (...args: any[]) => void);
+    }
+
+    removeListener<T extends keyof CadEvents>(type: T, listener: CadEventCallBack<T>) {
+        return super.removeListener(type, listener as (...args: any[]) => void);
+    }
+
+    removeAllListeners<T extends keyof CadEvents>(type?: T) {
+        return super.removeAllListeners(type);
     }
 
     toBase64() {
@@ -782,8 +829,10 @@ export class CadViewer extends EventEmitter {
     }
 
     destroy() {
-        this.data = new CadData();
+        // this.data = new CadData();
+        this.reset();
         this.dom.remove();
+        this.offAll();
         return this;
     }
 
@@ -797,8 +846,7 @@ export class CadViewer extends EventEmitter {
         this.dom.setAttribute("name", this.data.name);
         this.traverse((e) => {
             e.el = null;
-            e.children.forEach((c) => (c.el = null));
-        });
+        }, true);
         this.dom.focus();
         return this;
     }
@@ -819,9 +867,8 @@ export class CadViewer extends EventEmitter {
 
     private _getFontFamily() {
         const names1 = this._fonts.map((v) => v.name);
-        const names2 = this._config.fontStyle.family?.split(",").map((v) => v.trim());
-        const names = new Set([...names1, ...(names2 || [])]);
-        return Array.from(names).join(", ");
+        const names2 = this._config.fontStyle.family || "";
+        return CadStylizer.mergeFontFamilies(names1, names2).join(", ");
     }
 
     private _updateFontFamily() {

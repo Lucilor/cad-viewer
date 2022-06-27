@@ -565,7 +565,7 @@ export class CadData {
         });
         this.components.data.length = 0;
         this.components.connections.length = 0;
-        data.forEach((v) => this.addComponent(v, true));
+        data.forEach((v) => this.addComponent(v));
         connections.forEach((c) => {
             try {
                 this.assembleComponents(c);

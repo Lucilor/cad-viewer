@@ -2,7 +2,6 @@ import {Angle, Arc, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
-import {CadEntity} from "./cad-entity";
 import {CadLineLike} from "./cad-line-like";
 
 export class CadArc extends CadLineLike {
@@ -46,7 +45,7 @@ export class CadArc extends CadLineLike {
         this.clockwise = data.clockwise ?? false;
     }
 
-    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
         matrix = new Matrix(matrix);
         const curve = this.curve;
         curve.transform(matrix);

@@ -57,7 +57,7 @@ export class CadImage extends CadEntity {
         };
     }
 
-    protected _transform(matrix: MatrixLike, parent?: CadEntity) {
+    protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
         const m = new Matrix(matrix);
         this.position.add(...m.translate());
         // this.anchor.set(...m.origin);

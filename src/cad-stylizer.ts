@@ -98,14 +98,24 @@ export class CadStylizer {
         return size;
     }
 
+    static getFontFamilies(str: string) {
+        return str.split(",").map((v) => v.trim()).filter(Boolean);
+    }
+
+    static mergeFontFamilies(val1: string | string[], val2: string | string[]) {
+        if (typeof val1 === "string") {
+            val1 = this.getFontFamilies(val1);
+        }
+        if (typeof val2 === "string") {
+            val2 = this.getFontFamilies(val2);
+        }
+        return Array.from(new Set([...val1, ...val2]));
+    }
+
     static mergeFontStyle(style1: FontStyle, style2: FontStyle) {
         const {family, size, weight, color} = style2 || {};
         if (family) {
-            if (style1.family) {
-                style1.family = `${style1.family}, ${family}`;
-            } else {
-                style1.family = family;
-            }
+            style1.family = this.mergeFontFamilies(style1.family || "", family).join(", ");
         }
         const size2 = this.getFontSize(size);
         if (size2) {
@@ -115,7 +125,6 @@ export class CadStylizer {
             style1.weight = weight;
         }
         if (color) {
-            console.log(color);
             style1.color = color;
         }
     }

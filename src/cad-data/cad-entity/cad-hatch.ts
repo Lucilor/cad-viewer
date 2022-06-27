@@ -65,7 +65,7 @@ export class CadHatch extends CadEntity {
         return {...super.export(), ...purgeObject({paths})};
     }
 
-    protected _transform(matrix: Matrix, parent?: CadEntity) {
+    protected _transform(matrix: Matrix, isFromParent?: boolean) {
         this.paths.forEach((path) => {
             path.edges.forEach((edge) => {
                 edge.start.transform(matrix);

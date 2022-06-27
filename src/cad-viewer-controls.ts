@@ -19,6 +19,7 @@ export interface CadEvents {
     wheel: [WheelEvent];
     keydown: [KeyboardEvent];
     entityclick: [MouseEvent, CadEntity];
+    entitydblclick: [MouseEvent, CadEntity];
     entitypointerdown: [PointerEvent, CadEntity];
     entitypointermove: [PointerEvent, CadEntity];
     entitypointerup: [PointerEvent, CadEntity];
@@ -108,7 +109,7 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
                         }
                     });
                     for (const e of toRemove) {
-                        entitiesToDrag.remove(e).add(...e.children.toArray());
+                        entitiesToDrag.remove(e);
                         entitiesNotToDrag.add(e);
                     }
                 }
@@ -257,8 +258,25 @@ function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
     this.dom.focus();
 }
 
+function onEntityDoubleClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
+    event.stopImmediatePropagation();
+    const selectMode = this.getConfig("selectMode");
+    if (selectMode === "single" || selectMode === "multiple") {
+        if (selectMode === "single") {
+            this.unselectAll();
+        }
+        if (entity.selected) {
+            this.unselect(entity);
+        } else {
+            this.select(entity);
+        }
+    }
+    this.emit("entitydblclick", event, entity);
+    this.dom.focus();
+}
+
 function onEntityPointerDown(this: CadViewer, event: PointerEvent, entity: CadEntity) {
-    if (this.getConfig("entityDraggable")) {
+    if (this.getConfig("entityDraggable") && entity.selectable) {
         if (entity instanceof CadDimension) {
             draggingDimension = entity;
         } else {
@@ -285,6 +303,7 @@ export const controls = {
     onPointerUp,
     onKeyDown,
     onEntityClick,
+    onEntityDoubleClick,
     onEntityPointerDown,
     onEntityPointerMove,
     onEntityPointerUp

@@ -16,7 +16,7 @@ export abstract class CadEntity extends ColoredObject {
     parent: CadEntity | null = null;
     children: CadEntities;
     el?: G | null;
-    updateInfo: {parent?: CadEntity; matrix?: Matrix} = {};
+    updateInfo: {matrix?: Matrix} = {};
     calcBoundingRect = true;
     calcBoundingRectForce = false;
     protected abstract get _boundingRectCalc(): Rectangle;
@@ -62,11 +62,7 @@ export abstract class CadEntity extends ColoredObject {
 
     protected _selectable?: boolean;
     get selectable() {
-        if (this.el) {
-            return this.el.hasClass("selectable");
-        } else {
-            return typeof this._selectable === "boolean" ? this._selectable : false;
-        }
+        return !!this._selectable;
     }
     set selectable(value) {
         if (this.el) {
@@ -75,19 +71,14 @@ export abstract class CadEntity extends ColoredObject {
             } else {
                 this.el.removeClass("selectable");
             }
-        } else {
-            this._selectable = value;
         }
+        this._selectable = value;
         this.children.forEach((c) => (c.selectable = value));
     }
 
     protected _selected = false;
     get selected() {
-        if (this.el) {
-            return this.el.hasClass("selected") && this.selectable;
-        } else {
-            return this._selected;
-        }
+        return this._selected;
     }
     set selected(value) {
         if (this.el) {
@@ -188,33 +179,34 @@ export abstract class CadEntity extends ColoredObject {
         }
     }
 
-    transform(matrix: MatrixLike, alter: boolean, parent?: CadEntity | undefined): CadEntity {
+    transform(matrix: MatrixLike, alter: boolean, isFromParent?: boolean): CadEntity {
         if (alter) {
-            this._transform(matrix, parent);
+            this._transform(matrix, isFromParent);
         } else {
+            const el = this.el;
             const matrix2 = new Matrix(matrix);
-            if (this.el) {
-                const oldMatrix = new Matrix2(this.el.transform());
-                this.el.transform(oldMatrix.transform(matrix2));
+            if (el) {
+                const oldMatrix = new Matrix2(el.transform());
+                el.transform(oldMatrix.transform(matrix2));
             }
             if (this.updateInfo.matrix) {
                 this.updateInfo.matrix.transform(matrix2);
             } else {
                 this.updateInfo.matrix = matrix2;
             }
-            this.updateInfo.parent = parent;
         }
-        this.children.forEach((e) => e.transform(matrix, alter, this));
+        this.children.forEach((e) => {
+            e.transform(matrix, alter, true);
+        });
         return this;
     }
 
-    protected abstract _transform(matrix: MatrixLike, parent?: CadEntity): void;
+    protected abstract _transform(matrix: MatrixLike, isFromParent?: boolean): void;
 
-    update() {
+    update(isFromParent?: boolean) {
         if (this.el) {
             if (typeof this._selectable === "boolean") {
                 this.selectable = this._selectable;
-                delete this._selectable;
             }
             if (typeof this._selected === "boolean") {
                 this.selected = this._selected;
@@ -226,11 +218,17 @@ export abstract class CadEntity extends ColoredObject {
                 this.visible = this._visible;
             }
         }
-        if (this.updateInfo.matrix) {
-            this.transform(this.updateInfo.matrix, true);
-            this.updateInfo = {};
+        const matrix = this.updateInfo.matrix;
+        if (matrix) {
+            if (!isFromParent) {
+                this.transform(matrix, true);
+            }
+            delete this.updateInfo.matrix;
             this.el?.transform({});
         }
+        this.children.forEach((child) => {
+            child.parent = this;
+        });
     }
 
     export(): ObjectOf<any> {
