@@ -150,7 +150,7 @@ export abstract class CadEntity extends ColoredObject {
         } else {
             this.info = {};
         }
-        this.children = new CadEntities(data.children || {}, [], false);
+        this.children = new CadEntities(data.children || {}, [], resetId);
         this.children.forEach((c) => (c.parent = this));
         this.selectable = data.selectable ?? true;
         this.selected = data.selected ?? false;

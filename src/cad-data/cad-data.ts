@@ -356,6 +356,7 @@ export class CadData {
     clone(resetIds = false) {
         const data = new CadData(this.export());
         if (resetIds) {
+            data.id = v4();
             data.layers.forEach((v) => (v.id = v4()));
             for (const name in data.blocks) {
                 data.blocks[name].forEach((v) => (v.id = v4()));
