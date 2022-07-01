@@ -342,46 +342,51 @@ export const drawImage = async (
     }
     const translateX = position.x - anchor.x * sw;
     const translateY = position.y - (1 - anchor.y) * sh;
-    let scaleX = tw / sw;
-    let scaleY = th / sh;
-    const sourceRatio = sw / sh;
-    const targetRatio = tw / th;
-    switch (objectFit) {
-        case "contain":
-            if (sourceRatio >= targetRatio) {
-                scaleY = scaleX *= tw / sw;
-            } else {
-                scaleX = scaleY *= th / sh;
+    let scaleX: number;
+    let scaleY: number;
+    if (sw > 0 && sh > 0) {
+        scaleX = tw / sw;
+        scaleY = th / sh;
+        const sourceRatio = sw / sh;
+        const targetRatio = tw / th;
+        switch (objectFit) {
+            case "contain":
+                if (sourceRatio >= targetRatio) {
+                    scaleY = scaleX;
+                } else {
+                    scaleX = scaleY;
+                }
+                break;
+            case "cover":
+                if (sourceRatio >= targetRatio) {
+                    scaleX = scaleY;
+                } else {
+                    scaleY = scaleX;
+                }
+                break;
+            case "fill":
+                break;
+            case "scale-down": {
+                let scaleX2 = scaleX;
+                let scaleY2 = scaleY;
+                if (sourceRatio >= targetRatio) {
+                    scaleY2 = scaleX2 *= tw / sw;
+                } else {
+                    scaleX2 = scaleY2 *= th / sh;
+                }
+                if (scaleX > scaleX2) {
+                    scaleX = scaleX2;
+                    scaleY = scaleY2;
+                }
+                break;
             }
-            break;
-        case "cover":
-            if (sourceRatio >= targetRatio) {
-                scaleX = scaleY *= th / sh;
-            } else {
-                scaleY = scaleX *= tw / sw;
-            }
-            break;
-        case "fill":
-            scaleX *= tw / sw;
-            scaleY *= th / sh;
-            break;
-        case "scale-down": {
-            let scaleX2 = scaleX;
-            let scaleY2 = scaleY;
-            if (sourceRatio >= targetRatio) {
-                scaleY2 = scaleX2 *= tw / sw;
-            } else {
-                scaleX2 = scaleY2 *= th / sh;
-            }
-            if (scaleX > scaleX2) {
-                scaleX = scaleX2;
-                scaleY = scaleY2;
-            }
-            break;
+            case "none":
+            default:
+                break;
         }
-        case "none":
-        default:
-            break;
+    } else {
+        scaleX = 1;
+        scaleY = 1;
     }
     imageEl.transform(new Matrix({translate: [translateX, translateY], scale: [scaleX, scaleY]}));
     return [imageContainer];
