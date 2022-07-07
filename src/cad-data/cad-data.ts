@@ -526,18 +526,7 @@ export class CadData {
         return this;
     }
 
-    addComponent(component: CadData, autoMove = true) {
-        const rect1 = this.getBoundingRect();
-        if (autoMove && rect1.width && rect1.height) {
-            const rect2 = component.getBoundingRect();
-            const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
-            const matrix = new Matrix();
-            if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
-                translate.x += (rect1.width + rect2.width) / 2 + 15;
-                matrix.transform({translate});
-            }
-            component.transform(matrix, true);
-        }
+    addComponent(component: CadData) {
         const data = this.components.data;
         const prev = data.findIndex((v) => v.id === component.id);
         if (prev > -1) {
