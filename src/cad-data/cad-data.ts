@@ -102,6 +102,7 @@ export class CadData {
     拼接料拼接时垂直翻转 = false;
     必须选择板材 = false;
     对应计算条数的配件: ObjectOf<string> = {};
+    指定板材分组 = "";
 
     get shouldShowIntersection() {
         const {zhidingweizhipaokeng, 指定分体位置, 指定位置不折} = this;
@@ -220,6 +221,7 @@ export class CadData {
         this.拼接料拼接时垂直翻转 = data.拼接料拼接时垂直翻转 ?? false;
         this.必须选择板材 = data.必须选择板材 ?? false;
         this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
+        this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
         this.updateDimensions();
         return this;
     }
@@ -310,7 +312,8 @@ export class CadData {
             显示厚度: this.显示厚度,
             拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转,
             必须选择板材: this.必须选择板材,
-            对应计算条数的配件: this.对应计算条数的配件
+            对应计算条数的配件: this.对应计算条数的配件,
+            指定板材分组: this.指定板材分组
         });
     }
 
