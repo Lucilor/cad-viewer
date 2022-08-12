@@ -101,6 +101,8 @@ export class CadData {
     显示厚度 = "";
     拼接料拼接时垂直翻转 = false;
     必须选择板材 = false;
+    对应计算条数的配件: ObjectOf<string> = {};
+    指定板材分组 = "";
 
     get shouldShowIntersection() {
         const {zhidingweizhipaokeng, 指定分体位置, 指定位置不折} = this;
@@ -218,6 +220,8 @@ export class CadData {
         this.显示厚度 = data.显示厚度 ?? "";
         this.拼接料拼接时垂直翻转 = data.拼接料拼接时垂直翻转 ?? false;
         this.必须选择板材 = data.必须选择板材 ?? false;
+        this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
+        this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
         this.updateDimensions();
         return this;
     }
@@ -307,7 +311,9 @@ export class CadData {
             指定封口厚度: this.指定封口厚度,
             显示厚度: this.显示厚度,
             拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转,
-            必须选择板材: this.必须选择板材
+            必须选择板材: this.必须选择板材,
+            对应计算条数的配件: this.对应计算条数的配件,
+            指定板材分组: this.指定板材分组
         });
     }
 
@@ -356,6 +362,7 @@ export class CadData {
     clone(resetIds = false) {
         const data = new CadData(this.export());
         if (resetIds) {
+            data.id = v4();
             data.layers.forEach((v) => (v.id = v4()));
             for (const name in data.blocks) {
                 data.blocks[name].forEach((v) => (v.id = v4()));
@@ -522,18 +529,7 @@ export class CadData {
         return this;
     }
 
-    addComponent(component: CadData, autoMove = true) {
-        const rect1 = this.getBoundingRect();
-        if (autoMove && rect1.width && rect1.height) {
-            const rect2 = component.getBoundingRect();
-            const translate = new Point(rect1.x - rect2.x, rect1.y - rect2.y);
-            const matrix = new Matrix();
-            if (Math.abs(translate.x) > 1500 || Math.abs(translate.y) > 1500) {
-                translate.x += (rect1.width + rect2.width) / 2 + 15;
-                matrix.transform({translate});
-            }
-            component.transform(matrix, true);
-        }
+    addComponent(component: CadData) {
         const data = this.components.data;
         const prev = data.findIndex((v) => v.id === component.id);
         if (prev > -1) {

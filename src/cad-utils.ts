@@ -142,7 +142,7 @@ const purgeObject2 = (obj: ObjectOf<any>) => {
     const isEmpty = (val: any) => val === undefined || val === null;
     Object.keys(obj).forEach((key) => {
         let value = obj[key];
-        if (isEmpty(value)) {
+        if (isEmpty(value) || key === "") {
             delete obj[key];
         } else if (Array.isArray(value)) {
             value = value.filter((v) => !isEmpty(v));
