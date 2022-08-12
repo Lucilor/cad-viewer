@@ -750,22 +750,22 @@ export class CadViewer extends EventEmitter {
     }
 
     getWorldPoint(x: number, y: number) {
-        const {height} = this.draw.node.getBoundingClientRect();
+        const {height, top, left} = this.draw.node.getBoundingClientRect();
         const box = this.draw.viewbox();
         const result = new Point();
         const zoom = this.zoom();
-        result.x = x / zoom + box.x;
-        result.y = (height - y) / zoom + box.y;
+        result.x = (x - left) / zoom + box.x;
+        result.y = (height - y + top) / zoom + box.y;
         return result;
     }
 
     getScreenPoint(x: number, y: number) {
-        const {height} = this.draw.node.getBoundingClientRect();
+        const {height, top, left} = this.draw.node.getBoundingClientRect();
         const box = this.draw.viewbox();
         const result = new Point();
         const zoom = this.zoom();
-        result.x = (x - box.x) * zoom;
-        result.y = height - (y - box.y) * zoom;
+        result.x = (x - box.x) * zoom + left;
+        result.y = height - (y - box.y) * zoom - top;
         return result;
     }
 
