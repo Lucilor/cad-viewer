@@ -3,8 +3,6 @@
     "version": "3.16.2",
     "description": "cad-viewer",
     "main": "lib/index.js",
-    "module": "lib/index.js",
-    "types": "lib/src/index.d.ts",
     "files": [
         "/lib",
         "/dist"
@@ -49,6 +47,7 @@
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
+        "@lucilor/utils": "^1.15.1",
         "@svgdotjs/svg.js": "3.1.2",
         "color": "^4.2.3",
         "events": "^3.3.0",

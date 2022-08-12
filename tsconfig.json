@@ -16,5 +16,7 @@
         "paths": {
             "@utils": ["src/utils/src"]
         }
-    }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["src/utils/**/*"]
 }
