@@ -27,16 +27,16 @@
         "url": "https://github.com/Lucilor/cad-viewer/issues"
     },
     "homepage": "https://github.com/Lucilor/cad-viewer#readme",
-    "packageManager": "yarn@3.2.0",
+    "packageManager": "yarn@3.2.3",
     "devDependencies": {
         "@types/color": "^3.0.3",
-        "@types/lodash": "^4.14.183",
+        "@types/lodash": "^4.14.184",
         "@types/uuid": "^8.3.4",
-        "@typescript-eslint/eslint-plugin": "^5.33.1",
-        "@typescript-eslint/parser": "^5.33.1",
+        "@typescript-eslint/eslint-plugin": "^5.35.1",
+        "@typescript-eslint/parser": "^5.35.1",
         "clean-webpack-plugin": "^4.0.0",
         "csstype": "^3.1.0",
-        "eslint": "^8.22.0",
+        "eslint": "^8.23.0",
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "terser-webpack-plugin": "^5.3.5",
         "ts-loader": "^9.3.1",
@@ -47,7 +47,7 @@
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@lucilor/utils": "^1.15.1",
+        "@lucilor/utils": "^1.15.2",
         "@svgdotjs/svg.js": "3.1.2",
         "color": "^4.2.3",
         "events": "^3.3.0",
