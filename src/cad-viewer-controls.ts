@@ -243,6 +243,9 @@ function onKeyDown(this: CadViewer, event: KeyboardEvent) {
 
 function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
     event.stopImmediatePropagation();
+    if (!entity.selectable) {
+        return;
+    }
     const selectMode = this.getConfig("selectMode");
     if (selectMode === "single" || selectMode === "multiple") {
         if (selectMode === "single") {
@@ -260,16 +263,8 @@ function onEntityClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
 
 function onEntityDoubleClick(this: CadViewer, event: MouseEvent, entity: CadEntity) {
     event.stopImmediatePropagation();
-    const selectMode = this.getConfig("selectMode");
-    if (selectMode === "single" || selectMode === "multiple") {
-        if (selectMode === "single") {
-            this.unselectAll();
-        }
-        if (entity.selected) {
-            this.unselect(entity);
-        } else {
-            this.select(entity);
-        }
+    if (!entity.selectable) {
+        return;
     }
     this.emit("entitydblclick", event, entity);
     this.dom.focus();

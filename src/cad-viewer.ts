@@ -669,7 +669,7 @@ export class CadViewer extends EventEmitter {
             entities = new CadEntities().fromArray(entities);
         }
         if (entities.length) {
-            entities.forEach((e) => (e.selected = true));
+            entities.forEach((e) => (e.selected = e.selectable));
             this.emit("entitiesselect", entities, multi);
         }
         return this;

@@ -241,7 +241,8 @@ export abstract class CadEntity extends ColoredObject {
             children: this.children.export(),
             info: this.info,
             lineweight: linewidth2lineweight(this.linewidth),
-            dashArray: this.dashArray
+            dashArray: this.dashArray,
+            visible: this.visible === false ? this.visible : undefined
         });
     }
 
