@@ -452,6 +452,9 @@ export class CadEntities {
     }
 
     getBoundingRect() {
+        if (this.length < 1) {
+            return new Rectangle(0, 0);
+        }
         const rect = Rectangle.min;
         this.forEach((e) => {
             if (e.calcBoundingRectForce || (e.visible && e.calcBoundingRect)) {
