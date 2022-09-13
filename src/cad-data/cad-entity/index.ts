@@ -1,6 +1,7 @@
 export * from "./cad-arc";
 export * from "./cad-circle";
 export * from "./cad-dimension";
+export * from "./cad-dimension-linear";
 export * from "./cad-entity";
 export * from "./cad-hatch";
 export * from "./cad-image";

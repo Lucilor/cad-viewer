@@ -162,7 +162,7 @@ export const drawTriangle = (draw: Container, p1: Point, p2: Point, size: number
     return drawShape(draw, [p1, p3, p4], color, i);
 };
 
-export const drawDimension = (
+export const drawDimensionLinear = (
     draw: Container,
     points: Point[],
     text: string,

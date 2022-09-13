@@ -1,7 +1,7 @@
-import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {ObjectOf, Rectangle} from "@utils";
 import {cloneDeep} from "lodash";
 import {CadStylizer} from "../../cad-stylizer";
-import {getVectorsFromArray, purgeObject} from "../../cad-utils";
+import {purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimensionStyle} from "../cad-styles";
 import {EntityType} from "../cad-types";
@@ -13,18 +13,10 @@ export interface CadDimensionEntity {
     defPoint?: number[];
 }
 
-export class CadDimension extends CadEntity {
+export abstract class CadDimension extends CadEntity {
     type: EntityType = "DIMENSION";
     dimstyle: string;
     style: CadDimensionStyle = {};
-    axis: "x" | "y";
-    entity1: CadDimensionEntity;
-    entity2: CadDimensionEntity;
-    defPoints?: Point[];
-    distance: number;
-    distance2?: number;
-    cad1: string;
-    cad2: string;
     mingzi: string;
     qujian: string;
     ref?: "entity1" | "entity2" | "minX" | "maxX" | "minY" | "maxY" | "minLength" | "maxLength";
@@ -82,26 +74,6 @@ export class CadDimension extends CadEntity {
         if (data.font_size) {
             this.setStyle({text: {size: data.font_size}});
         }
-        this.entity1 = {id: "", location: "center"};
-        this.entity2 = {id: "", location: "center"};
-        (["entity1", "entity2"] as ("entity1" | "entity2")[]).forEach((field) => {
-            if (data[field]) {
-                if (typeof data[field].id === "string") {
-                    this[field].id = data[field].id;
-                }
-                this[field].location = data[field].location ?? "center";
-            }
-        });
-        const defPoints = getVectorsFromArray(data.defPoints);
-        if (defPoints) {
-            this.defPoints = defPoints;
-        } else {
-            delete this.defPoints;
-        }
-        this.axis = data.axis ?? "x";
-        this.distance = data.distance ?? 20;
-        this.cad1 = data.cad1 ?? "";
-        this.cad2 = data.cad2 ?? "";
         this.mingzi = data.mingzi ?? "";
         this.qujian = data.qujian ?? "";
         this.ref = data.ref ?? "entity1";
@@ -111,24 +83,12 @@ export class CadDimension extends CadEntity {
         this.xiaoshuchuli = data.xiaoshuchuli ?? "四舍五入";
     }
 
-    protected _transform(matrix: Matrix, isFromParent?: boolean) {
-        if (this.defPoints) {
-            this.defPoints.forEach((v) => v.transform(matrix));
-        }
-    }
-
     export(): ObjectOf<any> {
         const result = {
             ...super.export(),
             ...purgeObject({
                 dimstyle: this.dimstyle,
                 style: cloneDeep(this.style),
-                axis: this.axis,
-                entity1: this.entity1,
-                entity2: this.entity2,
-                distance: this.distance,
-                cad1: this.cad1,
-                cad2: this.cad2,
                 mingzi: this.mingzi,
                 qujian: this.qujian,
                 ref: this.ref,
@@ -138,69 +98,7 @@ export class CadDimension extends CadEntity {
                 xiaoshuchuli: this.xiaoshuchuli
             })
         };
-        if (this.defPoints) {
-            result.defPoints = this.defPoints.map((v) => v.toArray());
-        }
         return result;
-    }
-
-    clone(resetId = false): CadDimension {
-        return this._afterClone(new CadDimension(this.export(), [], resetId));
-    }
-
-    getDistance() {
-        if (this.defPoints) {
-            if (this.axis === "x") {
-                return this.defPoints[0].y - this.defPoints[2].y;
-            } else if (this.axis === "y") {
-                return this.defPoints[0].x - this.defPoints[2].x;
-            }
-            return NaN;
-        } else {
-            return this.distance;
-        }
-    }
-
-    setDistance(value: number) {
-        if (this.defPoints) {
-            if (this.axis === "x") {
-                this.defPoints[0].y = this.defPoints[2].y + value;
-            } else if (this.axis === "y") {
-                this.defPoints[0].x = this.defPoints[2].x + value;
-            }
-        } else {
-            this.distance = value;
-        }
-        return this;
-    }
-
-    switchAxis() {
-        if (this.defPoints) {
-            const distance = this.getDistance();
-            const [p0, p1, p2] = this.defPoints;
-            if (this.axis === "x") {
-                this.axis = "y";
-                const dy = p1.y - p2.y;
-                this.defPoints = [p1, p0, p2];
-                p1.y = p2.y;
-                p0.x = p2.x + dy;
-                this.setDistance(distance);
-            } else if (this.axis === "y") {
-                this.axis = "x";
-                const dx = p1.x - p2.x;
-                this.defPoints = [p1, p0, p2];
-                p1.x = p2.x;
-                p0.y = p2.y + dx;
-                this.setDistance(distance);
-            }
-        } else {
-            if (this.axis === "x") {
-                this.axis = "y";
-            } else if (this.axis === "y") {
-                this.axis = "x";
-            }
-        }
-        return this;
     }
 
     setStyle(style: CadDimensionStyle): this {

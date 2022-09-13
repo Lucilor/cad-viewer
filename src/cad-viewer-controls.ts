@@ -1,6 +1,7 @@
 import {Point, Rectangle} from "@utils";
 import {CadEntities} from "./cad-data/cad-entities";
 import {CadDimension, CadEntity} from "./cad-data/cad-entity";
+import {CadDimensionLinear} from "./cad-data/cad-entity/cad-dimension-linear";
 import {CadViewer} from "./cad-viewer";
 
 let pointer: {from: Point; to: Point} | null = null;
@@ -121,34 +122,38 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
                     const right = Math.max(p1.x, p2.x);
                     const top = Math.max(p1.y, p2.y);
                     const bottom = Math.min(p1.y, p2.y);
-                    const distance = draggingDimension.getDistance();
-                    if (draggingDimension.axis === "x") {
-                        if (clientX >= left && clientX <= right) {
-                            draggingDimension.setDistance(distance - translate.y);
-                        } else if (clientY >= bottom && clientY <= top) {
-                            draggingDimension.switchAxis();
-                            if (clientX <= left) {
-                                draggingDimension.setDistance(clientX - left);
+                    if (draggingDimension instanceof CadDimensionLinear) {
+                        const distance = draggingDimension.getDistance();
+                        if (draggingDimension.axis === "x") {
+                            if (clientX >= left && clientX <= right) {
+                                draggingDimension.setDistance(distance - translate.y);
+                            } else if (clientY >= bottom && clientY <= top) {
+                                draggingDimension.switchAxis();
+                                if (clientX <= left) {
+                                    draggingDimension.setDistance(clientX - left);
+                                } else {
+                                    draggingDimension.setDistance(clientX - right);
+                                }
                             } else {
-                                draggingDimension.setDistance(clientX - right);
+                                draggingDimension.setDistance(distance - translate.y);
                             }
-                        } else {
-                            draggingDimension.setDistance(distance - translate.y);
                         }
-                    }
-                    if (draggingDimension.axis === "y") {
-                        if (clientY >= bottom && clientY <= top) {
-                            draggingDimension.setDistance(distance + translate.x);
-                        } else if (clientX >= left && clientX <= right) {
-                            draggingDimension.switchAxis();
-                            if (clientY >= top) {
-                                draggingDimension.setDistance(top - clientY);
+                        if (draggingDimension.axis === "y") {
+                            if (clientY >= bottom && clientY <= top) {
+                                draggingDimension.setDistance(distance + translate.x);
+                            } else if (clientX >= left && clientX <= right) {
+                                draggingDimension.switchAxis();
+                                if (clientY >= top) {
+                                    draggingDimension.setDistance(top - clientY);
+                                } else {
+                                    draggingDimension.setDistance(bottom - clientY);
+                                }
                             } else {
-                                draggingDimension.setDistance(bottom - clientY);
+                                draggingDimension.setDistance(distance + translate.x);
                             }
-                        } else {
-                            draggingDimension.setDistance(distance + translate.x);
                         }
+                    } else {
+                        console.log(draggingDimension);
                     }
                     this.render(draggingDimension);
                 }
