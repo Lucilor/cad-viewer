@@ -31,6 +31,34 @@ export enum CadVersion {
     DXF2018 = "AC1032"
 }
 
+export const suanliaochuliValues = ["算料+显示展开+开料", "算料+开料", "算料+显示展开", "算料"] as const;
+export type Suanliaochuli = typeof suanliaochuliValues[number];
+
+export const suanliaodanxianshiValues = [
+    "尺寸",
+    "板材",
+    "尺寸+板材",
+    "名字",
+    "名字+板材",
+    "名字+展开宽",
+    "名字+展开宽+展开高",
+    "名字+展开高+展开宽",
+    "名字+展开高+板材",
+    "名字+展开宽+展开高+板材",
+    "名字+展开高",
+    "展开宽",
+    "展开高",
+    "展开宽+展开高",
+    "展开高+展开宽",
+    "展开宽+板材",
+    "展开高+板材",
+    "展开宽+展开高+板材",
+    "展开高+展开宽+板材",
+    "都不显示",
+    "所有"
+] as const;
+export type Suanliaodanxianshi = typeof suanliaodanxianshiValues[number];
+
 export class CadData {
     private _entities: CadEntities;
     get entities() {
@@ -66,7 +94,7 @@ export class CadData {
     kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版" = "自动排版";
     morenkailiaobancai = "";
     gudingkailiaobancai = "";
-    suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料" = "算料+显示展开+开料";
+    suanliaochuli: Suanliaochuli = "算料+显示展开+开料";
     showKuandubiaozhu = false;
     info: CadDataInfo = {};
     attributes: ObjectOf<string> = {};
@@ -76,7 +104,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
-    suanliaodanxianshi = "展开宽+展开高+板材";
+    suanliaodanxianshi: Suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
     指定分体位置: string[][] = [];
     指定位置不折: string[][] = [];
@@ -179,6 +207,9 @@ export class CadData {
         this.morenkailiaobancai = data.morenkailiaobancai ?? "";
         this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
         this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
+        if (!suanliaochuliValues.includes(this.suanliaochuli)) {
+            this.suanliaochuli = "算料+显示展开+开料";
+        }
         this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
         this.info = getObject(data.info);
         this.attributes = getObject(data.attributes);
@@ -196,6 +227,9 @@ export class CadData {
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
+        if (!suanliaodanxianshiValues.includes(this.suanliaodanxianshi)) {
+            this.suanliaodanxianshi = "展开宽+展开高+板材";
+        }
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.指定分体位置 = data.指定分体位置 ?? [];
         this.指定位置不折 = data.指定位置不折 ?? [];
