@@ -1,4 +1,4 @@
-import {Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {exportObject, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {Properties} from "csstype";
 import {isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
@@ -14,6 +14,7 @@ export class CadImage extends CadEntity {
     sourceSize: Point | null = null;
     targetSize: Point | null = null;
     objectFit: Properties["objectFit"] = "none";
+    transformMatrix: Matrix = new Matrix();
 
     protected get _boundingRectCalc() {
         const {position, anchor, sourceSize, targetSize} = this;
@@ -41,6 +42,9 @@ export class CadImage extends CadEntity {
             this.targetSize = getVectorFromArray(data.targetSize);
         }
         this.objectFit = data.objectFit || "none";
+        if (data.transformMatrix) {
+            this.transformMatrix.compose(data.transformMatrix);
+        }
     }
 
     export(): ObjectOf<any> {
@@ -52,19 +56,14 @@ export class CadImage extends CadEntity {
                 anchor: this.anchor.toArray(),
                 sourceSize: this.sourceSize ? this.sourceSize.toArray() : null,
                 targetSize: this.targetSize ? this.targetSize.toArray() : null,
-                objectFit: this.objectFit
+                objectFit: this.objectFit,
+                transformMatrix: exportObject(this.transformMatrix.decompose(), new Matrix().decompose())
             })
         };
     }
 
     protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
-        const m = new Matrix(matrix);
-        this.position.add(...m.translate());
-        // this.anchor.set(...m.origin);
-        // if (this.targetSize) {
-        //     const scale = m.scale();
-        //     this.targetSize.multiply(...scale);
-        // }
+        this.transformMatrix.transform(matrix);
     }
 
     clone(resetId?: boolean): CadImage {
