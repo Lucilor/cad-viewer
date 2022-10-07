@@ -19,6 +19,8 @@ import {v4} from "uuid";
 import {CadInsert} from "./cad-entity/cad-insert";
 import {CadData} from "./cad-data";
 import {CadImage} from "./cad-entity/cad-image";
+import {CadDimensionType} from "./cad-styles";
+import {CadDimensionLinear} from "./cad-entity/cad-dimension-linear";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 
@@ -39,7 +41,12 @@ export const getCadEntity = <T extends CadEntity = AnyCadEntity>(
     } else if (type === "CIRCLE") {
         entity = new CadCircle(data, layers, resetId);
     } else if (type === "DIMENSION") {
-        entity = new CadDimension(data, layers, resetId);
+        const dimType: CadDimensionType = data.dimType;
+        if (dimType === "linear" || !dimType) {
+            entity = new CadDimensionLinear(data, layers, resetId);
+        } else {
+            throw new Error(`unsupported dimension type: ${dimType}`);
+        }
     } else if (type === "HATCH") {
         entity = new CadHatch(data, layers, resetId);
     } else if (type === "LINE") {
@@ -89,11 +96,14 @@ export class CadEntities {
             try {
                 return getCadEntity(data2, layers, resetIds, type);
             } catch (error) {
+                console.groupCollapsed("failed to create entity");
                 if (error instanceof Error) {
-                    console.warn(`${error.message}\n${JSON.stringify(data2)}`);
+                    console.warn(error.message);
                 } else {
-                    console.warn(`failed to create entity: \n${JSON.stringify(data2)}`);
+                    console.warn(error);
                 }
+                console.warn(data2);
+                console.groupEnd();
                 return null;
             }
         };
@@ -132,13 +142,15 @@ export class CadEntities {
         });
         if (resetIds) {
             this.dimension.forEach((e) => {
-                const e1Id = idMap[e.entity1.id];
-                const e2Id = idMap[e.entity2.id];
-                if (e1Id) {
-                    e.entity1.id = e1Id;
-                }
-                if (e2Id) {
-                    e.entity2.id = e2Id;
+                if (e instanceof CadDimensionLinear) {
+                    const e1Id = idMap[e.entity1.id];
+                    const e2Id = idMap[e.entity2.id];
+                    if (e1Id) {
+                        e.entity1.id = e1Id;
+                    }
+                    if (e2Id) {
+                        e.entity2.id = e2Id;
+                    }
                 }
             });
         }
@@ -216,13 +228,15 @@ export class CadEntities {
             e.id = id;
         });
         this.dimension.forEach((e) => {
-            const e1Id = idMap[e.entity1.id];
-            const e2Id = idMap[e.entity2.id];
-            if (e1Id) {
-                e.entity1.id = e1Id;
-            }
-            if (e2Id) {
-                e.entity2.id = e2Id;
+            if (e instanceof CadDimensionLinear) {
+                const e1Id = idMap[e.entity1.id];
+                const e2Id = idMap[e.entity2.id];
+                if (e1Id) {
+                    e.entity1.id = e1Id;
+                }
+                if (e2Id) {
+                    e.entity2.id = e2Id;
+                }
             }
         });
     }
@@ -332,6 +346,9 @@ export class CadEntities {
     }
 
     getDimensionPoints(dimension: CadDimension) {
+        if (!(dimension instanceof CadDimensionLinear)) {
+            return [];
+        }
         const {entity1, entity2, distance, axis, distance2, ref, defPoints} = dimension;
         if (defPoints?.length === 3) {
             const [p0, p1, p2] = defPoints;

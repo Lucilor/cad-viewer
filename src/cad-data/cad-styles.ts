@@ -26,3 +26,6 @@ export interface CadDimensionStyle {
     arrows?: {hidden?: boolean; color?: string; size?: number};
     text?: {hidden?: boolean} & Partial<FontStyle>;
 }
+
+export const cadDimensionTypes = ["linear", "angular", "radius"] as const;
+export type CadDimensionType = typeof cadDimensionTypes[number];

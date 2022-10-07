@@ -4,6 +4,7 @@ import {v4} from "uuid";
 import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, purgeObject} from "../cad-utils";
 import {CadEntities, getCadEntity} from "./cad-entities";
 import {CadCircle, CadDimension, CadEntity, CadLine} from "./cad-entity";
+import {CadDimensionLinear} from "./cad-entity/cad-dimension-linear";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
 
@@ -29,6 +30,34 @@ export enum CadVersion {
     DXF2013 = "AC1027",
     DXF2018 = "AC1032"
 }
+
+export const suanliaochuliValues = ["算料+显示展开+开料", "算料+开料", "算料+显示展开", "算料"] as const;
+export type Suanliaochuli = typeof suanliaochuliValues[number];
+
+export const suanliaodanxianshiValues = [
+    "尺寸",
+    "板材",
+    "尺寸+板材",
+    "名字",
+    "名字+板材",
+    "名字+展开宽",
+    "名字+展开宽+展开高",
+    "名字+展开高+展开宽",
+    "名字+展开高+板材",
+    "名字+展开宽+展开高+板材",
+    "名字+展开高",
+    "展开宽",
+    "展开高",
+    "展开宽+展开高",
+    "展开高+展开宽",
+    "展开宽+板材",
+    "展开高+板材",
+    "展开宽+展开高+板材",
+    "展开高+展开宽+板材",
+    "都不显示",
+    "所有"
+] as const;
+export type Suanliaodanxianshi = typeof suanliaodanxianshiValues[number];
 
 export class CadData {
     private _entities: CadEntities;
@@ -65,7 +94,7 @@ export class CadData {
     kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版" = "自动排版";
     morenkailiaobancai = "";
     gudingkailiaobancai = "";
-    suanliaochuli: "算料+显示展开+开料" | "算料+开料" | "算料+显示展开" | "算料" = "算料+显示展开+开料";
+    suanliaochuli: Suanliaochuli = "算料+显示展开+开料";
     showKuandubiaozhu = false;
     info: CadDataInfo = {};
     attributes: ObjectOf<string> = {};
@@ -75,7 +104,7 @@ export class CadData {
     needsHuajian = true;
     kedulibancai = false;
     shuangxiangzhewan = false;
-    suanliaodanxianshi = "展开宽+展开高+板材";
+    suanliaodanxianshi: Suanliaodanxianshi = "展开宽+展开高+板材";
     zhidingweizhipaokeng: string[][] = [];
     指定分体位置: string[][] = [];
     指定位置不折: string[][] = [];
@@ -178,6 +207,9 @@ export class CadData {
         this.morenkailiaobancai = data.morenkailiaobancai ?? "";
         this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
         this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
+        if (!suanliaochuliValues.includes(this.suanliaochuli)) {
+            this.suanliaochuli = "算料+显示展开+开料";
+        }
         this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
         this.info = getObject(data.info);
         this.attributes = getObject(data.attributes);
@@ -195,6 +227,9 @@ export class CadData {
         this.kedulibancai = data.kedulibancai ?? false;
         this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
         this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
+        if (!suanliaodanxianshiValues.includes(this.suanliaodanxianshi)) {
+            this.suanliaodanxianshi = "展开宽+展开高+板材";
+        }
         this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
         this.指定分体位置 = data.指定分体位置 ?? [];
         this.指定位置不折 = data.指定位置不折 ?? [];
@@ -456,16 +491,18 @@ export class CadData {
         const horizontal = m.a < 0;
         const vertical = m.d < 0;
         this.entities.dimension.forEach((e) => {
-            if (vertical && e.axis === "x") {
-                const [p1, p2] = this.getDimensionPoints(e);
-                if (p1 && p2) {
-                    e.distance = -Math.abs(p1.y - p2.y) - e.distance;
+            if (e instanceof CadDimensionLinear) {
+                if (vertical && e.axis === "x") {
+                    const [p1, p2] = this.getDimensionPoints(e);
+                    if (p1 && p2) {
+                        e.distance = -Math.abs(p1.y - p2.y) - e.distance;
+                    }
                 }
-            }
-            if (horizontal && e.axis === "y") {
-                const [p1, p2] = this.getDimensionPoints(e);
-                if (p1 && p2) {
-                    e.distance = -Math.abs(p1.x - p2.x) - e.distance;
+                if (horizontal && e.axis === "y") {
+                    const [p1, p2] = this.getDimensionPoints(e);
+                    if (p1 && p2) {
+                        e.distance = -Math.abs(p1.x - p2.x) - e.distance;
+                    }
                 }
             }
         });
@@ -583,7 +620,7 @@ export class CadData {
         this.entities.dimension = [];
         const rect = this.getBoundingRect();
         this.entities.dimension.forEach((e) => {
-            if (e.mingzi === "宽度标注") {
+            if (e instanceof CadDimensionLinear && e.mingzi === "宽度标注") {
                 e.distance2 = rect.y + rect.height / 2 + 40;
             }
         });
@@ -591,27 +628,29 @@ export class CadData {
 
         const children = [...this.partners, ...this.components.data];
         this.entities.dimension.forEach((e) => {
-            let cad1Changed = false;
-            let cad2Changed = false;
-            if (this.entities.find(e.entity1.id)) {
-                e.cad1 = this.name;
-                cad1Changed = true;
-            }
-            if (this.entities.find(e.entity2.id)) {
-                e.cad2 = this.name;
-                cad2Changed = true;
-            }
-            if (!(cad1Changed && cad2Changed)) {
-                for (const child of children) {
-                    if (!cad1Changed && child.findEntity(e.entity1.id)) {
-                        e.cad1 = child.name;
-                        cad1Changed = true;
-                        break;
-                    }
-                    if (!cad2Changed && child.findEntity(e.entity2.id)) {
-                        e.cad2 = child.name;
-                        cad2Changed = true;
-                        break;
+            if (e instanceof CadDimensionLinear) {
+                let cad1Changed = false;
+                let cad2Changed = false;
+                if (this.entities.find(e.entity1.id)) {
+                    e.cad1 = this.name;
+                    cad1Changed = true;
+                }
+                if (this.entities.find(e.entity2.id)) {
+                    e.cad2 = this.name;
+                    cad2Changed = true;
+                }
+                if (!(cad1Changed && cad2Changed)) {
+                    for (const child of children) {
+                        if (!cad1Changed && child.findEntity(e.entity1.id)) {
+                            e.cad1 = child.name;
+                            cad1Changed = true;
+                            break;
+                        }
+                        if (!cad2Changed && child.findEntity(e.entity2.id)) {
+                            e.cad2 = child.name;
+                            cad2Changed = true;
+                            break;
+                        }
                     }
                 }
             }

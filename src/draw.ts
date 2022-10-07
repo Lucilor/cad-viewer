@@ -1,6 +1,6 @@
 import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
 import {Angle, Arc, Line, Matrix, Point} from "@utils";
-import {Properties} from "csstype";
+import {CadImage} from "./cad-data";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
 
@@ -162,7 +162,7 @@ export const drawTriangle = (draw: Container, p1: Point, p2: Point, size: number
     return drawShape(draw, [p1, p3, p4], color, i);
 };
 
-export const drawDimension = (
+export const drawDimensionLinear = (
     draw: Container,
     points: Point[],
     text: string,
@@ -300,16 +300,11 @@ const loadImageEl = async (el: Image, url: string) => {
     });
 };
 
-export const drawImage = async (
-    draw: Container,
-    url: string,
-    position: Point,
-    anchor: Point,
-    sourceSize: Point,
-    targetSize: Point | null,
-    objectFit: Properties["objectFit"],
-    i = 0
-) => {
+export const drawImage = async (draw: Container, e: CadImage, i = 0) => {
+    if (!e.sourceSize) {
+        e.sourceSize = new Point(0, 0);
+    }
+    const {url, position, anchor, sourceSize, targetSize, objectFit, transformMatrix} = e;
     let imageContainer = draw.children()[i] as Container;
     let imageEl: Image;
     if (imageContainer) {
@@ -388,6 +383,8 @@ export const drawImage = async (
         scaleX = 1;
         scaleY = 1;
     }
-    imageEl.transform(new Matrix({translate: [translateX, translateY], scale: [scaleX, scaleY]}));
+    const matrix = new Matrix({translate: [translateX, translateY], scale: [scaleX, scaleY]});
+    matrix.transform(transformMatrix);
+    imageEl.transform(matrix);
     return [imageContainer];
 };
