@@ -59,6 +59,9 @@ export const suanliaodanxianshiValues = [
 ] as const;
 export type Suanliaodanxianshi = typeof suanliaodanxianshiValues[number];
 
+export const intersectionsKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
+export type Intersections = typeof intersectionsKeys[number];
+
 export class CadData {
     private _entities: CadEntities;
     get entities() {
@@ -132,11 +135,6 @@ export class CadData {
     必须选择板材 = false;
     对应计算条数的配件: ObjectOf<string> = {};
     指定板材分组 = "";
-
-    get shouldShowIntersection() {
-        const {zhidingweizhipaokeng, 指定分体位置, 指定位置不折} = this;
-        return zhidingweizhipaokeng.length > 0 || 指定分体位置.length > 0 || 指定位置不折.length > 0;
-    }
 
     constructor(data?: ObjectOf<any>) {
         this._entities = new CadEntities();
@@ -405,6 +403,11 @@ export class CadData {
             data.entities = data.entities.clone(true);
             data.partners = data.partners.map((v) => v.clone(true));
             data.components.data = data.components.data.map((v) => v.clone(true));
+
+            const idMap = data.entities.idMap;
+            for (const key of intersectionsKeys) {
+                data[key] = data[key].map((v) => v.map((id) => idMap[id] || id));
+            }
         }
         return data;
     }

@@ -80,6 +80,7 @@ export class CadEntities {
     leader: CadLeader[] = [];
     insert: CadInsert[] = [];
     image: CadImage[] = [];
+    idMap: ObjectOf<string>;
 
     get length() {
         let result = 0;
@@ -91,7 +92,7 @@ export class CadEntities {
         if (typeof data !== "object") {
             throw new Error("Invalid data.");
         }
-        const idMap: ObjectOf<string> = {};
+        this.idMap = {};
         const tryGetCadEntity = (data2: any, type?: EntityType) => {
             try {
                 return getCadEntity(data2, layers, resetIds, type);
@@ -123,7 +124,7 @@ export class CadEntities {
                     eNew.root = this;
                     this[key].push(eNew);
                     if (resetIds) {
-                        idMap[e.id] = eNew.id;
+                        this.idMap[e.id] = eNew.id;
                     }
                 });
             } else if (group && typeof group === "object") {
@@ -135,7 +136,7 @@ export class CadEntities {
                     eNew.root = this;
                     this[key].push(eNew);
                     if (resetIds) {
-                        idMap[e.id] = eNew.id;
+                        this.idMap[e.id] = eNew.id;
                     }
                 });
             }
@@ -143,8 +144,8 @@ export class CadEntities {
         if (resetIds) {
             this.dimension.forEach((e) => {
                 if (e instanceof CadDimensionLinear) {
-                    const e1Id = idMap[e.entity1.id];
-                    const e2Id = idMap[e.entity2.id];
+                    const e1Id = this.idMap[e.entity1.id];
+                    const e2Id = this.idMap[e.entity2.id];
                     if (e1Id) {
                         e.entity1.id = e1Id;
                     }
