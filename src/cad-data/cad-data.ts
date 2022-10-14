@@ -15,6 +15,8 @@ export interface CadDataInfo {
     锁边自动绑定可搭配铰边?: string;
     version?: CadVersion;
     vars?: ObjectOf<string>;
+    激光开料是否翻转?: boolean;
+    激光开料标记线?: {ids: string[]; type: string}[];
 }
 
 export enum CadVersion {
@@ -60,7 +62,7 @@ export const suanliaodanxianshiValues = [
 export type Suanliaodanxianshi = typeof suanliaodanxianshiValues[number];
 
 export const intersectionsKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
-export type Intersections = typeof intersectionsKeys[number];
+export type IntersectionKey = typeof intersectionsKeys[number];
 
 export class CadData {
     private _entities: CadEntities;
@@ -407,6 +409,11 @@ export class CadData {
             const idMap = data.entities.idMap;
             for (const key of intersectionsKeys) {
                 data[key] = data[key].map((v) => v.map((id) => idMap[id] || id));
+            }
+            if (data.info.激光开料标记线) {
+                for (const v of data.info.激光开料标记线) {
+                    v.ids = v.ids.map((id) => idMap[id] || id);
+                }
             }
         }
         return data;
