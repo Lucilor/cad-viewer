@@ -121,7 +121,7 @@ export class CadStylizer {
             if (key === "family" && style2.family) {
                 style1.family = this.mergeFontFamilies(style1.family || "", style2.family).join(", ");
             } else if (key === "size") {
-                const size = this.getFontSize(style2.family);
+                const size = this.getFontSize(style2.size);
                 if (size) {
                     style1.size = size;
                 }
