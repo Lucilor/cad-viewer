@@ -90,8 +90,8 @@ export const drawArc = (
     return [el];
 };
 
-export const drawText = (draw: Container, text: string, position: Point, anchor: Point, vertical = false, style?: FontStyle, i = 0) => {
-    const {size, family, weight, color} = style || {};
+export const drawText = (draw: Container, text: string, position: Point, anchor: Point, style?: FontStyle, i = 0) => {
+    const {size, family, weight, color, vertical, vertical2} = style || {};
     if (!text || !size || !(size > 0)) {
         draw.remove();
         return [];
@@ -115,15 +115,26 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
         ty -= width / 2;
         deg = 90;
     }
+    if (vertical2) {
+        el.css("writing-mode" as any, "vertical-lr");
+    } else {
+        el.css("writing-mode" as any, "");
+    }
     el.css("transform", `translate(${tx}px, ${ty}px) scale(1, -1) rotate(${deg}deg)`);
     if (family) {
         el.css("font-family" as any, family);
+    } else {
+        el.css("font-family" as any, "");
     }
     if (weight) {
         el.css("font-weight" as any, weight);
+    } else {
+        el.css("font-weight" as any, "");
     }
     if (color) {
         el.fill(color);
+    } else {
+        el.fill("");
     }
     el.move(position.x, position.y);
     return [el];
@@ -234,7 +245,7 @@ export const drawDimensionLinear = (
         i += arrow2.length;
         [...arrow1, ...arrow2].forEach((el) => el.addClass("dim-arrow"));
     }
-    const textStyle = style?.text || {};
+    const textStyle = {...style?.text};
     let textEls: ReturnType<typeof drawText> = [];
     if (!textStyle?.hidden) {
         if (!textStyle.color) {
@@ -270,9 +281,10 @@ export const drawDimensionLinear = (
         }
         const middle = p3.clone().add(p4).divide(2);
         if (axis === "x") {
-            textEls = drawText(draw, text, middle, new Point(0.5, 1), false, textStyle, i);
+            textEls = drawText(draw, text, middle, new Point(0.5, 1), textStyle, i);
         } else if (axis === "y") {
-            textEls = drawText(draw, text, middle, new Point(1, 0.5), true, textStyle, i);
+            textStyle.vertical = true;
+            textEls = drawText(draw, text, middle, new Point(1, 0.5), textStyle, i);
         }
         textEls.forEach((el) => el.addClass("dim-text"));
         i += textEls.length;

@@ -219,10 +219,10 @@ export const sortLines = (data: CadData, tolerance = DEFAULT_TOLERANCE) => {
             }
         }
         result.push(lines);
-        lines.forEach((l) => {
+        for (const l of lines) {
             exclude.push(l.id);
             allIds.delete(l.id);
-        });
+        }
     }
     if (allIds.size > 0) {
         result.push(data.entities.filter((e) => allIds.has(e.id)).toArray() as CadLineLike[]);

@@ -163,10 +163,15 @@ function onPointerMove(this: CadViewer, event: PointerEvent) {
                     multiSelector.classList.add("multi-selector");
                     this.dom.appendChild(multiSelector);
                 }
-                multiSelector.style.left = Math.min(from.x, to.x) + "px";
-                multiSelector.style.top = Math.min(from.y, to.y) + "px";
-                multiSelector.style.width = Math.abs(from.x - to.x) + "px";
-                multiSelector.style.height = Math.abs(from.y - to.y) + "px";
+                const rect = this.dom.getBoundingClientRect();
+                const x = Math.min(from.x, to.x) - rect.left;
+                const y = Math.min(from.y, to.y) - rect.top;
+                const w = Math.abs(from.x - to.x);
+                const h = Math.abs(from.y - to.y);
+                multiSelector.style.left = x + "px";
+                multiSelector.style.top = y + "px";
+                multiSelector.style.width = w + "px";
+                multiSelector.style.height = h + "px";
             }
         }
         to.set(clientX, clientY);

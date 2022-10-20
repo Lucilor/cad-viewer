@@ -474,16 +474,21 @@ export class CadViewer extends EventEmitter {
                         el.remove();
                         entity.el = null;
                     } else {
-                        const {mingzi, mingzi2, gongshi} = parent;
+                        const {mingzi, mingzi2, gongshi, 刨坑起始线} = parent;
                         const mingzi3 = mingzi || mingzi2;
+                        const arr: string[] = [];
                         if (gongshi) {
-                            entity.text = `${mingzi3}=${gongshi}`;
+                            arr.push(`${mingzi3}=${gongshi}`);
                         } else {
-                            entity.text = mingzi3;
+                            arr.push(mingzi3);
                         }
                         if (mingzi && mingzi2) {
-                            entity.text += `\n${mingzi2}`;
+                            arr.push(mingzi2);
                         }
+                        if (刨坑起始线) {
+                            arr.push("刨坑起始线");
+                        }
+                        entity.text = arr.join("\n");
                         let varName = "";
                         const root = parent.root?.root;
                         if (root && root.info.vars) {
@@ -562,7 +567,7 @@ export class CadViewer extends EventEmitter {
                     }
                 }
             }
-            drawResult = drawText(el, entity.text, insert, anchor, false, fontStyle);
+            drawResult = drawText(el, entity.text, insert, anchor, fontStyle);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {

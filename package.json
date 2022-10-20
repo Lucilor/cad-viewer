@@ -1,6 +1,6 @@
 {
     "name": "@lucilor/cad-viewer",
-    "version": "3.17.0",
+    "version": "3.17.1",
     "description": "cad-viewer",
     "main": "lib/index.js",
     "files": [
@@ -27,31 +27,31 @@
         "url": "https://github.com/Lucilor/cad-viewer/issues"
     },
     "homepage": "https://github.com/Lucilor/cad-viewer#readme",
-    "packageManager": "yarn@3.2.3",
+    "packageManager": "yarn@3.2.4",
     "devDependencies": {
         "@types/color": "^3.0.3",
-        "@types/lodash": "^4.14.184",
+        "@types/lodash": "^4.14.186",
         "@types/uuid": "^8.3.4",
-        "@typescript-eslint/eslint-plugin": "^5.36.1",
-        "@typescript-eslint/parser": "^5.36.1",
+        "@typescript-eslint/eslint-plugin": "^5.40.1",
+        "@typescript-eslint/parser": "^5.40.1",
         "clean-webpack-plugin": "^4.0.0",
-        "csstype": "^3.1.0",
-        "eslint": "^8.23.0",
+        "csstype": "^3.1.1",
+        "eslint": "^8.25.0",
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "terser-webpack-plugin": "^5.3.6",
-        "ts-loader": "^9.3.1",
-        "typescript": "~4.8.2",
+        "ts-loader": "^9.4.1",
+        "typescript": "~4.8.4",
         "webpack": "^5.74.0",
         "webpack-cli": "^4.10.0",
         "webpack-merge": "^5.8.0",
         "webpack-node-externals": "^3.0.0"
     },
     "dependencies": {
-        "@lucilor/utils": "^1.15.2",
+        "@lucilor/utils": "^1.16.0",
         "@svgdotjs/svg.js": "3.1.2",
         "color": "^4.2.3",
         "events": "^3.3.0",
         "lodash": "^4.17.21",
-        "uuid": "^8.3.2"
+        "uuid": "^9.0.0"
     }
 }
