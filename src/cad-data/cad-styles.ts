@@ -3,6 +3,8 @@ export interface FontStyle {
     size?: number;
     family?: string;
     weight?: string;
+    vertical?: boolean;
+    vertical2?: boolean;
 }
 export interface CadStyle {
     color?: string;

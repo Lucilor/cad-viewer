@@ -567,7 +567,7 @@ export class CadViewer extends EventEmitter {
                     }
                 }
             }
-            drawResult = drawText(el, entity.text, insert, anchor, false, fontStyle);
+            drawResult = drawText(el, entity.text, insert, anchor, fontStyle);
         } else if (entity instanceof CadSpline) {
             // TODO
         } else if (entity instanceof CadLeader) {
