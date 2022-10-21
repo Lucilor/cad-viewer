@@ -120,12 +120,9 @@ export class CadEntities {
                         }
                         e = e2;
                     }
-                    const eNew = e.clone(resetIds) as AnyCadEntity;
+                    const eNew = e.clone() as AnyCadEntity;
                     eNew.root = this;
                     this[key].push(eNew);
-                    if (resetIds) {
-                        this.idMap[e.id] = eNew.id;
-                    }
                 });
             } else if (group && typeof group === "object") {
                 Object.values(group).forEach((e) => {
@@ -135,25 +132,11 @@ export class CadEntities {
                     }
                     eNew.root = this;
                     this[key].push(eNew);
-                    if (resetIds) {
-                        this.idMap[e.id] = eNew.id;
-                    }
                 });
             }
         });
         if (resetIds) {
-            this.dimension.forEach((e) => {
-                if (e instanceof CadDimensionLinear) {
-                    const e1Id = this.idMap[e.entity1.id];
-                    const e2Id = this.idMap[e.entity2.id];
-                    if (e1Id) {
-                        e.entity1.id = e1Id;
-                    }
-                    if (e2Id) {
-                        e.entity2.id = e2Id;
-                    }
-                }
-            });
+            this.resetIds();
         }
     }
 
@@ -222,7 +205,8 @@ export class CadEntities {
     }
 
     resetIds() {
-        const idMap: ObjectOf<string> = {};
+        this.idMap = {};
+        const idMap = this.idMap;
         this.forEach((e) => {
             const id = v4();
             idMap[e.id] = id;

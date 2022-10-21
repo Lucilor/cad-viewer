@@ -138,13 +138,13 @@ export class CadData {
     对应计算条数的配件: ObjectOf<string> = {};
     指定板材分组 = "";
 
-    constructor(data?: ObjectOf<any>) {
+    constructor(data?: ObjectOf<any>, resetIds = false) {
         this._entities = new CadEntities();
         this._entities.root = this;
-        this.init(data);
+        this.init(data, resetIds);
     }
 
-    init(data?: ObjectOf<any>) {
+    init(data?: ObjectOf<any>, resetIds = false) {
         if (typeof data !== "object") {
             data = {};
         }
@@ -258,6 +258,9 @@ export class CadData {
         this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
         this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
         this.updateDimensions();
+        if (resetIds) {
+            this.resetIds();
+        }
         return this;
     }
 
@@ -395,27 +398,7 @@ export class CadData {
     }
 
     clone(resetIds = false) {
-        const data = new CadData(this.export());
-        if (resetIds) {
-            data.id = v4();
-            data.layers.forEach((v) => (v.id = v4()));
-            for (const name in data.blocks) {
-                data.blocks[name].forEach((v) => (v.id = v4()));
-            }
-            data.entities = data.entities.clone(true);
-            data.partners = data.partners.map((v) => v.clone(true));
-            data.components.data = data.components.data.map((v) => v.clone(true));
-
-            const idMap = data.entities.idMap;
-            for (const key of intersectionsKeys) {
-                data[key] = data[key].map((v) => v.map((id) => idMap[id] || id));
-            }
-            if (data.info.激光开料标记线) {
-                for (const v of data.info.激光开料标记线) {
-                    v.ids = v.ids.map((id) => idMap[id] || id);
-                }
-            }
-        }
+        const data = new CadData(this.export(), resetIds);
         return data;
     }
 
@@ -436,6 +419,15 @@ export class CadData {
             v.parent = this.id;
             v.resetIds(entitiesOnly);
         });
+        const idMap = this.entities.idMap;
+        for (const key of intersectionsKeys) {
+            this[key] = this[key].map((v) => v.map((id) => idMap[id] || id));
+        }
+        if (this.info.激光开料标记线) {
+            for (const v of this.info.激光开料标记线) {
+                v.ids = v.ids.map((id) => idMap[id] || id);
+            }
+        }
         return this;
     }
 
