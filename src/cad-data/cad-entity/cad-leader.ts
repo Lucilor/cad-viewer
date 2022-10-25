@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
@@ -31,5 +31,8 @@ export class CadLeader extends CadEntity {
 
     protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
         this.vertices.forEach((v) => v.transform(matrix));
+        const m = new Matrix(matrix);
+        const [scaleX, scaleY] = m.scale();
+        this.size *= Math.abs(Math.sqrt(scaleX * scaleY));
     }
 }
