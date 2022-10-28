@@ -137,6 +137,7 @@ export class CadData {
     必须选择板材 = false;
     对应计算条数的配件: ObjectOf<string> = {};
     指定板材分组 = "";
+    拉码碰撞判断 = true;
 
     constructor(data?: ObjectOf<any>, resetIds = false) {
         this._entities = new CadEntities();
@@ -257,6 +258,7 @@ export class CadData {
         this.必须选择板材 = data.必须选择板材 ?? false;
         this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
         this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
+        this.拉码碰撞判断 = data.拉码碰撞判断 ?? true;
         this.updateDimensions();
         if (resetIds) {
             this.resetIds();
@@ -351,7 +353,8 @@ export class CadData {
             拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转,
             必须选择板材: this.必须选择板材,
             对应计算条数的配件: this.对应计算条数的配件,
-            指定板材分组: this.指定板材分组
+            指定板材分组: this.指定板材分组,
+            拉码碰撞判断: this.拉码碰撞判断
         });
     }
 
