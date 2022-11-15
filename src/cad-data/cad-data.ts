@@ -79,6 +79,7 @@ export class CadData {
     id = "";
     numId = 0;
     name = "";
+    name2 = "";
     xianshimingzi = "";
     type = "";
     type2 = "";
@@ -152,6 +153,7 @@ export class CadData {
         this.id = data.id ?? v4();
         this.numId = data.numId ?? 0;
         this.name = data.name ?? "";
+        this.name2 = data.name2 ?? "";
         this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
         this.type2 = data.type2 ?? "";
@@ -296,6 +298,7 @@ export class CadData {
             id: this.id,
             numId: this.numId,
             name: this.name,
+            name2: this.name2,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
             type2: this.type2,
