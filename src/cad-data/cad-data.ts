@@ -139,6 +139,7 @@ export class CadData {
     对应计算条数的配件: ObjectOf<string> = {};
     指定板材分组 = "";
     拉码碰撞判断 = true;
+    双向折弯附加值 = "";
 
     constructor(data?: ObjectOf<any>, resetIds = false) {
         this._entities = new CadEntities();
@@ -261,6 +262,7 @@ export class CadData {
         this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
         this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
         this.拉码碰撞判断 = data.拉码碰撞判断 ?? true;
+        this.双向折弯附加值 = data.双向折弯附加值 ?? "";
         this.updateDimensions();
         if (resetIds) {
             this.resetIds();
@@ -357,7 +359,8 @@ export class CadData {
             必须选择板材: this.必须选择板材,
             对应计算条数的配件: this.对应计算条数的配件,
             指定板材分组: this.指定板材分组,
-            拉码碰撞判断: this.拉码碰撞判断
+            拉码碰撞判断: this.拉码碰撞判断,
+            双向折弯附加值: this.双向折弯附加值
         });
     }
 
