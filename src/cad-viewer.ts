@@ -1,5 +1,5 @@
 import {Box, CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
-import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage} from "@utils";
+import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
@@ -616,6 +616,7 @@ export class CadViewer extends EventEmitter {
                     await this.drawEntity(entity, style);
                 }
             }
+            await timeout(0);
             this.emit("render", entities);
         }
     }
