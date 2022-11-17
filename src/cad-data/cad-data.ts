@@ -79,7 +79,6 @@ export class CadData {
     id = "";
     numId = 0;
     name = "";
-    name2 = "";
     xianshimingzi = "";
     type = "";
     type2 = "";
@@ -140,6 +139,8 @@ export class CadData {
     指定板材分组 = "";
     拉码碰撞判断 = true;
     双向折弯附加值 = "";
+    开孔对应名字 = "";
+    切内空对应名字 = "";
 
     constructor(data?: ObjectOf<any>, resetIds = false) {
         this._entities = new CadEntities();
@@ -154,7 +155,6 @@ export class CadData {
         this.id = data.id ?? v4();
         this.numId = data.numId ?? 0;
         this.name = data.name ?? "";
-        this.name2 = data.name2 ?? "";
         this.xianshimingzi = data.xianshimingzi ?? "";
         this.type = data.type ?? "";
         this.type2 = data.type2 ?? "";
@@ -262,7 +262,8 @@ export class CadData {
         this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
         this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
         this.拉码碰撞判断 = data.拉码碰撞判断 ?? true;
-        this.双向折弯附加值 = data.双向折弯附加值 ?? "";
+        this.开孔对应名字 = data.开孔对应名字 ?? "";
+        this.切内空对应名字 = data.切内空对应名字 ?? "";
         this.updateDimensions();
         if (resetIds) {
             this.resetIds();
@@ -300,7 +301,6 @@ export class CadData {
             id: this.id,
             numId: this.numId,
             name: this.name,
-            name2: this.name2,
             xianshimingzi: this.xianshimingzi,
             type: this.type,
             type2: this.type2,
@@ -360,7 +360,9 @@ export class CadData {
             对应计算条数的配件: this.对应计算条数的配件,
             指定板材分组: this.指定板材分组,
             拉码碰撞判断: this.拉码碰撞判断,
-            双向折弯附加值: this.双向折弯附加值
+            双向折弯附加值: this.双向折弯附加值,
+            开孔对应名字: this.开孔对应名字,
+            切内空对应名字: this.切内空对应名字
         });
     }
 
