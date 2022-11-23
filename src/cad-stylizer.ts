@@ -14,9 +14,12 @@ export class CadStylizer {
             fontStyle: {size: Defaults.FONT_SIZE, family: "", weight: "", ...config.fontStyle, ...params.fontStyle},
             lineStyle: {padding: dashedLinePadding, dashArray: entity.dashArray},
             opacity: 1,
-            dimStyle: {...config.dimStyle, ...params.dimStyle}
+            dimStyle: {text: {size: 16}}
         };
         const result: Required<CadStyle> = {...defaultStyle, ...params};
+        this.mergeDimStyle(result.dimStyle, defaultStyle.dimStyle);
+        this.mergeDimStyle(result.dimStyle, config.dimStyle);
+        this.mergeDimStyle(result.dimStyle, params.dimStyle || {});
         let linewidth: number;
         let color = new ColoredObject(params.color || entity?.getColor() || 0);
         if (params.lineStyle) {
