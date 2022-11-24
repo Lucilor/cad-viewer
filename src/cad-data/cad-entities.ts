@@ -453,7 +453,7 @@ export class CadEntities {
         return [p1, p2, p3, p4];
     }
 
-    getBoundingRect() {
+    getBoundingRect(recursive = true) {
         if (this.length < 1) {
             return new Rectangle(0, 0);
         }
@@ -466,7 +466,7 @@ export class CadEntities {
                     rect.expandByRect(eRect);
                 }
             }
-        }, true);
+        }, recursive);
         return rect;
     }
 

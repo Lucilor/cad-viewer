@@ -944,8 +944,8 @@ export class CadData {
         return this.getAllEntities().getDimensionPoints(dimension);
     }
 
-    getBoundingRect() {
-        return this.getAllEntities().getBoundingRect();
+    getBoundingRect(recursive = true) {
+        return this.getAllEntities().getBoundingRect(recursive);
     }
 }
 
