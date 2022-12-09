@@ -6,9 +6,9 @@ export const entityTypesKey = ["image", "dimension", "hatch", "mtext", "circle",
 export type EntityTypeKey = typeof entityTypesKey[number];
 
 export const entityTypesMap: Record<EntityTypeKey, EntityType> = (() => {
-    const map: Record<string, EntityType> = {};
-    entityTypesKey.forEach((key, index) => {
-        map[key] = entityTypes[index];
-    });
-    return map;
+  const map: Record<string, EntityType> = {};
+  entityTypesKey.forEach((key, index) => {
+    map[key] = entityTypes[index];
+  });
+  return map;
 })();

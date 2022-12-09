@@ -1,22 +1,22 @@
 {
-    "compilerOptions": {
-        "baseUrl": "./",
-        "outDir": "./lib/",
-        "forceConsistentCasingInFileNames": true,
-        "sourceMap": true,
-        "strict": true,
-        "module": "commonjs",
-        "target": "ES2020",
-        "jsx": "react",
-        "allowJs": true,
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "lib": ["esnext", "dom"],
-        "esModuleInterop": true,
-        "paths": {
-            "@utils": ["src/utils/src"]
-        }
-    },
-    "include": ["src/**/*"],
-    "exclude": ["src/utils/**/*"]
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./lib/",
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "strict": true,
+    "module": "commonjs",
+    "target": "ES2020",
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "lib": ["esnext", "dom"],
+    "esModuleInterop": true,
+    "paths": {
+      "@utils": ["src/utils/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/utils/**/*"]
 }

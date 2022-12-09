@@ -10,4 +10,3 @@ export * from "./cad-line";
 export * from "./cad-line-like";
 export * from "./cad-mtext";
 export * from "./cad-spline";
-
