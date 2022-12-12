@@ -132,7 +132,7 @@ export class CadViewer extends EventEmitter {
     this.draw = SVG().addTo(dom).size("100%", "100%");
 
     dom.addEventListener("wheel", controls.onWheel.bind(this));
-    dom.addEventListener("click", controls.onClick.bind(this));
+    // dom.addEventListener("click", controls.onClick.bind(this));
     dom.addEventListener("pointerdown", controls.onPointerDown.bind(this));
     dom.addEventListener("pointermove", controls.onPointerMove.bind(this));
     dom.addEventListener("pointerup", controls.onPointerUp.bind(this));
@@ -758,21 +758,20 @@ export class CadViewer extends EventEmitter {
   }
 
   getWorldPoint(x: number, y: number) {
-    const {height, top, left} = this.draw.node.getBoundingClientRect();
+    const {left, bottom} = this.draw.node.getBoundingClientRect();
     const box = this.draw.viewbox();
     const result = new Point();
     const zoom = this.zoom();
     result.x = (x - left) / zoom + box.x;
-    result.y = (height - y + top) / zoom + box.y;
+    result.y = (bottom - y) / zoom + box.y;
     return result;
   }
 
   getScreenPoint(x: number, y: number) {
-    const {height, top, left, bottom} = this.draw.node.getBoundingClientRect();
+    const {left, bottom} = this.draw.node.getBoundingClientRect();
     const box = this.draw.viewbox();
     const result = new Point();
     const zoom = this.zoom();
-    console.log({height, top, left, bottom, zoom, x, y, box});
     result.x = left + (x - box.x) * zoom;
     result.y = bottom - (y - box.y) * zoom;
     return result;
