@@ -467,6 +467,7 @@ export class CadViewer extends EventEmitter {
               entity.text = String(error);
             }
             entity.fontStyle.size = parent.lengthTextSize;
+            fontStyle.size = entity.fontStyle.size;
             foundOffset = getVectorFromArray(entity.info.offset);
           }
         } else if (entity.info.isGongshiText) {
@@ -506,6 +507,7 @@ export class CadViewer extends EventEmitter {
               entity.text = varName;
             }
             entity.fontStyle.size = lineGongshi;
+            fontStyle.size = entity.fontStyle.size;
             foundOffset = getVectorFromArray(entity.info.offset);
           }
         } else if (entity.info.isBianhuazhiText) {
@@ -519,6 +521,7 @@ export class CadViewer extends EventEmitter {
               entity.text = "";
             }
             entity.fontStyle.size = lineGongshi - 3;
+            fontStyle.size = entity.fontStyle.size;
             foundOffset = getVectorFromArray(entity.info.offset);
           }
         }
