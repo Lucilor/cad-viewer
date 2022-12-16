@@ -76,6 +76,7 @@ export abstract class CadLineLike extends CadEntity {
   开料不要: boolean;
   分体线长公式: string;
   刨坑起始线: boolean;
+  双向折弯附加值 = "";
 
   constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
     super(data, layers, resetId);
@@ -122,6 +123,7 @@ export abstract class CadLineLike extends CadEntity {
     this.开料不要 = data.开料不要 ?? false;
     this.分体线长公式 = data.分体线长公式 ?? "";
     this.刨坑起始线 = data.刨坑起始线 ?? false;
+    this.双向折弯附加值 = data.双向折弯附加值 ?? "";
   }
 
   export(): ObjectOf<any> {
@@ -155,7 +157,8 @@ export abstract class CadLineLike extends CadEntity {
         分体线长公式: this.分体线长公式,
         显示线长: this.显示线长 || undefined,
         线id: this.线id || undefined,
-        刨坑起始线: this.刨坑起始线 || undefined
+        刨坑起始线: this.刨坑起始线 || undefined,
+        双向折弯附加值: this.双向折弯附加值 || undefined
       })
     };
     return result;
