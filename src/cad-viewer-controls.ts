@@ -53,17 +53,6 @@ function onWheel(this: CadViewer, event: WheelEvent) {
   }
 }
 
-function onClick(this: CadViewer, event: MouseEvent) {
-  event.preventDefault();
-  this.dom.focus();
-  if (this.entitiesCopied) {
-    this.emit("entitiespaste", this.entitiesCopied);
-    this.entitiesCopied = undefined;
-  } else {
-    this.emit("click", event);
-  }
-}
-
 function onPointerDown(this: CadViewer, event: PointerEvent) {
   event.preventDefault();
   const {clientX, clientY, button: eBtn} = event;
@@ -185,6 +174,12 @@ function onPointerUp(this: CadViewer, event: PointerEvent) {
     const {from, to} = pointer;
     if (from.distanceTo(to) < 1) {
       this.emit("click", event);
+      if (this.entitiesCopied) {
+        this.emit("entitiespaste", this.entitiesCopied);
+        this.entitiesCopied = undefined;
+      } else {
+        this.emit("click", event);
+      }
     } else if (multiSelector) {
       const rect = new Rectangle(from, to).justify();
       const toSelect = Array<CadEntity>();
@@ -215,6 +210,7 @@ function onPointerUp(this: CadViewer, event: PointerEvent) {
     toRender = null;
   }
   entitiesToDrag = entitiesNotToDrag = draggingDimension = null;
+  this.dom.focus();
   this.emit("pointerup", event);
 }
 
@@ -302,7 +298,6 @@ function onEntityPointerUp(this: CadViewer, event: PointerEvent, entity: CadEnti
 
 export const controls = {
   onWheel,
-  onClick,
   onPointerDown,
   onPointerMove,
   onPointerUp,

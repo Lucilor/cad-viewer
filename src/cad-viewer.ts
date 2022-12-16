@@ -132,7 +132,6 @@ export class CadViewer extends EventEmitter {
     this.draw = SVG().addTo(dom).size("100%", "100%");
 
     dom.addEventListener("wheel", controls.onWheel.bind(this));
-    // dom.addEventListener("click", controls.onClick.bind(this));
     dom.addEventListener("pointerdown", controls.onPointerDown.bind(this));
     dom.addEventListener("pointermove", controls.onPointerMove.bind(this));
     dom.addEventListener("pointerup", controls.onPointerUp.bind(this));
