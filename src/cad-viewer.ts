@@ -474,7 +474,7 @@ export class CadViewer extends EventEmitter {
             el.remove();
             entity.el = null;
           } else {
-            const {mingzi, mingzi2, gongshi, 刨坑起始线} = parent;
+            const {mingzi, mingzi2, gongshi, 刨坑起始线, 双向折弯附加值} = parent;
             const mingzi3 = mingzi || mingzi2;
             const arr: string[] = [];
             if (gongshi) {
@@ -487,6 +487,9 @@ export class CadViewer extends EventEmitter {
             }
             if (刨坑起始线) {
               arr.push("刨坑起始线");
+            }
+            if (双向折弯附加值) {
+              arr.push(双向折弯附加值);
             }
             entity.text = arr.join("\n");
             let varName = "";

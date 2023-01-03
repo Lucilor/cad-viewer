@@ -140,6 +140,8 @@ export class CadData {
   拉码碰撞判断 = true;
   开孔对应名字 = "";
   切内空对应名字 = "";
+  默认开料材料 = "";
+  默认开料板材厚度 = "";
 
   constructor(data?: ObjectOf<any>, resetIds = false) {
     this._entities = new CadEntities();
@@ -263,6 +265,8 @@ export class CadData {
     this.拉码碰撞判断 = data.拉码碰撞判断 ?? true;
     this.开孔对应名字 = data.开孔对应名字 ?? "";
     this.切内空对应名字 = data.切内空对应名字 ?? "";
+    this.默认开料材料 = data.默认开料材料 ?? "";
+    this.默认开料板材厚度 = data.默认开料板材厚度 ?? "";
     this.updateDimensions();
     if (resetIds) {
       this.resetIds();
@@ -360,7 +364,9 @@ export class CadData {
       指定板材分组: this.指定板材分组,
       拉码碰撞判断: this.拉码碰撞判断,
       开孔对应名字: this.开孔对应名字,
-      切内空对应名字: this.切内空对应名字
+      切内空对应名字: this.切内空对应名字,
+      默认开料材料: this.默认开料材料,
+      默认开料板材厚度: this.默认开料板材厚度
     });
   }
 
