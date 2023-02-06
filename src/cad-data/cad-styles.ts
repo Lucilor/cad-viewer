@@ -30,4 +30,4 @@ export interface CadDimensionStyle {
 }
 
 export const cadDimensionTypes = ["linear", "angular", "radius"] as const;
-export type CadDimensionType = typeof cadDimensionTypes[number];
+export type CadDimensionType = (typeof cadDimensionTypes)[number];

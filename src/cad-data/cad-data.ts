@@ -34,7 +34,7 @@ export enum CadVersion {
 }
 
 export const suanliaochuliValues = ["算料+显示展开+开料", "算料+开料", "算料+显示展开", "算料"] as const;
-export type Suanliaochuli = typeof suanliaochuliValues[number];
+export type Suanliaochuli = (typeof suanliaochuliValues)[number];
 
 export const suanliaodanxianshiValues = [
   "尺寸",
@@ -59,10 +59,10 @@ export const suanliaodanxianshiValues = [
   "都不显示",
   "所有"
 ] as const;
-export type Suanliaodanxianshi = typeof suanliaodanxianshiValues[number];
+export type Suanliaodanxianshi = (typeof suanliaodanxianshiValues)[number];
 
 export const intersectionsKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
-export type IntersectionKey = typeof intersectionsKeys[number];
+export type IntersectionKey = (typeof intersectionsKeys)[number];
 
 export class CadData {
   private _entities: CadEntities;
