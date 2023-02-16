@@ -61,8 +61,13 @@ export const suanliaodanxianshiValues = [
 ] as const;
 export type Suanliaodanxianshi = (typeof suanliaodanxianshiValues)[number];
 
-export const intersectionsKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
-export type IntersectionKey = (typeof intersectionsKeys)[number];
+export const intersectionKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
+export type IntersectionKey = (typeof intersectionKeys)[number];
+export const intersectionKeysTranslate: Record<IntersectionKey, string> = {
+  zhidingweizhipaokeng: "指定位置刨坑",
+  指定分体位置: "指定分体位置",
+  指定位置不折: "指定位置不折"
+};
 
 export class CadData {
   private _entities: CadEntities;
@@ -435,7 +440,7 @@ export class CadData {
       v.resetIds(entitiesOnly);
     });
     const idMap = this.entities.idMap;
-    for (const key of intersectionsKeys) {
+    for (const key of intersectionKeys) {
       this[key] = this[key].map((v) => v.map((id) => idMap[id] || id));
     }
     if (this.info.激光开料标记线) {
