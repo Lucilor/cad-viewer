@@ -1,8 +1,8 @@
-import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 
 export class CadSpline extends CadEntity {
   type: EntityType = "SPLINE";

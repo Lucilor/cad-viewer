@@ -1,11 +1,11 @@
-import {ObjectOf, Rectangle} from "@utils";
-import {cloneDeep} from "lodash";
 import {CadStylizer} from "../../cad-stylizer";
 import {purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimensionStyle} from "../cad-styles";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {ObjectOf, Rectangle} from "@utils";
+import {cloneDeep} from "lodash";
 
 export interface CadDimensionEntity {
   id: string;

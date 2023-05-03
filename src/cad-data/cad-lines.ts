@@ -1,8 +1,8 @@
-import {DEFAULT_TOLERANCE, Point} from "@utils";
 import {CadArc, CadLine, CadLineLike, CadMtext, DEFAULT_LENGTH_TEXT_SIZE} from "..";
 import {getVectorFromArray} from "../cad-utils";
 import {CadData} from "./cad-data";
 import {CadEntities} from "./cad-entities";
+import {DEFAULT_TOLERANCE, Point} from "@utils";
 
 export type PointsMap = {
   point: Point;

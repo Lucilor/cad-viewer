@@ -1,12 +1,12 @@
-import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
-import {cloneDeep, uniqWith, intersection} from "lodash";
-import {v4} from "uuid";
 import {getArray, getObject, mergeArray, mergeObject, separateArray, separateObject, getVectorFromArray, purgeObject} from "../cad-utils";
 import {CadEntities, getCadEntity} from "./cad-entities";
 import {CadCircle, CadDimension, CadEntity, CadLine} from "./cad-entity";
 import {CadDimensionLinear} from "./cad-entity/cad-dimension-linear";
 import {CadLayer} from "./cad-layer";
 import {isLinesParallel} from "./cad-lines";
+import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
+import {cloneDeep, uniqWith, intersection} from "lodash";
+import {v4} from "uuid";
 
 export interface CadDataInfo {
   [key: string]: any;

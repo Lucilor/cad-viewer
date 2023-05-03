@@ -1,8 +1,8 @@
-import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
 import {CadLineLike} from "./cad-line-like";
+import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 
 export class CadLine extends CadLineLike {
   type: EntityType = "LINE";

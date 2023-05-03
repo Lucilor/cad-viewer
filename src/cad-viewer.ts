@@ -1,7 +1,3 @@
-import {Box, CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
-import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@utils";
-import {EventEmitter} from "events";
-import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";
 import {CadEntities} from "./cad-data/cad-entities";
 import {
@@ -25,6 +21,10 @@ import {CadStylizer} from "./cad-stylizer";
 import {getVectorFromArray, toFixedTrim} from "./cad-utils";
 import {CadEventCallBack, CadEvents, controls} from "./cad-viewer-controls";
 import {drawArc, drawCircle, drawDimensionLinear, drawImage, drawLeader, drawLine, drawShape, drawText} from "./draw";
+import {Box, CoordinateXY, Element, G, Point as SvgPoint, SVG, Svg} from "@svgdotjs/svg.js";
+import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@utils";
+import {EventEmitter} from "events";
+import {cloneDeep} from "lodash";
 
 export interface CadViewerFont {
   name: string;

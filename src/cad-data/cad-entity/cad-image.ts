@@ -1,10 +1,10 @@
-import {exportObject, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
-import {Properties} from "csstype";
-import {isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {exportObject, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {Properties} from "csstype";
+import {isEqual} from "lodash";
 
 export class CadImage extends CadEntity {
   type: EntityType = "IMAGE";

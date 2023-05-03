@@ -1,10 +1,10 @@
-import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
-import {cloneDeep, isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {FontStyle} from "../cad-styles";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {cloneDeep, isEqual} from "lodash";
 
 export interface CadMtextInfo {
   [key: string]: any;

@@ -1,8 +1,8 @@
-import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
-import {Angle, Arc, Line, Matrix, Point} from "@utils";
 import {CadImage} from "./cad-data";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";
+import {Circle as SvgCircle, Container, Element, Image, Line as SvgLine, Path, PathArrayAlias, Text} from "@svgdotjs/svg.js";
+import {Angle, Arc, Line, Matrix, Point} from "@utils";
 
 const setLineStyle = (el: Element, style: LineStyle) => {
   const {color, width, dashArray} = style;

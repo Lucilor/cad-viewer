@@ -1,6 +1,6 @@
-import {v4} from "uuid";
 import {lineweight2linewidth, linewidth2lineweight} from "../cad-utils";
 import {ColoredObject} from "../colored-object";
+import {v4} from "uuid";
 
 export class CadLayer extends ColoredObject {
   id: string;

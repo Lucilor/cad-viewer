@@ -30,6 +30,7 @@
   "homepage": "https://github.com/Lucilor/cad-viewer#readme",
   "packageManager": "yarn@3.5.1",
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/color": "^3.0.3",
     "@types/events": "^3.0.0",
     "@types/lodash": "^4.14.194",

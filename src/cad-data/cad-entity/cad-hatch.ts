@@ -1,8 +1,8 @@
-import {Point, ObjectOf, Matrix, Rectangle} from "@utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
+import {Point, ObjectOf, Matrix, Rectangle} from "@utils";
 
 export class CadHatch extends CadEntity {
   type: EntityType = "HATCH";
