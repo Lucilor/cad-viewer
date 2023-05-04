@@ -1,10 +1,10 @@
+import {keysOf} from "@utils";
+import {cloneDeep} from "lodash";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";
 import {Defaults} from "./cad-utils";
 import {CadViewerConfig} from "./cad-viewer";
 import {ColoredObject} from "./colored-object";
-import {keysOf} from "@utils";
-import {cloneDeep} from "lodash";
 
 export class CadStylizer {
   static get(entity: CadEntity, config: CadViewerConfig, params: CadStyle = {}) {

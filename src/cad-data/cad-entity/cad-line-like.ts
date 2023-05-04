@@ -1,8 +1,8 @@
+import {ObjectOf, Point} from "@utils";
 import {purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {CadEntity} from "./cad-entity";
-import {ObjectOf, Point} from "@utils";
 
 export const 变化方式 = [
   "按比例",

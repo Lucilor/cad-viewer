@@ -1,7 +1,7 @@
+import {Matrix, ObjectOf, Point} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimension, CadDimensionEntity} from "./cad-dimension";
-import {Matrix, ObjectOf, Point} from "@utils";
 
 export class CadDimensionLinear extends CadDimension {
   axis: "x" | "y";

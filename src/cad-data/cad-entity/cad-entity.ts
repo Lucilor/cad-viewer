@@ -1,12 +1,12 @@
+import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
+import {Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
+import {cloneDeep} from "lodash";
+import {v4} from "uuid";
 import {Defaults, lineweight2linewidth, linewidth2lineweight, purgeObject} from "../../cad-utils";
 import {ColoredObject} from "../../colored-object";
 import {CadEntities} from "../cad-entities";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
-import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
-import {Matrix, MatrixLike, ObjectOf, Rectangle} from "@utils";
-import {cloneDeep} from "lodash";
-import {v4} from "uuid";
 
 export abstract class CadEntity extends ColoredObject {
   id: string;

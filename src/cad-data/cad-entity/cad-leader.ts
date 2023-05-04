@@ -1,8 +1,8 @@
+import {Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
 import {CadEntity} from "./cad-entity";
-import {Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
 
 export class CadLeader extends CadEntity {
   type: EntityType = "LEADER";

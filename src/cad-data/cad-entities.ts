@@ -1,3 +1,5 @@
+import {MatrixLike, ObjectOf, Rectangle} from "@utils";
+import {v4} from "uuid";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadData} from "./cad-data";
 import {
@@ -18,9 +20,7 @@ import {CadImage} from "./cad-entity/cad-image";
 import {CadInsert} from "./cad-entity/cad-insert";
 import {CadLayer} from "./cad-layer";
 import {CadDimensionType} from "./cad-styles";
-import {entityTypesKey, EntityTypeKey, EntityType, entityTypesMap} from "./cad-types";
-import {MatrixLike, ObjectOf, Rectangle} from "@utils";
-import {v4} from "uuid";
+import {EntityType, EntityTypeKey, entityTypesKey, entityTypesMap} from "./cad-types";
 
 export const DEFAULT_LENGTH_TEXT_SIZE = 24;
 

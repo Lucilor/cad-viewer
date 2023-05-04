@@ -4,5 +4,6 @@
   "importOrder": ["<THIRD_PARTY_MODULES>", "^[./]"],
   "importOrderSortSpecifiers": true,
   "importOrderGroupNamespaceSpecifiers": true,
+  "importOrderCaseInsensitive": true,
   "importOrderParserPlugins": ["typescript", "decorators-legacy"]
 }
