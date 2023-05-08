@@ -58,7 +58,7 @@ export class CadLine extends CadLineLike {
     }
   }
 
-  protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
+  protected _transform(matrix: MatrixLike) {
     this.start.transform(matrix);
     this.end.transform(matrix);
   }

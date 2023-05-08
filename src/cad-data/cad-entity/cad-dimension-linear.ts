@@ -37,7 +37,7 @@ export class CadDimensionLinear extends CadDimension {
     this.cad2 = data.cad2 ?? "";
   }
 
-  protected _transform(matrix: Matrix, isFromParent?: boolean) {
+  protected _transform(matrix: Matrix) {
     if (this.defPoints) {
       this.defPoints.forEach((v) => v.transform(matrix));
     }

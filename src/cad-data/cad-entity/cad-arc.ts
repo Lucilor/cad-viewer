@@ -45,7 +45,7 @@ export class CadArc extends CadLineLike {
     this.clockwise = data.clockwise ?? false;
   }
 
-  protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
+  protected _transform(matrix: MatrixLike) {
     matrix = new Matrix(matrix);
     const curve = this.curve;
     curve.transform(matrix);

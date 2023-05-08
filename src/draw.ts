@@ -305,8 +305,8 @@ const loadImageEl = async (el: Image, url: string) => {
   if (el.attr("href") === url) {
     return;
   }
-  return new Promise<void>((resolve, reject) => {
-    el.load(url, (event) => {
+  return new Promise<void>((resolve) => {
+    el.load(url, () => {
       resolve();
     });
   });

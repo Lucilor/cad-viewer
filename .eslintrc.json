@@ -10,6 +10,7 @@
         "project": "tsconfig.json",
         "createDefaultProgram": true
       },
+      "plugins": ["deprecation"],
       "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
@@ -25,27 +26,13 @@
             "leadingUnderscore": "allowSingleOrDouble"
           }
         ],
-        "@typescript-eslint/no-unused-vars": [
-          "warn",
-          {
-            "argsIgnorePattern": "."
-          }
-        ],
         "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "guard-for-in": "off",
-        "no-underscore-dangle": "off",
-        "no-console": "off",
-        "eqeqeq": ["error", "always"],
-        "prefer-arrow-callback": "error",
-        "arrow-parens": "error",
-        "arrow-body-style": ["error", "as-needed"],
         "@typescript-eslint/no-shadow": "error",
+        "comma-dangle": ["error", "never"],
+        "deprecation/deprecation": "warn",
+        "eqeqeq": ["error", "always"],
         "no-empty": ["error", {"allowEmptyCatch": true}],
-        "object-curly-spacing": ["error", "never"],
-        "array-bracket-spacing": ["error", "never"],
-        "object-shorthand": ["error", "always"],
-        "comma-dangle": ["error", "never"]
+        "no-underscore-dangle": "off"
       }
     }
   ]

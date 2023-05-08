@@ -817,6 +817,7 @@ export class CadViewer extends EventEmitter {
   toBase64() {
     let str = new XMLSerializer().serializeToString(this.draw.node);
     // FIXME: window.unescape is deprecated
+    // eslint-disable-next-line deprecation/deprecation
     str = unescape(encodeURIComponent(str));
     return "data:image/svg+xml;base64," + window.btoa(str);
   }
@@ -906,7 +907,7 @@ export class CadViewer extends EventEmitter {
     if (!dataUrl) {
       const response = await fetch(url);
       const blob = await response.blob();
-      dataUrl = await new Promise<string | null>((resolve, reject) => {
+      dataUrl = await new Promise<string | null>((resolve) => {
         const fileReader = new FileReader();
         fileReader.readAsDataURL(blob);
         fileReader.onload = () => {

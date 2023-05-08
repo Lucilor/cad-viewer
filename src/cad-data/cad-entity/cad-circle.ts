@@ -37,7 +37,7 @@ export class CadCircle extends CadLineLike {
     this.radius = data.radius ?? 0;
   }
 
-  protected _transform(matrix: Matrix, isFromParent?: boolean) {
+  protected _transform(matrix: Matrix) {
     this.center.transform(matrix);
   }
 

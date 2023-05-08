@@ -29,7 +29,7 @@ export class CadLeader extends CadEntity {
     return this._afterClone(new CadLeader(this.export(), [], resetId));
   }
 
-  protected _transform(matrix: MatrixLike, isFromParent?: boolean) {
+  protected _transform(matrix: MatrixLike) {
     this.vertices.forEach((v) => v.transform(matrix));
     const m = new Matrix(matrix);
     const [scaleX, scaleY] = m.scale();
