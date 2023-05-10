@@ -10,12 +10,12 @@
         "project": "tsconfig.json",
         "createDefaultProgram": true
       },
-      "plugins": ["deprecation"],
+      "plugins": ["deprecation", "prettier"],
       "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
-        "prettier"
+        "plugin:prettier/recommended"
       ],
       "rules": {
         "@typescript-eslint/naming-convention": [

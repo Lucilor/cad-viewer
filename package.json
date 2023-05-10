@@ -13,7 +13,7 @@
     "build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js",
     "prepublish": "yarn build",
     "lint": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write . --ignore-path .eslintignore"
   },
   "repository": {
     "type": "git",
@@ -43,6 +43,7 @@
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-deprecation": "^1.4.1",
+    "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.8",
     "terser-webpack-plugin": "^5.3.8",
     "ts-loader": "^9.4.2",
