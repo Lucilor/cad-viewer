@@ -1,4 +1,4 @@
-import {ObjectOf, Point} from "@utils";
+import {getTypeOf, ObjectOf, Point} from "@utils";
 import {cloneDeep} from "lodash";
 
 export class Defaults {
@@ -32,14 +32,14 @@ export const getVectorsFromArray = (data: any, defaultVal = new Point()) => {
 };
 
 export const getArray = <T>(data: any): T[] => {
-  if (Array.isArray(data)) {
+  if (getTypeOf(data) === "array") {
     return cloneDeep(data);
   }
   return [];
 };
 
 export const getObject = <T>(data: any): ObjectOf<T> => {
-  if (data && typeof data === "object" && !Array.isArray(data)) {
+  if (getTypeOf(data) === "object") {
     return cloneDeep(data);
   }
   return {};

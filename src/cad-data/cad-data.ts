@@ -1,7 +1,7 @@
-import {keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
+import {getTypeOf, keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, intersection, uniqWith} from "lodash";
 import {v4} from "uuid";
-import {getArray, getObject, getVectorFromArray, mergeArray, mergeObject, purgeObject, separateArray, separateObject} from "../cad-utils";
+import {getObject, getVectorFromArray, mergeArray, mergeObject, purgeObject, separateArray, separateObject} from "../cad-utils";
 import {CadEntities, getCadEntity} from "./cad-entities";
 import {CadCircle, CadDimension, CadEntity, CadLine} from "./cad-entity";
 import {CadDimensionLinear} from "./cad-entity/cad-dimension-linear";
@@ -40,6 +40,70 @@ export const intersectionKeysTranslate: Record<IntersectionKey, string> = {
   指定分体位置: "指定分体位置",
   指定位置不折: "指定位置不折"
 };
+
+const propertyKeys: (keyof CadData)[] = [
+  "numId",
+  "name",
+  "xianshimingzi",
+  "type",
+  "type2",
+  "conditions",
+  "options",
+  "parent",
+  "huajian",
+  "xinghaohuajian",
+  "mubanfangda",
+  "kailiaoshibaokeng",
+  "bianxingfangshi",
+  "bancaiwenlifangxiang",
+  "huajianwenlifangxiang",
+  "kailiaopaibanfangshi",
+  "morenkailiaobancai",
+  "gudingkailiaobancai",
+  "suanliaochuli",
+  "showKuandubiaozhu",
+  "info",
+  "attributes",
+  "bancaihoudufangxiang",
+  "suanliaodanxianshibancai",
+  "needsHuajian",
+  "kedulibancai",
+  "shuangxiangzhewan",
+  "suanliaodanxianshi",
+  "zhidingweizhipaokeng",
+  "指定分体位置",
+  "指定位置不折",
+  "suanliaodanZoom",
+  "企料前后宽同时改变",
+  "主CAD",
+  "算料单展开显示位置",
+  "属于门框门扇",
+  "内开做分体",
+  "板材绑定选项",
+  "算料单线长显示的最小长度",
+  "检查企料厚度",
+  "对应门扇厚度",
+  "跟随CAD开料板材",
+  "算料特殊要求",
+  "正面宽差值",
+  "墙厚差值",
+  "企料翻转",
+  "装配位置",
+  "企料包边门框配合位增加值",
+  "企料包边类型",
+  "指定封口厚度",
+  "显示厚度",
+  "拼接料拼接时垂直翻转",
+  "必须选择板材",
+  "对应计算条数的配件",
+  "指定板材分组",
+  "拉码碰撞判断",
+  "开孔对应名字",
+  "切内空对应名字",
+  "默认开料材料",
+  "默认开料板材厚度",
+  "自动生成双折宽双折高公式"
+];
 
 export class CadData {
   private _entities: CadEntities;
@@ -124,19 +188,14 @@ export class CadData {
   constructor(data?: ObjectOf<any>, resetIds = false) {
     this._entities = new CadEntities();
     this._entities.root = this;
-    this.init(data, resetIds);
+    this.import(data, resetIds);
   }
 
-  init(data?: ObjectOf<any>, resetIds = false) {
+  import(data?: ObjectOf<any>, resetIds = false) {
     if (typeof data !== "object") {
       data = {};
     }
     this.id = data.id ?? v4();
-    this.numId = data.numId ?? 0;
-    this.name = data.name ?? "";
-    this.xianshimingzi = data.xianshimingzi ?? "";
-    this.type = data.type ?? "";
-    this.type2 = data.type2 ?? "";
     this.layers = [];
     if (typeof data.layers === "object") {
       for (const id in data.layers) {
@@ -156,8 +215,6 @@ export class CadData {
     } else {
       this.blocks = {};
     }
-    this.conditions = getArray(data.conditions);
-    this.options = getObject(data.options);
     this.baseLines = [];
     if (Array.isArray(data.baseLines)) {
       data.baseLines.forEach((v) => {
@@ -170,7 +227,6 @@ export class CadData {
         this.jointPoints.push(new CadJointPoint(v));
       });
     }
-    this.parent = data.parent ?? "";
     this.partners = [];
     this.components = new CadComponents();
     if (Array.isArray(data.partners)) {
@@ -179,21 +235,6 @@ export class CadData {
     this.updatePartners();
     this.components = new CadComponents(getObject(data.components));
     this.updateComponents();
-    this.huajian = data.huajian ?? "";
-    this.xinghaohuajian = getObject(data.xinghaohuajian);
-    this.mubanfangda = data.mubanfangda ?? true;
-    this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
-    this.bianxingfangshi = data.bianxingfangshi ?? "";
-    this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "";
-    this.huajianwenlifangxiang = data.huajianwenlifangxiang ?? "";
-    this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "";
-    this.morenkailiaobancai = data.morenkailiaobancai ?? "";
-    this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
-    this.suanliaochuli = data.suanliaochuli ?? "";
-    this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
-    this.info = getObject(data.info);
-    this.attributes = getObject(data.attributes);
-    this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "";
     if (Array.isArray(data.zhankai) && data.zhankai.length > 0) {
       this.zhankai = data.zhankai.map((v) => new CadZhankai(v));
     } else {
@@ -202,53 +243,17 @@ export class CadData {
     if (data.kailiaomuban && !this.zhankai[0].kailiaomuban) {
       this.zhankai[0].kailiaomuban = data.kailiaomuban;
     }
-    this.suanliaodanxianshibancai = data.suanliaodanxianshibancai ?? true;
-    this.needsHuajian = data.needsHuajian ?? true;
-    this.kedulibancai = data.kedulibancai ?? false;
-    this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
-    this.suanliaodanxianshi = data.suanliaodanxianshi ?? "";
-    this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
-    this.指定分体位置 = data.指定分体位置 ?? [];
-    this.指定位置不折 = data.指定位置不折 ?? [];
-    this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
-    this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
-    this.主CAD = data.主CAD ?? false;
-    this.算料单展开显示位置 = data.算料单展开显示位置 ?? "";
-    this.属于门框门扇 = data.属于门框门扇 ?? "";
-    this.内开做分体 = data.内开做分体 ?? false;
-    this.板材绑定选项 = data.板材绑定选项 ?? "";
-    this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? null;
-    this.检查企料厚度 = data.检查企料厚度 ?? true;
-    this.对应门扇厚度 = data.对应门扇厚度 ?? 0;
-    this.跟随CAD开料板材 = data.跟随CAD开料板材 ?? null;
-    this.算料特殊要求 = data.算料特殊要求 ?? null;
-    this.正面宽差值 = data.正面宽差值 ?? 0;
-    this.墙厚差值 = data.墙厚差值 ?? 0;
-    this.企料翻转 = data.企料翻转 ?? false;
-    this.装配位置 = data.装配位置 ?? "";
-    this.企料包边门框配合位增加值 = data.企料包边门框配合位增加值 ?? 0;
-    this.企料包边类型 = data.企料包边类型 ?? "自动判断";
-    this.指定封口厚度 = data.指定封口厚度 ?? "";
-    this.显示厚度 = data.显示厚度 ?? "";
-    this.拼接料拼接时垂直翻转 = data.拼接料拼接时垂直翻转 ?? false;
-    this.必须选择板材 = data.必须选择板材 ?? false;
-    this.对应计算条数的配件 = data.对应计算条数的配件 ?? {};
-    this.指定板材分组 = data.指定板材分组 ?? this.指定板材分组;
-    this.拉码碰撞判断 = data.拉码碰撞判断 ?? true;
-    this.开孔对应名字 = data.开孔对应名字 ?? "";
-    this.切内空对应名字 = data.切内空对应名字 ?? "";
-    this.默认开料材料 = data.默认开料材料 ?? "";
-    this.默认开料板材厚度 = data.默认开料板材厚度 ?? "";
-    this.自动生成双折宽双折高公式 = data.自动生成双折宽双折高公式 ?? true;
+    for (const key of propertyKeys) {
+      const sourceValue = data[key];
+      if (getTypeOf(sourceValue) === getTypeOf(this[key])) {
+        (this as any)[key] = cloneDeep(sourceValue);
+      }
+    }
     this.updateDimensions();
     if (resetIds) {
       this.resetIds();
     }
     return this;
-  }
-
-  copy(data: CadData) {
-    return this.init(data);
   }
 
   export(): ObjectOf<any> {
@@ -270,78 +275,29 @@ export class CadData {
         blocks[name] = block.map((v) => v.export());
       }
     }
-    return purgeObject({
+    const result: ObjectOf<any> = {
       layers: exLayers,
       entities: this.entities.export(),
       blocks,
       id: this.id,
-      numId: this.numId,
-      name: this.name,
-      xianshimingzi: this.xianshimingzi,
-      type: this.type,
-      type2: this.type2,
-      conditions: this.conditions.filter((v) => v),
-      options,
       baseLines: this.baseLines.map((v) => v.export()).filter((v) => v.name && v.idX && v.idY),
       jointPoints: this.jointPoints.map((v) => v.export()),
-      parent: this.parent,
       partners: this.partners.map((v) => v.export()),
       components: this.components.export(),
-      huajian: this.huajian,
-      xinghaohuajian: this.xinghaohuajian,
-      mubanfangda: this.mubanfangda,
-      kailiaoshibaokeng: this.kailiaoshibaokeng,
-      bianxingfangshi: this.bianxingfangshi,
-      bancaiwenlifangxiang: this.bancaiwenlifangxiang,
-      huajianwenlifangxiang: this.huajianwenlifangxiang,
-      kailiaopaibanfangshi: this.kailiaopaibanfangshi,
-      morenkailiaobancai: this.morenkailiaobancai,
-      gudingkailiaobancai: this.gudingkailiaobancai,
-      suanliaochuli: this.suanliaochuli,
-      showKuandubiaozhu: this.showKuandubiaozhu,
-      info: this.info,
-      attributes: this.attributes,
-      bancaihoudufangxiang: this.bancaihoudufangxiang,
-      zhankai: this.zhankai.map((v) => v.export()),
-      suanliaodanxianshibancai: this.suanliaodanxianshibancai,
-      needsHuajian: this.needsHuajian,
-      kedulibancai: this.kedulibancai,
-      shuangxiangzhewan: this.shuangxiangzhewan,
-      suanliaodanxianshi: this.suanliaodanxianshi,
-      zhidingweizhipaokeng: this.zhidingweizhipaokeng,
-      指定分体位置: this.指定分体位置,
-      指定位置不折: this.指定位置不折,
-      suanliaodanZoom: this.suanliaodanZoom,
-      企料前后宽同时改变: this.企料前后宽同时改变,
-      主CAD: this.主CAD,
-      算料单展开显示位置: this.算料单展开显示位置,
-      属于门框门扇: this.属于门框门扇,
-      内开做分体: this.内开做分体,
-      板材绑定选项: this.板材绑定选项,
-      算料单线长显示的最小长度: this.算料单线长显示的最小长度,
-      检查企料厚度: this.检查企料厚度,
-      对应门扇厚度: this.对应门扇厚度,
-      跟随CAD开料板材: this.跟随CAD开料板材,
-      算料特殊要求: this.算料特殊要求,
-      正面宽差值: this.正面宽差值,
-      墙厚差值: this.墙厚差值,
-      企料翻转: this.企料翻转,
-      装配位置: this.装配位置,
-      企料包边门框配合位增加值: this.企料包边门框配合位增加值,
-      企料包边类型: this.企料包边类型,
-      指定封口厚度: this.指定封口厚度,
-      显示厚度: this.显示厚度,
-      拼接料拼接时垂直翻转: this.拼接料拼接时垂直翻转,
-      必须选择板材: this.必须选择板材,
-      对应计算条数的配件: this.对应计算条数的配件,
-      指定板材分组: this.指定板材分组,
-      拉码碰撞判断: this.拉码碰撞判断,
-      开孔对应名字: this.开孔对应名字,
-      切内空对应名字: this.切内空对应名字,
-      默认开料材料: this.默认开料材料,
-      默认开料板材厚度: this.默认开料板材厚度,
-      自动生成双折宽双折高公式: this.自动生成双折宽双折高公式
-    });
+      zhankai: this.zhankai.map((v) => v.export())
+    };
+    for (const key of propertyKeys) {
+      if (key === "conditions") {
+        result[key] = this[key].filter(Boolean);
+      } else {
+        result[key] = this[key];
+      }
+    }
+    return purgeObject(result);
+  }
+
+  copy(data: CadData) {
+    return this.import(data);
   }
 
   getAllEntities() {
