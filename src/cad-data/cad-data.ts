@@ -33,34 +33,6 @@ export enum CadVersion {
   DXF2018 = "AC1032"
 }
 
-export const suanliaochuliValues = ["算料+显示展开+开料", "算料+开料", "算料+显示展开", "算料"] as const;
-export type Suanliaochuli = (typeof suanliaochuliValues)[number];
-
-export const suanliaodanxianshiValues = [
-  "尺寸",
-  "板材",
-  "尺寸+板材",
-  "名字",
-  "名字+板材",
-  "名字+展开宽",
-  "名字+展开宽+展开高",
-  "名字+展开高+展开宽",
-  "名字+展开高+板材",
-  "名字+展开宽+展开高+板材",
-  "名字+展开高",
-  "展开宽",
-  "展开高",
-  "展开宽+展开高",
-  "展开高+展开宽",
-  "展开宽+板材",
-  "展开高+板材",
-  "展开宽+展开高+板材",
-  "展开高+展开宽+板材",
-  "都不显示",
-  "所有"
-] as const;
-export type Suanliaodanxianshi = (typeof suanliaodanxianshiValues)[number];
-
 export const intersectionKeys = ["zhidingweizhipaokeng", "指定分体位置", "指定位置不折"] as const;
 export type IntersectionKey = (typeof intersectionKeys)[number];
 export const intersectionKeysTranslate: Record<IntersectionKey, string> = {
@@ -98,31 +70,31 @@ export class CadData {
   xinghaohuajian: ObjectOf<string> = {};
   mubanfangda = true;
   kailiaoshibaokeng = false;
-  bianxingfangshi: "自由" | "高比例变形" | "宽比例变形" | "宽高比例变形" = "自由";
-  bancaiwenlifangxiang: "垂直" | "水平" | "不限" | "指定垂直" | "指定水平" | "指定不限" = "垂直";
-  huajianwenlifangxiang?: "垂直" | "水平" = "垂直";
-  kailiaopaibanfangshi: "自动排版" | "不排版" | "必须排版" = "自动排版";
+  bianxingfangshi = "";
+  bancaiwenlifangxiang = "";
+  huajianwenlifangxiang = "";
+  kailiaopaibanfangshi = "";
   morenkailiaobancai = "";
   gudingkailiaobancai = "";
-  suanliaochuli: Suanliaochuli = "算料+显示展开+开料";
+  suanliaochuli = "";
   showKuandubiaozhu = false;
   info: CadDataInfo = {};
   attributes: ObjectOf<string> = {};
-  bancaihoudufangxiang: "none" | "gt0" | "lt0" = "none";
+  bancaihoudufangxiang = "";
   zhankai: CadZhankai[] = [];
   suanliaodanxianshibancai = true;
   needsHuajian = true;
   kedulibancai = false;
   shuangxiangzhewan = false;
-  suanliaodanxianshi: Suanliaodanxianshi = "展开宽+展开高+板材";
+  suanliaodanxianshi = "";
   zhidingweizhipaokeng: string[][] = [];
   指定分体位置: string[][] = [];
   指定位置不折: string[][] = [];
   suanliaodanZoom = 1.5;
   企料前后宽同时改变 = true;
   主CAD = false;
-  算料单展开显示位置 = "CAD下面";
-  属于门框门扇: "未区分" | "门框" | "门扇" = "未区分";
+  算料单展开显示位置 = "";
+  属于门框门扇 = "";
   内开做分体 = false;
   板材绑定选项 = "";
   算料单线长显示的最小长度: number | null = null;
@@ -135,7 +107,7 @@ export class CadData {
   企料翻转 = false;
   装配位置 = "";
   企料包边门框配合位增加值 = 0;
-  企料包边类型 = "自动判断";
+  企料包边类型 = "";
   指定封口厚度 = "";
   显示厚度 = "";
   拼接料拼接时垂直翻转 = false;
@@ -210,20 +182,17 @@ export class CadData {
     this.xinghaohuajian = getObject(data.xinghaohuajian);
     this.mubanfangda = data.mubanfangda ?? true;
     this.kailiaoshibaokeng = data.kailiaoshibaokeng ?? false;
-    this.bianxingfangshi = data.bianxingfangshi ?? "自由";
-    this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "垂直";
-    this.huajianwenlifangxiang = data.huajianwenlifangxiang;
-    this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "自动排版";
+    this.bianxingfangshi = data.bianxingfangshi ?? "";
+    this.bancaiwenlifangxiang = data.bancaiwenlifangxiang ?? "";
+    this.huajianwenlifangxiang = data.huajianwenlifangxiang ?? "";
+    this.kailiaopaibanfangshi = data.kailiaopaibanfangshi ?? "";
     this.morenkailiaobancai = data.morenkailiaobancai ?? "";
     this.gudingkailiaobancai = data.gudingkailiaobancai ?? "";
-    this.suanliaochuli = data.suanliaochuli ?? "算料+显示展开+开料";
-    if (!suanliaochuliValues.includes(this.suanliaochuli)) {
-      this.suanliaochuli = "算料+显示展开+开料";
-    }
+    this.suanliaochuli = data.suanliaochuli ?? "";
     this.showKuandubiaozhu = data.showKuandubiaozhu ?? false;
     this.info = getObject(data.info);
     this.attributes = getObject(data.attributes);
-    this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "none";
+    this.bancaihoudufangxiang = data.bancaihoudufangxiang ?? "";
     if (Array.isArray(data.zhankai) && data.zhankai.length > 0) {
       this.zhankai = data.zhankai.map((v) => new CadZhankai(v));
     } else {
@@ -236,18 +205,15 @@ export class CadData {
     this.needsHuajian = data.needsHuajian ?? true;
     this.kedulibancai = data.kedulibancai ?? false;
     this.shuangxiangzhewan = data.shuangxiangzhewan ?? false;
-    this.suanliaodanxianshi = data.suanliaodanxianshi ?? "展开宽+展开高+板材";
-    if (!suanliaodanxianshiValues.includes(this.suanliaodanxianshi)) {
-      this.suanliaodanxianshi = "展开宽+展开高+板材";
-    }
+    this.suanliaodanxianshi = data.suanliaodanxianshi ?? "";
     this.zhidingweizhipaokeng = data.zhidingweizhipaokeng ?? [];
     this.指定分体位置 = data.指定分体位置 ?? [];
     this.指定位置不折 = data.指定位置不折 ?? [];
     this.suanliaodanZoom = data.suanliaodanZoom ?? 1.5;
     this.企料前后宽同时改变 = data.企料前后宽同时改变 ?? true;
     this.主CAD = data.主CAD ?? false;
-    this.算料单展开显示位置 = data.算料单展开显示位置 ?? "CAD下面";
-    this.属于门框门扇 = data.属于门框门扇 ?? "未区分";
+    this.算料单展开显示位置 = data.算料单展开显示位置 ?? "";
+    this.属于门框门扇 = data.属于门框门扇 ?? "";
     this.内开做分体 = data.内开做分体 ?? false;
     this.板材绑定选项 = data.板材绑定选项 ?? "";
     this.算料单线长显示的最小长度 = data.算料单线长显示的最小长度 ?? null;
