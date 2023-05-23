@@ -31,10 +31,11 @@ export class ColoredObject {
 
   setIndexColor(index: number) {
     const rgb = list[index];
-    if (!rgb) {
-      return new Color(index);
+    if (rgb) {
+      this._color = new Color(rgb);
+    } else {
+      this._color = new Color(index);
     }
-    this._color = new Color(rgb);
     return this;
   }
 }
