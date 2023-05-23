@@ -119,6 +119,7 @@ export class CadData {
   切内空对应名字 = "";
   默认开料材料 = "";
   默认开料板材厚度 = "";
+  自动生成双折宽双折高公式 = true;
 
   constructor(data?: ObjectOf<any>, resetIds = false) {
     this._entities = new CadEntities();
@@ -238,6 +239,7 @@ export class CadData {
     this.切内空对应名字 = data.切内空对应名字 ?? "";
     this.默认开料材料 = data.默认开料材料 ?? "";
     this.默认开料板材厚度 = data.默认开料板材厚度 ?? "";
+    this.自动生成双折宽双折高公式 = data.自动生成双折宽双折高公式 ?? true;
     this.updateDimensions();
     if (resetIds) {
       this.resetIds();
@@ -337,7 +339,8 @@ export class CadData {
       开孔对应名字: this.开孔对应名字,
       切内空对应名字: this.切内空对应名字,
       默认开料材料: this.默认开料材料,
-      默认开料板材厚度: this.默认开料板材厚度
+      默认开料板材厚度: this.默认开料板材厚度,
+      自动生成双折宽双折高公式: this.自动生成双折宽双折高公式
     });
   }
 
