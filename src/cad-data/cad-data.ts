@@ -245,7 +245,12 @@ export class CadData {
     }
     for (const key of propertyKeys) {
       const sourceValue = data[key];
-      if (getTypeOf(sourceValue) === getTypeOf(this[key])) {
+      const currentValue = this[key];
+      const sourceType = getTypeOf(sourceValue);
+      const currentType = getTypeOf(currentValue);
+      const isSourceEmpty = sourceType === "undefined" || sourceValue === null;
+      const isCurrentEmpty = currentType === "undefined" || currentValue === null;
+      if (sourceType === currentType || (!isSourceEmpty && isCurrentEmpty)) {
         (this as any)[key] = cloneDeep(sourceValue);
       }
     }
