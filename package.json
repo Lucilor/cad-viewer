@@ -1,57 +1,64 @@
 {
-    "name": "@lucilor/cad-viewer",
-    "version": "3.17.2",
-    "description": "cad-viewer",
-    "main": "lib/index.js",
-    "files": [
-        "/lib",
-        "/dist"
-    ],
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "lib": "webpack --config webpack.lib.js",
-        "dist": "webpack --config webpack.dist.js",
-        "build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js",
-        "prepublish": "yarn build"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Lucilor/cad-viewer.git"
-    },
-    "keywords": [
-        "cad"
-    ],
-    "author": "lucilor <lucilor@me.com>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/Lucilor/cad-viewer/issues"
-    },
-    "homepage": "https://github.com/Lucilor/cad-viewer#readme",
-    "packageManager": "yarn@3.2.4",
-    "devDependencies": {
-        "@types/color": "^3.0.3",
-        "@types/lodash": "^4.14.186",
-        "@types/uuid": "^8.3.4",
-        "@typescript-eslint/eslint-plugin": "^5.40.1",
-        "@typescript-eslint/parser": "^5.40.1",
-        "clean-webpack-plugin": "^4.0.0",
-        "csstype": "^3.1.1",
-        "eslint": "^8.25.0",
-        "eslint-plugin-prefer-arrow": "^1.2.3",
-        "terser-webpack-plugin": "^5.3.6",
-        "ts-loader": "^9.4.1",
-        "typescript": "~4.8.4",
-        "webpack": "^5.74.0",
-        "webpack-cli": "^4.10.0",
-        "webpack-merge": "^5.8.0",
-        "webpack-node-externals": "^3.0.0"
-    },
-    "dependencies": {
-        "@lucilor/utils": "^1.16.0",
-        "@svgdotjs/svg.js": "3.1.2",
-        "color": "^4.2.3",
-        "events": "^3.3.0",
-        "lodash": "^4.17.21",
-        "uuid": "^9.0.0"
-    }
+  "name": "@lucilor/cad-viewer",
+  "version": "3.18.0",
+  "description": "cad-viewer",
+  "main": "lib/index.js",
+  "files": [
+    "/lib",
+    "/dist"
+  ],
+  "scripts": {
+    "lib": "webpack --config webpack.lib.js",
+    "dist": "webpack --config webpack.dist.js",
+    "build": "webpack --config webpack.lib.js && webpack --config webpack.dist.js",
+    "prepublish": "yarn build",
+    "lint": "eslint . --fix",
+    "format": "prettier --write . --ignore-path .eslintignore"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucilor/cad-viewer.git"
+  },
+  "keywords": [
+    "cad"
+  ],
+  "author": "lucilor <lucilor@me.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lucilor/cad-viewer/issues"
+  },
+  "homepage": "https://github.com/Lucilor/cad-viewer#readme",
+  "packageManager": "yarn@3.5.1",
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/color": "^3.0.3",
+    "@types/events": "^3.0.0",
+    "@types/lodash": "^4.14.194",
+    "@types/prettier": "^2.7.2",
+    "@types/uuid": "^9.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
+    "clean-webpack-plugin": "^4.0.0",
+    "csstype": "^3.1.2",
+    "eslint": "^8.40.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-deprecation": "^1.4.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.8",
+    "terser-webpack-plugin": "^5.3.8",
+    "ts-loader": "^9.4.2",
+    "typescript": "~5.0.4",
+    "webpack": "^5.82.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-merge": "^5.8.0",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "dependencies": {
+    "@lucilor/utils": "^1.17.5",
+    "@svgdotjs/svg.js": "3.1.2",
+    "color": "^4.2.3",
+    "events": "^3.3.0",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.0"
+  }
 }
