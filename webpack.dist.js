@@ -10,6 +10,7 @@ module.exports = merge(common, {
   output: {
     path: path.resolve(__dirname, "dist"),
     libraryTarget: "window",
-    globalObject: "this"
+    globalObject: "this",
+    library: ["lucilor", "cad-viewer"]
   }
 });
