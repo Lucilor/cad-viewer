@@ -1,7 +1,7 @@
 import {getTypeOf, keysOf, Matrix, MatrixLike, ObjectOf, Point} from "@utils";
 import {cloneDeep, intersection, uniqWith} from "lodash";
 import {v4} from "uuid";
-import {getObject, getVectorFromArray, mergeArray, mergeObject, purgeObject, separateArray, separateObject} from "../cad-utils";
+import {getArray, getObject, getVectorFromArray, mergeArray, mergeObject, purgeObject, separateArray, separateObject} from "../cad-utils";
 import {CadEntities, getCadEntity} from "./cad-entities";
 import {CadCircle, CadDimension, CadEntity, CadLine} from "./cad-entity";
 import {CadDimensionLinear} from "./cad-entity/cad-dimension-linear";
@@ -244,13 +244,17 @@ export class CadData {
       this.zhankai[0].kailiaomuban = data.kailiaomuban;
     }
     for (const key of propertyKeys) {
+      if (!(key in data)) {
+        continue;
+      }
       const sourceValue = data[key];
       const currentValue = this[key];
-      const sourceType = getTypeOf(sourceValue);
       const currentType = getTypeOf(currentValue);
-      const isSourceEmpty = sourceType === "undefined" || sourceValue === null;
-      const isCurrentEmpty = currentType === "undefined" || currentValue === null;
-      if (sourceType === currentType || (!isSourceEmpty && isCurrentEmpty)) {
+      if (currentType === "array") {
+        (this as any)[key] = getArray(sourceValue);
+      } else if (currentType === "object") {
+        (this as any)[key] = getObject(sourceValue);
+      } else {
         (this as any)[key] = cloneDeep(sourceValue);
       }
     }
