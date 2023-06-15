@@ -1,4 +1,4 @@
-import {ObjectOf, Rectangle} from "@utils";
+import {ObjectOf, Rectangle} from "@lucilor/utils";
 import {cloneDeep} from "lodash";
 import {CadStylizer} from "../../cad-stylizer";
 import {purgeObject} from "../../cad-utils";

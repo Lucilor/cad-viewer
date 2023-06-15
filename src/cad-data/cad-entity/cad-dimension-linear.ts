@@ -1,4 +1,4 @@
-import {Matrix, ObjectOf, Point} from "@utils";
+import {Matrix, ObjectOf, Point} from "@lucilor/utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {CadDimension, CadDimensionEntity} from "./cad-dimension";

@@ -1,4 +1,4 @@
-import {Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {Matrix, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {cloneDeep, isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";

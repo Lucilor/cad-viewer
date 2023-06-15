@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Rectangle} from "@utils";
+import {MatrixLike, ObjectOf, Rectangle} from "@lucilor/utils";
 import {v4} from "uuid";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadData} from "./cad-data";

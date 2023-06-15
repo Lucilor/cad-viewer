@@ -1,4 +1,4 @@
-import {ObjectOf} from "@utils";
+import {ObjectOf} from "@lucilor/utils";
 import Color from "color";
 import {isEqual} from "lodash";
 

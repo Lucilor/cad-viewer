@@ -1,4 +1,4 @@
-import {Point, Rectangle} from "@utils";
+import {Point, Rectangle} from "@lucilor/utils";
 import {CadEntities} from "./cad-data/cad-entities";
 import {CadDimension, CadEntity} from "./cad-data/cad-entity";
 import {CadDimensionLinear} from "./cad-data/cad-entity/cad-dimension-linear";

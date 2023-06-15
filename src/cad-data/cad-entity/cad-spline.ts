@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {MatrixLike, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {getVectorsFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";

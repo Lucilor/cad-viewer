@@ -1,4 +1,4 @@
-import {exportObject, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {exportObject, Matrix, MatrixLike, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {Properties} from "csstype";
 import {isEqual} from "lodash";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";

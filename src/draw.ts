@@ -1,5 +1,5 @@
+import {Angle, Arc, Line, Matrix, Point} from "@lucilor/utils";
 import {Container, Element, Image, Path, PathArrayAlias, Circle as SvgCircle, Line as SvgLine, Text} from "@svgdotjs/svg.js";
-import {Angle, Arc, Line, Matrix, Point} from "@utils";
 import {CadImage} from "./cad-data";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
 import {CadDimensionStyle, FontStyle, LineStyle} from "./cad-data/cad-styles";

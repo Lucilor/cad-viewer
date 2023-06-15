@@ -1,4 +1,4 @@
-import {ObjectOf, Point} from "@utils";
+import {ObjectOf, Point} from "@lucilor/utils";
 import {purgeObject} from "../../cad-utils";
 import {DEFAULT_LENGTH_TEXT_SIZE} from "../cad-entities";
 import {CadLayer} from "../cad-layer";

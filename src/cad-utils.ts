@@ -1,4 +1,4 @@
-import {getTypeOf, ObjectOf, Point} from "@utils";
+import {getTypeOf, ObjectOf, Point} from "@lucilor/utils";
 import {cloneDeep} from "lodash";
 
 export class Defaults {

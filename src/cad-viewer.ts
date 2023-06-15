@@ -1,5 +1,5 @@
+import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@lucilor/utils";
 import {Box, CoordinateXY, Element, G, SVG, Svg, Point as SvgPoint} from "@svgdotjs/svg.js";
-import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@utils";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
 import {CadData} from "./cad-data/cad-data";

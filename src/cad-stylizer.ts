@@ -1,4 +1,4 @@
-import {keysOf} from "@utils";
+import {keysOf} from "@lucilor/utils";
 import {cloneDeep} from "lodash";
 import {CadDimension, CadEntity, CadHatch, CadLine, CadLineLike, CadMtext} from "./cad-data/cad-entity";
 import {CadDimensionStyle, CadStyle, FontStyle} from "./cad-data/cad-styles";

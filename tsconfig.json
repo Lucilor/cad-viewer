@@ -14,9 +14,9 @@
     "lib": ["ESNext", "DOM"],
     "esModuleInterop": true,
     "paths": {
-      "@utils": ["src/utils/src"]
+      "@lucilor/utils": ["src/utils/src"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/utils/**/*"]
+  "include": ["src"],
+  "exclude": ["src/utils"]
 }

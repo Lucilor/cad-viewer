@@ -1,4 +1,4 @@
-import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@utils";
+import {DEFAULT_TOLERANCE, Line, MatrixLike, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {getVectorFromArray} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";

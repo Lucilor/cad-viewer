@@ -1,4 +1,4 @@
-import {Angle, Arc, Matrix, ObjectOf, Point, Rectangle} from "@utils";
+import {Angle, Arc, Matrix, ObjectOf, Point, Rectangle} from "@lucilor/utils";
 import {getVectorFromArray, purgeObject} from "../../cad-utils";
 import {CadLayer} from "../cad-layer";
 import {EntityType} from "../cad-types";
