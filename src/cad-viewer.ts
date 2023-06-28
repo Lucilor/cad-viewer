@@ -1,4 +1,4 @@
-import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, timeout} from "@lucilor/utils";
+import {calculate, keysOf, loadImage, ObjectOf, Point, SessionStorage, svgToBase64, timeout} from "@lucilor/utils";
 import {Box, CoordinateXY, Element, G, SVG, Svg, Point as SvgPoint} from "@svgdotjs/svg.js";
 import {EventEmitter} from "events";
 import {cloneDeep} from "lodash";
@@ -815,11 +815,7 @@ export class CadViewer extends EventEmitter {
   }
 
   toBase64() {
-    let str = new XMLSerializer().serializeToString(this.draw.node);
-    // FIXME: window.unescape is deprecated
-    // eslint-disable-next-line deprecation/deprecation
-    str = unescape(encodeURIComponent(str));
-    return "data:image/svg+xml;base64," + window.btoa(str);
+    return svgToBase64(this.draw.node);
   }
 
   async toCanvas() {
