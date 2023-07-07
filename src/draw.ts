@@ -1,4 +1,4 @@
-import {Angle, Arc, Line, Matrix, Point} from "@lucilor/utils";
+import {Angle, Arc, getTypeOf, Line, Matrix, Point} from "@lucilor/utils";
 import {Container, Element, Image, Path, PathArrayAlias, Circle as SvgCircle, Line as SvgLine, Text} from "@svgdotjs/svg.js";
 import {CadImage} from "./cad-data";
 import {CadDimension} from "./cad-data/cad-entity/cad-dimension";
@@ -115,22 +115,24 @@ export const drawText = (draw: Container, text: string, position: Point, anchor:
     ty -= width / 2;
     deg = 90;
   }
+  const getStr = (val: any) => {
+    switch (getTypeOf(val)) {
+      case "string":
+        return val;
+      case "number":
+        return String(val);
+      default:
+        return "";
+    }
+  };
   if (vertical2) {
     el.css("writing-mode" as any, "vertical-lr");
   } else {
     el.css("writing-mode" as any, "");
   }
   el.css("transform", `translate(${tx}px, ${ty}px) scale(1, -1) rotate(${deg}deg)`);
-  if (family) {
-    el.css("font-family" as any, family);
-  } else {
-    el.css("font-family" as any, "");
-  }
-  if (weight) {
-    el.css("font-weight" as any, weight);
-  } else {
-    el.css("font-weight" as any, "");
-  }
+  el.css("font-family" as any, getStr(family));
+  el.css("font-weight" as any, getStr(weight));
   if (color) {
     el.fill(color);
   } else {

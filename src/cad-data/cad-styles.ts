@@ -1,13 +1,15 @@
+import csstype from "csstype";
+
 export interface FontStyle {
-  color?: string;
+  color?: csstype.Properties["color"];
   size?: number;
-  family?: string;
-  weight?: string;
+  family?: csstype.Properties["fontFamily"];
+  weight?: csstype.Properties["fontWeight"];
   vertical?: boolean;
   vertical2?: boolean;
 }
 export interface CadStyle {
-  color?: string;
+  color?: csstype.Properties["color"];
   fontStyle?: FontStyle;
   lineStyle?: LineStyle;
   opacity?: number;
@@ -15,17 +17,17 @@ export interface CadStyle {
 }
 
 export interface LineStyle {
-  color?: string;
+  color?: csstype.Properties["color"];
   dashArray?: number[];
   padding?: number | number[];
   width?: number;
 }
 
 export interface CadDimensionStyle {
-  color?: string;
+  color?: csstype.Properties["color"];
   dimensionLine?: {hidden?: boolean} & LineStyle;
   extensionLines?: {hidden?: boolean; length?: number} & LineStyle;
-  arrows?: {hidden?: boolean; color?: string; size?: number};
+  arrows?: {hidden?: boolean; color?: csstype.Properties["color"]; size?: number};
   text?: {hidden?: boolean} & Partial<FontStyle>;
 }
 
