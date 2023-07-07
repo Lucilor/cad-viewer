@@ -181,16 +181,15 @@ function onPointerUp(this: CadViewer, event: PointerEvent) {
         this.emit("click", event);
       }
     } else if (multiSelector) {
-      const rect = new Rectangle(from, to).justify();
+      const selectorRect = Rectangle.fromDomRect(multiSelector.getBoundingClientRect());
       const toSelect = Array<CadEntity>();
       this.data.getAllEntities().forEach((e) => {
-        const domRect = e.el?.node.getBoundingClientRect();
-        if (!domRect) {
+        const elDomRect = e.el?.node.getBoundingClientRect();
+        if (!elDomRect) {
           return;
         }
-        const {top, right, bottom, left} = domRect;
-        const rect2 = new Rectangle(new Point(left, top), new Point(right, bottom));
-        if (rect.contains(rect2)) {
+        const elRect = Rectangle.fromDomRect(elDomRect);
+        if (selectorRect.contains(elRect)) {
           toSelect.push(e);
         }
       });

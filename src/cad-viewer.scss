@@ -16,6 +16,7 @@ $selected-color: #ffca1c;
 $hover-color: cyan;
 
 .cad-viewer {
+  position: relative;
   svg {
     box-sizing: border-box;
 
