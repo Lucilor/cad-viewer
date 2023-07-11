@@ -191,8 +191,8 @@ export class CadData {
     this.import(data, resetIds);
   }
 
-  import(data?: ObjectOf<any>, resetIds = false) {
-    if (typeof data !== "object") {
+  import(data: ObjectOf<any> = {}, resetIds = false) {
+    if (getTypeOf(data) !== "object") {
       data = {};
     }
     this.id = data.id ?? v4();
@@ -961,7 +961,7 @@ export class CadComponents {
   data: CadData[];
   connections: CadConnection[];
   constructor(data: ObjectOf<any> = {}) {
-    if (typeof data !== "object") {
+    if (getTypeOf(data) !== "object") {
       throw new Error("Invalid data.");
     }
     this.data = [];
@@ -1019,7 +1019,7 @@ export class CadZhankai {
   包边正面按分类拼接?: string;
 
   constructor(data: ObjectOf<any> = {}) {
-    if (typeof data !== "object") {
+    if (getTypeOf(data) !== "object") {
       data = {};
     }
     this.zhankaikuan = data.zhankaikuan ?? "ceil(总长)+0";

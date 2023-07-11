@@ -1,4 +1,4 @@
-import {MatrixLike, ObjectOf, Rectangle} from "@lucilor/utils";
+import {getTypeOf, MatrixLike, ObjectOf, Rectangle} from "@lucilor/utils";
 import {v4} from "uuid";
 import {mergeArray, separateArray} from "../cad-utils";
 import {CadData} from "./cad-data";
@@ -88,8 +88,8 @@ export class CadEntities {
     return result;
   }
 
-  constructor(data: any = {}, layers: CadLayer[] = [], resetIds = false) {
-    if (typeof data !== "object") {
+  constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetIds = false) {
+    if (getTypeOf(data) !== "object") {
       throw new Error("Invalid data.");
     }
     this.idMap = {};

@@ -1,4 +1,4 @@
-import {Matrix, MatrixLike, ObjectOf, Rectangle} from "@lucilor/utils";
+import {getTypeOf, Matrix, MatrixLike, ObjectOf, Rectangle} from "@lucilor/utils";
 import {G, Matrix as Matrix2, Svg} from "@svgdotjs/svg.js";
 import {cloneDeep} from "lodash";
 import {v4} from "uuid";
@@ -124,9 +124,9 @@ export abstract class CadEntity extends ColoredObject {
     this.children.forEach((c) => (c.visible = value));
   }
 
-  constructor(data: any = {}, layers: CadLayer[] = [], resetId = false) {
+  constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetId = false) {
     super();
-    if (typeof data !== "object") {
+    if (getTypeOf(data) !== "object") {
       throw new Error("Invalid data.");
     }
     if (typeof data.id === "string" && !resetId) {
