@@ -962,7 +962,7 @@ export class CadComponents {
   connections: CadConnection[];
   constructor(data: ObjectOf<any> = {}) {
     if (getTypeOf(data) !== "object") {
-      throw new Error("Invalid data.");
+      data = {};
     }
     this.data = [];
     this.connections = [];

@@ -90,7 +90,7 @@ export class CadEntities {
 
   constructor(data: ObjectOf<any> = {}, layers: CadLayer[] = [], resetIds = false) {
     if (getTypeOf(data) !== "object") {
-      throw new Error("Invalid data.");
+      data = {};
     }
     this.idMap = {};
     const tryGetCadEntity = (data2: any, type?: EntityType) => {
