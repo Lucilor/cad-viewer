@@ -1,5 +1,5 @@
 import {getTypeOf, ObjectOf, Point} from "@lucilor/utils";
-import {cloneDeep} from "lodash";
+import {cloneDeep, isEqual} from "lodash";
 
 export class Defaults {
   static get DASH_ARRAY() {
@@ -138,11 +138,13 @@ export const toFixedTrim = (num: number, fractionDigits?: number | undefined) =>
   return str.replace(/\.[1-9]*0+/, "");
 };
 
-const purgeObject2 = (obj: ObjectOf<any>) => {
+const purgeObject2 = (obj: ObjectOf<any>, defaultObj?: ObjectOf<any>) => {
   const isEmpty = (val: any) => val === undefined || val === null;
   Object.keys(obj).forEach((key) => {
     let value = obj[key];
     if (isEmpty(value) || key === "") {
+      delete obj[key];
+    } else if (defaultObj && isEqual(value, defaultObj[key])) {
       delete obj[key];
     } else if (Array.isArray(value)) {
       value = value.filter((v) => !isEmpty(v));
@@ -150,7 +152,7 @@ const purgeObject2 = (obj: ObjectOf<any>) => {
         delete obj[key];
       }
     } else if (typeof value === "object") {
-      purgeObject2(value);
+      purgeObject2(value, defaultObj);
       if (Object.keys(value).length < 1) {
         delete obj[key];
       }
@@ -158,8 +160,8 @@ const purgeObject2 = (obj: ObjectOf<any>) => {
   });
 };
 
-export const purgeObject = (obj: ObjectOf<any>): ObjectOf<any> => {
+export const purgeObject = (obj: ObjectOf<any>, defaultObj?: ObjectOf<any>): ObjectOf<any> => {
   const result = cloneDeep(obj);
-  purgeObject2(result);
+  purgeObject2(result, defaultObj);
   return result;
 };

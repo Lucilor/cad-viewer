@@ -157,8 +157,10 @@ export abstract class CadEntity extends ColoredObject {
     if (data.parent instanceof CadEntity) {
       this.parent = data.parent;
     }
-    this.visible = data.visible ?? true;
-    this.opacity = data.opacity ?? 1;
+    this.visible = data.visible ?? cadEntityDefaultValues.visible;
+    this.opacity = data.opacity ?? cadEntityDefaultValues.opacity;
+    this.calcBoundingRect = data.calcBoundingRect ?? cadEntityDefaultValues.calcBoundingRect;
+    this.calcBoundingRectForce = data.calcBoundingRectForce ?? cadEntityDefaultValues.calcBoundingRectForce;
     this.linewidth = data.linewidth ?? 1;
     this._lineweight = -3;
     if (typeof data.lineweight === "number") {
@@ -233,17 +235,23 @@ export abstract class CadEntity extends ColoredObject {
 
   export(): ObjectOf<any> {
     this.update();
-    return purgeObject({
-      id: this.id,
-      layer: this.layer,
-      type: this.type,
-      color: this.getIndexColor(),
-      children: this.children.export(),
-      info: this.info,
-      lineweight: linewidth2lineweight(this.linewidth),
-      dashArray: this.dashArray,
-      visible: this.visible === false ? this.visible : undefined
-    });
+    return purgeObject(
+      {
+        id: this.id,
+        layer: this.layer,
+        type: this.type,
+        color: this.getIndexColor(),
+        children: this.children.export(),
+        info: this.info,
+        lineweight: linewidth2lineweight(this.linewidth),
+        dashArray: this.dashArray,
+        visible: this.visible,
+        opacity: this.opacity,
+        calcBoundingRect: this.calcBoundingRect,
+        calcBoundingRectForce: this.calcBoundingRectForce
+      },
+      cadEntityDefaultValues
+    );
   }
 
   addChild(...children: CadEntity[]) {
@@ -290,3 +298,10 @@ export abstract class CadEntity extends ColoredObject {
 
   // abstract getBoundingRect(): Rectangle;
 }
+
+export const cadEntityDefaultValues: Partial<CadEntity> = {
+  visible: true,
+  opacity: 1,
+  calcBoundingRect: true,
+  calcBoundingRectForce: false
+};
