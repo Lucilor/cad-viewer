@@ -329,13 +329,35 @@ export class CadViewer extends EventEmitter {
     const {draw} = this;
     const config = this.getConfig();
     const {color, fontStyle, lineStyle, dimStyle} = CadStylizer.get(entity, config, style);
-    if (!entity.visible || (entity instanceof CadDimension && this.getConfig("hideDimensions"))) {
+    let shouldDraw = entity.visible;
+    if (entity instanceof CadDimension) {
+      if (config.hideDimensions) {
+        shouldDraw = false;
+      }
+    } else if (entity instanceof CadMtext) {
+      const parent = entity.parent;
+      if (parent instanceof CadLineLike) {
+        const {isLengthText, isGongshiText, isBianhuazhiText} = entity.info;
+        const isLineText = isLengthText || isGongshiText || isBianhuazhiText;
+        if (isLineText) {
+          const {hideLineLength, hideLineGongshi} = config;
+          if (isLengthText && (parent.hideLength || hideLineLength)) {
+            shouldDraw = false;
+          } else if (isGongshiText && hideLineGongshi) {
+            shouldDraw = false;
+          } else if (isBianhuazhiText && hideLineGongshi) {
+            shouldDraw = false;
+          }
+        }
+      }
+    }
+    if (shouldDraw) {
+      entity.update(isFromParent);
+    } else {
       entity.el?.remove();
       entity.el = null;
       entity.update(isFromParent);
       return [];
-    } else {
-      entity.update(isFromParent);
     }
     let el = entity.el;
     if (!el) {
@@ -418,114 +440,99 @@ export class CadViewer extends EventEmitter {
       const {isLengthText, isGongshiText, isBianhuazhiText} = entity.info;
       const isLineText = isLengthText || isGongshiText || isBianhuazhiText;
       if (parent instanceof CadLineLike && isLineText) {
-        const {lineGongshi, hideLineLength, hideLineGongshi} = this._config;
+        const {lineGongshi} = config;
         let foundOffset: Point | undefined;
-        if (entity.info.isLengthText) {
+        if (isLengthText) {
           let valid = true;
           let error = null as any;
-          if (hideLineLength || parent.hideLength) {
-            el.remove();
-            entity.el = null;
-          } else {
-            let length = parent.length;
-            let prefix = "";
-            if (parent.显示线长) {
-              const calcReuslt = calculate(parent.显示线长, {线长: length});
-              if (calcReuslt.error === null) {
-                if (isNaN(calcReuslt.value)) {
-                  error = "NaN";
-                  valid = false;
-                } else {
-                  length = calcReuslt.value;
-                }
-              } else {
-                error = calcReuslt.error;
+          let length = parent.length;
+          let prefix = "";
+          if (parent.显示线长) {
+            const calcReuslt = calculate(parent.显示线长, {线长: length});
+            if (calcReuslt.error === null) {
+              if (isNaN(calcReuslt.value)) {
+                error = "NaN";
                 valid = false;
+              } else {
+                length = calcReuslt.value;
               }
-            } else if (parent instanceof CadArc) {
-              switch (parent.圆弧显示) {
-                case "半径":
-                case "R+半径":
-                  length = parent.radius;
-                  prefix = "R";
-                  break;
-                case "φ+直径":
-                  length = parent.radius * 2;
-                  prefix = "φ";
-                  break;
-                case "弧长+线长":
-                  length = parent.length;
-                  prefix = "弧长";
-                  break;
-                default:
-              }
-            }
-            if (valid) {
-              entity.text = prefix + toFixedTrim(length);
             } else {
-              entity.text = String(error);
+              error = calcReuslt.error;
+              valid = false;
             }
-            entity.fontStyle.size = parent.lengthTextSize;
-            fontStyle.size = entity.fontStyle.size;
-            foundOffset = getVectorFromArray(entity.info.offset);
+          } else if (parent instanceof CadArc) {
+            switch (parent.圆弧显示) {
+              case "半径":
+              case "R+半径":
+                length = parent.radius;
+                prefix = "R";
+                break;
+              case "φ+直径":
+                length = parent.radius * 2;
+                prefix = "φ";
+                break;
+              case "弧长+线长":
+                length = parent.length;
+                prefix = "弧长";
+                break;
+              default:
+            }
           }
-        } else if (entity.info.isGongshiText) {
-          if (hideLineGongshi) {
-            el.remove();
-            entity.el = null;
+          if (valid) {
+            entity.text = prefix + toFixedTrim(length);
           } else {
-            const {mingzi, mingzi2, gongshi, 刨坑起始线, 双向折弯附加值} = parent;
-            const mingzi3 = mingzi || mingzi2;
-            const arr: string[] = [];
-            if (gongshi) {
-              arr.push(`${mingzi3}=${gongshi}`);
-            } else {
-              arr.push(mingzi3);
-            }
-            if (mingzi && mingzi2) {
-              arr.push(mingzi2);
-            }
-            if (刨坑起始线) {
-              arr.push("刨坑起始线");
-            }
-            if (双向折弯附加值) {
-              arr.push(双向折弯附加值);
-            }
-            entity.text = arr.join("\n");
-            let varName = "";
-            const root = parent.root?.root;
-            if (root && root.info.vars) {
-              for (const name in root.info.vars) {
-                if (root.info.vars[name] === parent.id) {
-                  varName = `可改${name}`;
-                }
-              }
-            }
-            if (entity.text) {
-              if (varName) {
-                entity.text += "," + varName;
-              }
-            } else {
-              entity.text = varName;
-            }
-            entity.fontStyle.size = lineGongshi;
-            fontStyle.size = entity.fontStyle.size;
-            foundOffset = getVectorFromArray(entity.info.offset);
+            entity.text = String(error);
           }
-        } else if (entity.info.isBianhuazhiText) {
-          if (hideLineGongshi) {
-            el.remove();
-            entity.el = null;
+          entity.fontStyle.size = parent.lengthTextSize;
+          fontStyle.size = entity.fontStyle.size;
+          foundOffset = getVectorFromArray(entity.info.offset);
+        } else if (isGongshiText) {
+          const {mingzi, mingzi2, gongshi, 刨坑起始线, 双向折弯附加值} = parent;
+          const mingzi3 = mingzi || mingzi2;
+          const arr: string[] = [];
+          if (gongshi) {
+            arr.push(`${mingzi3}=${gongshi}`);
           } else {
-            if (parent instanceof CadLine && parent.guanlianbianhuagongshi) {
-              entity.text = `变化值=${parent.guanlianbianhuagongshi}`;
-            } else {
-              entity.text = "";
-            }
-            entity.fontStyle.size = lineGongshi - 3;
-            fontStyle.size = entity.fontStyle.size;
-            foundOffset = getVectorFromArray(entity.info.offset);
+            arr.push(mingzi3);
           }
+          if (mingzi && mingzi2) {
+            arr.push(mingzi2);
+          }
+          if (刨坑起始线) {
+            arr.push("刨坑起始线");
+          }
+          if (双向折弯附加值) {
+            arr.push(双向折弯附加值);
+          }
+          entity.text = arr.join("\n");
+          let varName = "";
+          const root = parent.root?.root;
+          if (root && root.info.vars) {
+            for (const name in root.info.vars) {
+              if (root.info.vars[name] === parent.id) {
+                varName = `可改${name}`;
+              }
+            }
+          }
+          if (entity.text) {
+            if (varName) {
+              entity.text += "," + varName;
+            }
+          } else {
+            entity.text = varName;
+          }
+          entity.fontStyle.size = lineGongshi;
+          fontStyle.size = entity.fontStyle.size;
+          foundOffset = getVectorFromArray(entity.info.offset);
+        } else if (isBianhuazhiText) {
+          if (parent instanceof CadLine && parent.guanlianbianhuagongshi) {
+            entity.text = `变化值=${parent.guanlianbianhuagongshi}`;
+          } else {
+            entity.text = "";
+          }
+          entity.fontStyle.size = lineGongshi - 3;
+          fontStyle.size = entity.fontStyle.size;
+          foundOffset = getVectorFromArray(entity.info.offset);
         }
         const middle = parent.middle;
         if (foundOffset) {
